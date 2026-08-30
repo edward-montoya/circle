@@ -1,0 +1,678 @@
+<title>Circle AI — Screens</title>
+
+<style>
+  :root {
+    --gal-bg:   #E8EBEE;
+    --gal-ink:  #12161C;
+    --gal-mut:  #616C7A;
+    --gal-fnt:  #8B95A2;
+    --gal-rule: #CFD6DD;
+    --accent:   #2B4E8F;
+
+    --chrome:     #DDE2E8;
+    --chrome-ink: #4A5461;
+    --chrome-rule:#C3CBD4;
+
+    --term-bg:  #11151C;
+    --term-fg:  #C6D0DC;
+    --term-dim: #66737F;
+    --tg:#7FC29B; --tr:#E5806F; --ta:#DFAE58; --tb:#8AB0E6; --tp:#B99BDB; --tw:#F2F5F8;
+
+    --mono: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, "Liberation Mono", monospace;
+    --sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --gal-bg:#0B0F14; --gal-ink:#DDE4EC; --gal-mut:#93A0AF; --gal-fnt:#67737F;
+      --gal-rule:#242E39; --accent:#7FA6DF;
+      --chrome:#1C242F; --chrome-ink:#8A97A6; --chrome-rule:#2B3540;
+    }
+  }
+  :root[data-theme="dark"]{
+    --gal-bg:#0B0F14; --gal-ink:#DDE4EC; --gal-mut:#93A0AF; --gal-fnt:#67737F;
+    --gal-rule:#242E39; --accent:#7FA6DF;
+    --chrome:#1C242F; --chrome-ink:#8A97A6; --chrome-rule:#2B3540;
+  }
+  :root[data-theme="light"]{
+    --gal-bg:#E8EBEE; --gal-ink:#12161C; --gal-mut:#616C7A; --gal-fnt:#8B95A2;
+    --gal-rule:#CFD6DD; --accent:#2B4E8F;
+    --chrome:#DDE2E8; --chrome-ink:#4A5461; --chrome-rule:#C3CBD4;
+  }
+
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--gal-bg);color:var(--gal-ink);font-family:var(--sans);font-size:15px;line-height:1.6;-webkit-font-smoothing:antialiased}
+  .gal{max-width:1160px;margin:0 auto;padding:2.5rem 1.25rem 5rem}
+
+  .intro{margin-bottom:3.5rem;max-width:60ch}
+  .intro .eyebrow{font-family:var(--mono);font-size:.6875rem;font-weight:600;letter-spacing:.18em;text-transform:uppercase;color:var(--accent);margin:0 0 .75rem}
+  .intro h1{font-family:var(--mono);font-size:clamp(1.4rem,1rem+1.8vw,2rem);font-weight:600;letter-spacing:-.02em;line-height:1.15;margin:0 0 .75rem}
+  .intro p{margin:0;color:var(--gal-mut)}
+
+  /* screen block */
+  .screen{margin-bottom:4rem}
+  .cap{display:flex;flex-wrap:wrap;align-items:baseline;gap:.75rem;margin-bottom:.75rem;font-family:var(--mono);font-size:.75rem}
+  .cap .n{font-weight:600;color:var(--accent);font-variant-numeric:tabular-nums}
+  .cap .t{font-weight:600}
+  .cap .s{color:var(--gal-fnt);margin-left:auto;font-size:.6875rem}
+
+  .win{border-radius:9px;overflow:hidden;box-shadow:0 1px 2px rgba(0,0,0,.12),0 14px 40px -12px rgba(0,0,0,.32);border:1px solid var(--chrome-rule)}
+  .bar{background:var(--chrome);border-bottom:1px solid var(--chrome-rule);display:flex;align-items:center;gap:.6rem;padding:.5rem .75rem;font-family:var(--mono);font-size:.6875rem;color:var(--chrome-ink)}
+  .lights{display:flex;gap:.4rem;flex:none}
+  .lights i{width:11px;height:11px;border-radius:50%;display:block}
+  .l1{background:#EC6A5E}.l2{background:#F4BF4F}.l3{background:#61C554}
+  .bar .title{flex:1;text-align:center;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .url{flex:1;background:var(--gal-bg);border:1px solid var(--chrome-rule);border-radius:5px;padding:.2rem .6rem;color:var(--chrome-ink);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .navbtn{color:var(--gal-fnt);flex:none;letter-spacing:.1em}
+
+  /* terminal */
+  .term{background:var(--term-bg);color:var(--term-fg);font-family:var(--mono);font-size:12.5px;line-height:1.62;padding:1.15rem 1.25rem;overflow-x:auto}
+  .term pre{margin:0;font:inherit}
+  .g{color:var(--tg)}.r{color:var(--tr)}.a{color:var(--ta)}.b{color:var(--tb)}
+  .p{color:var(--tp)}.d{color:var(--term-dim)}.w{color:var(--tw);font-weight:700}
+  .ps1{color:var(--tg);font-weight:700}
+  .cur{background:var(--tb);color:var(--term-bg)}
+
+  /* ---------- brief.html document ---------- */
+  .doc{background:#FBFCFD;color:#171B21;font-family:var(--sans);font-size:15px;line-height:1.62}
+  .doc-stick{position:sticky;top:0;z-index:5;background:#FFF8F5;border-bottom:2px solid #A8352A;padding:.7rem 2.25rem;display:flex;flex-wrap:wrap;gap:1rem;align-items:center}
+  .doc-stick .pill{font-family:var(--mono);font-size:.625rem;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:#A8352A;border:1.5px solid #A8352A;padding:.25em .6em;flex:none}
+  .doc-stick p{margin:0;font-size:.8125rem;color:#6B4842;flex:1 1 240px}
+  .doc-stick code{font-family:var(--mono);font-size:.75rem;background:#11151C;color:#C6D0DC;padding:.3em .55em;border-radius:3px;white-space:nowrap}
+  .doc-in{padding:2.25rem 2.25rem 2.75rem;max-width:none}
+  .doc-hd{border-bottom:1px solid #DCE2E8;padding-bottom:1.5rem;margin-bottom:1.75rem}
+  .doc-meta{display:flex;flex-wrap:wrap;gap:.45rem;margin-bottom:.9rem}
+  .tag{font-family:var(--mono);font-size:.625rem;font-weight:600;letter-spacing:.09em;text-transform:uppercase;padding:.22em .55em;border:1px solid currentColor}
+  .tg-id{color:#2B4E8F}.tg-mut{color:#7A8593}.tg-warn{color:#8A5A12}
+  .doc-hd h1{font-size:1.85rem;line-height:1.15;letter-spacing:-.02em;margin:0 0 .7rem;font-weight:600;text-wrap:balance;color:#12161C}
+  .doc-hd .sub{margin:0;color:#5A6674;max-width:70ch}
+  .doc h2{font-family:var(--mono);font-size:.6875rem;font-weight:600;letter-spacing:.15em;text-transform:uppercase;color:#2B4E8F;margin:2rem 0 .9rem;padding-bottom:.5rem;border-bottom:1px solid #E4E9EE}
+  .doc h2:first-of-type{margin-top:0}
+  .doc p{margin:0 0 .75rem;max-width:72ch}
+  .doc ul{margin:0;padding-left:1.15em}
+  .doc li{margin-bottom:.5rem;max-width:72ch}
+  .doc li:last-child{margin-bottom:0}
+  .doc code{font-family:var(--mono);font-size:.8125rem;background:#EDF1F5;padding:.12em .38em;border-radius:3px;color:#2E3A47}
+  .verif{font-family:var(--mono);font-size:.625rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:#26654A}
+  .human{font-family:var(--mono);font-size:.625rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:#8A5A12}
+  .plate{background:#fff;border:1px solid #DCE2E8;border-radius:4px;padding:1.15rem;overflow-x:auto;margin-bottom:.5rem}
+  .plate .mermaid{display:block}
+  .figcap{font-family:var(--mono);font-size:.625rem;letter-spacing:.09em;text-transform:uppercase;color:#8B95A2;margin:0 0 .5rem}
+  .doc table{border-collapse:collapse;width:100%;font-size:.8125rem}
+  .doc th{font-family:var(--mono);font-size:.5875rem;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:#8B95A2;text-align:left;padding:.4rem .6rem;border-bottom:1px solid #DCE2E8;white-space:nowrap}
+  .doc td{padding:.5rem .6rem;border-bottom:1px solid #EDF1F5;vertical-align:top}
+  .doc tr:last-child td{border-bottom:0}
+  .doc td.m{font-family:var(--mono);font-variant-numeric:tabular-nums}
+  .scrollx{overflow-x:auto}
+  .doc-foot{margin-top:2.25rem;border:1.5px solid #A8352A;background:#FFF8F5;padding:1.35rem;display:flex;flex-wrap:wrap;gap:1.35rem;align-items:center}
+  .stamp{border:2.5px solid #A8352A;color:#A8352A;font-family:var(--mono);font-weight:700;font-size:.8125rem;letter-spacing:.13em;text-transform:uppercase;text-align:center;padding:.55rem 1.15rem;transform:rotate(-4deg);flex:none;line-height:1.35}
+  .stamp small{display:block;font-size:.5625rem;letter-spacing:.09em;opacity:.85;font-weight:600}
+  .doc-foot .fc{flex:1 1 280px;min-width:0}
+  .doc-foot .fc p{margin:0 0 .5rem;font-size:.875rem;color:#5A4340}
+  .doc-foot .fc p:last-child{margin:0}
+  .doc-foot code{background:#11151C;color:#C6D0DC;font-size:.8125rem;padding:.35em .6em;border-radius:3px}
+
+  /* ---------- web app ---------- */
+  .app{display:grid;grid-template-columns:212px minmax(0,1fr);background:#F4F6F8;color:#171B21;min-height:560px;font-size:14px}
+  @media(max-width:760px){.app{grid-template-columns:minmax(0,1fr)}}
+  .side{background:#151B24;color:#B9C4D0;padding:1.1rem 0}
+  .side .brandline{font-family:var(--mono);font-size:.75rem;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:#fff;padding:0 1.1rem 1rem;border-bottom:1px solid #232D39;margin-bottom:.9rem}
+  .side .grp{font-family:var(--mono);font-size:.5875rem;letter-spacing:.14em;text-transform:uppercase;color:#5E6B7A;padding:0 1.1rem;margin:1.1rem 0 .45rem}
+  .side a{display:flex;gap:.55rem;align-items:center;padding:.42rem 1.1rem;color:#B9C4D0;text-decoration:none;font-size:.8125rem}
+  .side a.on{background:#1F2937;color:#fff;box-shadow:inset 3px 0 0 #7FA6DF}
+  .side a .dot{width:6px;height:6px;border-radius:50%;flex:none}
+  .dot-g{background:#5FB08A}.dot-a{background:#D9A441}.dot-r{background:#E0705F}.dot-m{background:#4A5563}
+  .side .meta{font-family:var(--mono);font-size:.625rem;color:#5E6B7A;padding:1.25rem 1.1rem 0;border-top:1px solid #232D39;margin-top:1.1rem;line-height:1.75}
+
+  .main{padding:1.35rem 1.6rem;overflow:hidden}
+  .apphd{display:flex;flex-wrap:wrap;gap:.75rem;align-items:baseline;margin-bottom:1.1rem}
+  .apphd h3{margin:0;font-size:1.15rem;font-weight:600;letter-spacing:-.01em}
+  .apphd .crumb{font-family:var(--mono);font-size:.6875rem;color:#8B95A2}
+  .apphd .live{margin-left:auto;font-family:var(--mono);font-size:.625rem;letter-spacing:.1em;text-transform:uppercase;color:#26654A;display:flex;align-items:center;gap:.35rem}
+  .apphd .live i{width:6px;height:6px;border-radius:50%;background:#26654A;display:block}
+  .cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:.75rem;margin-bottom:1.1rem}
+  .card{background:#fff;border:1px solid #DFE5EB;border-radius:5px;padding:.8rem .9rem}
+  .card .k{font-family:var(--mono);font-size:.5875rem;letter-spacing:.11em;text-transform:uppercase;color:#8B95A2}
+  .card .v{font-family:var(--mono);font-size:1.6rem;font-weight:600;line-height:1.15;font-variant-numeric:tabular-nums;margin-top:.15rem}
+  .card .s{font-size:.75rem;color:#6B7683;margin-top:.15rem}
+  .bars{display:grid;gap:.4rem;margin-top:.6rem}
+  .barrow{display:grid;grid-template-columns:104px 1fr 46px;gap:.6rem;align-items:center;font-size:.75rem}
+  .barrow .lbl{font-family:var(--mono);font-size:.6875rem;color:#6B7683}
+  .barrow .num{font-family:var(--mono);font-size:.6875rem;text-align:right;font-variant-numeric:tabular-nums;color:#6B7683}
+  .trk{height:6px;background:#E4E9EE;border-radius:3px;overflow:hidden}
+  .trk span{display:block;height:100%}
+  .fg{background:#26654A}.fa{background:#B8862B}.fr{background:#A8352A}
+  .grid2{display:grid;grid-template-columns:1.35fr 1fr;gap:.75rem}
+  @media(max-width:860px){.grid2{grid-template-columns:minmax(0,1fr)}}
+  .panel{background:#fff;border:1px solid #DFE5EB;border-radius:5px;padding:.9rem}
+  .panel h4{font-family:var(--mono);font-size:.5875rem;font-weight:600;letter-spacing:.13em;text-transform:uppercase;color:#8B95A2;margin:0 0 .7rem}
+  .tl{font-family:var(--mono);font-size:.75rem;line-height:1.4}
+  .tl .row{display:grid;grid-template-columns:44px 12px 1fr;gap:.5rem;padding:.4rem 0;border-bottom:1px solid #F0F3F6}
+  .tl .row:last-child{border-bottom:0}
+  .tl .tm{color:#8B95A2;font-variant-numeric:tabular-nums}
+  .tl .ax{position:relative}
+  .tl .ax::before{content:"";position:absolute;left:4px;top:-.4rem;bottom:-.4rem;width:1px;background:#DFE5EB}
+  .tl .row:first-child .ax::before{top:.45rem}
+  .tl .row:last-child .ax::before{bottom:auto;height:.45rem}
+  .tl .ax i{position:absolute;left:1px;top:.3rem;width:7px;height:7px;border-radius:50%;background:#fff;border:1.5px solid #8B95A2;display:block}
+  .tl .ax i.ok{border-color:#26654A;background:#26654A}
+  .tl .ax i.bad{border-color:#A8352A;background:#A8352A}
+  .tl .ax i.warn{border-color:#B8862B;background:#B8862B}
+  .tl .sha{font-weight:600}
+  .tl .fls{color:#6B7683;font-size:.6875rem}
+  .tl .strike{text-decoration:line-through;color:#A9B2BC}
+  .sug{font-family:var(--mono);font-size:.75rem;background:#11151C;color:#C6D0DC;padding:.45rem .6rem;border-radius:4px;margin-bottom:.4rem;display:block;overflow-x:auto;white-space:nowrap}
+  .sug .g{color:#7FC29B}
+  .kv{display:grid;grid-template-columns:1fr auto;gap:.3rem .6rem;font-size:.8125rem;align-items:center}
+  .kv .st{font-family:var(--mono);font-size:.5875rem;font-weight:700;letter-spacing:.09em;text-transform:uppercase;padding:.15em .45em;border:1px solid currentColor}
+  .st-ok{color:#26654A}.st-wn{color:#8A5A12}.st-bd{color:#A8352A}
+  .noexec{margin-top:.75rem;font-size:.6875rem;color:#8B95A2;font-family:var(--mono);line-height:1.5}
+
+  .foot{margin-top:1rem;font-family:var(--mono);font-size:.6875rem;color:var(--gal-fnt)}
+  a{color:var(--accent)}
+  :focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+  @media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
+
+<div class="gal">
+
+  <div class="intro">
+    <p class="eyebrow">Circle AI · Screens · Iteration 2</p>
+    <h1>Every screen, at size</h1>
+    <p>Seven screens as they would actually appear: five terminal windows, the brief in a browser, and the observation app. Real content, real widths, no excerpts.</p>
+  </div>
+
+  <!-- 1 · init -->
+  <section class="screen">
+    <div class="cap"><span class="n">01</span><span class="t">circle init</span><span class="s">Terminal · 96 cols · first run on a fresh clone</span></div>
+    <div class="win">
+      <div class="bar"><span class="lights"><i class="l1"></i><i class="l2"></i><i class="l3"></i></span><span class="title">edward@mbp — platform — zsh — 96×44</span></div>
+      <div class="term"><pre><span class="ps1">~/code/platform</span> <span class="p">main</span> <span class="d">✔</span>
+<span class="ps1">❯</span> circle init
+
+<span class="w">Circle AI</span> <span class="d">· initialising .circle/ in acme/platform</span>
+
+<span class="d">╭─</span> <span class="w">Environment</span> <span class="d">──────────────────────────────────────────────────────────────────╮</span>
+   <span class="g">✓</span> git          2.47.1 <span class="d">·</span> acme/platform <span class="d">·</span> main <span class="d">·</span> working tree clean
+   <span class="g">✓</span> docker       28.1.1 <span class="d">·</span> compose v2.34.0
+   <span class="g">✓</span> gh           2.67.0 <span class="d">·</span> authenticated as edward-m
+   <span class="d">○ bd           not found — using the built-in task graph</span>
+<span class="d">╰───────────────────────────────────────────────────────────────────────────────╯</span>
+
+<span class="w">Execution contract</span>
+
+   <span class="g">✓</span> compose      docker-compose.yml <span class="d">·</span> 6 services
+                <span class="b">api</span>        build ./services/api        <span class="d">→</span> <span class="a">app candidate</span>
+                <span class="b">web</span>        build ./services/web        <span class="d">→</span> <span class="a">app candidate</span>
+                <span class="b">worker</span>     build ./services/worker     <span class="d">→</span> <span class="a">app candidate</span>
+                <span class="d">postgres   image postgres:16          → infrastructure</span>
+                <span class="d">redis      image redis:7             → infrastructure</span>
+                <span class="d">mailhog    image mailhog/mailhog     → infrastructure</span>
+
+   <span class="a">?</span> Mark <span class="b">api</span>, <span class="b">web</span>, <span class="b">worker</span> as application containers? <span class="d">[Y/n]</span> <span class="w">y</span>
+   <span class="g">✓</span> recorded     <span class="d">→ project.toml [execution] app_services</span>
+
+   <span class="g">✓</span> run recipe   <span class="d">found</span> .claude/skills/run-platform/SKILL.md
+                <span class="d">seeding from the recorded launch recipe</span>
+                make dev-up            <span class="d">→ execution.up</span>
+                make dev-down          <span class="d">→ execution.down</span>
+                cp .env.example .env   <span class="d">→ execution.bootstrap</span>
+
+<span class="w">Quality contract</span>
+
+   <span class="g">✓</span> package.json pnpm <span class="d">·</span> 5 gates detected
+                format      pnpm prettier --check .
+                lint        pnpm eslint .
+                typecheck   pnpm tsc --noEmit
+                test:unit   pnpm vitest run
+                test:e2e    pnpm playwright test
+   <span class="a">⚠</span> coverage     <span class="d">no threshold found — defaulting to 80, edit to change</span>
+
+<span class="w">Knowledge registry</span>
+
+   <span class="g">✓</span> docs         docs/ <span class="d">·</span> README.md <span class="d">·</span> services/*/README.md   <span class="d">→ 14 files</span>
+   <span class="g">✓</span> validations  tests/ <span class="d">·</span> e2e/ <span class="d">·</span> .github/workflows/       <span class="d">→ 61 files</span>
+   <span class="a">⚠</span> definitions  <span class="d">none found — this feeds the brief. add one:</span>
+                <span class="b">circle knowledge add docs/architecture --as definitions</span>
+
+<span class="w">Writing</span>
+
+   <span class="g">✓</span> .circle/project.toml       <span class="d">the replicable contract — commit this</span>
+   <span class="g">✓</span> .circle/settings.toml      <span class="d">environment-specific — commit this</span>
+   <span class="g">✓</span> .gitignore                 <span class="d">+ .circle/runtime/  .claude/worktrees/</span>
+   <span class="g">✓</span> .worktreeinclude           <span class="d">+ .env  .env.local</span>
+   <span class="d">○ hooks                      shipped by the circle-ai plugin — none written</span>
+
+<span class="d">Done in 3.4s.</span>  <span class="w">Next</span>
+   <span class="b">circle preflight</span>                            <span class="d">validate all three contracts</span>
+   <span class="b">circle knowledge add &lt;path&gt; --as definitions</span>
+
+<span class="ps1">~/code/platform</span> <span class="p">main</span> <span class="a">✚2</span>
+<span class="ps1">❯</span> <span class="cur"> </span>
+</pre></div>
+    </div>
+  </section>
+
+  <!-- 2 · preflight -->
+  <section class="screen">
+    <div class="cap"><span class="n">02</span><span class="t">circle preflight --explain</span><span class="s">Terminal · the gate refusing to pass · exit 2</span></div>
+    <div class="win">
+      <div class="bar"><span class="lights"><i class="l1"></i><i class="l2"></i><i class="l3"></i></span><span class="title">edward@mbp — platform — zsh — 96×38</span></div>
+      <div class="term"><pre><span class="ps1">~/code/platform</span> <span class="p">main</span> <span class="d">✔</span>
+<span class="ps1">❯</span> circle preflight --explain
+
+<span class="w">PREFLIGHT</span>  <span class="d">acme/platform · .circle/project.toml · contract_v1</span>
+
+<span class="g">  ✓ EXECUTION</span>   <span class="d">how do I run this, in isolation?</span>
+                 compose docker-compose.yml <span class="d">·</span> 6 services <span class="d">·</span> 3 marked app
+                 <span class="d">└ api, web, worker — confirmed 2026-08-28 by edward-m</span>
+                 <span class="d">└ up: make dev-up   down: make dev-down</span>
+                 <span class="d">└ ports 42000-42999 free · 0 stacks running</span>
+
+<span class="g">  ✓ QUALITY</span>     <span class="d">how do I prove it's correct?</span>
+                 5 gates <span class="d">·</span> format lint typecheck test:unit test:e2e
+                 <span class="d">└ last full run 4m ago — all green</span>
+                 <span class="d">└ coverage floor 80% · currently 84.2%</span>
+
+<span class="r">  ✗ KNOWLEDGE</span>   <span class="d">where is the truth about this project?</span>
+                 <span class="g">7</span> of 9 registered paths resolve
+                 <span class="r">└ docs/adr/</span>            <span class="d">[definitions]</span>  <span class="r">directory does not exist</span>
+                 <span class="r">└ services/*/README</span>    <span class="d">[docs]</span>         <span class="r">matched 0 files</span>
+                 <span class="d">└ definitions coverage for the current item: 0%</span>
+
+<span class="a">  ⚠ GOAL</span>        <span class="d">advisory — does not block</span>
+                 <span class="a">6</span> of 11 criteria are machine-checkable  <span class="d">(55%, target 70%)</span>
+                 <span class="d">└ 5 criteria have no command attached</span>
+                 <span class="d">└ circle goal validate --ratio  to see which</span>
+
+<span class="d">───────────────────────────────────────────────────────────────────────────────</span>
+
+<span class="r">  PREFLIGHT FAILED</span>   <span class="d">1 contract blocking · 1 advisory</span>
+
+  <span class="w">Fix, in order:</span>
+    <span class="b">circle knowledge add docs/architecture --as definitions</span>
+    <span class="b">circle knowledge list --unresolved</span>       <span class="d"># then repoint or remove</span>
+
+  <span class="d">Bypass is recorded, degrades the status score, and blocks PR creation:</span>
+    <span class="d">circle preflight --force --reason "&lt;why&gt;"</span>
+
+<span class="ps1">~/code/platform</span> <span class="p">main</span> <span class="d">✔</span>
+<span class="ps1">❯</span> echo $?
+<span class="r">2</span>
+
+<span class="ps1">~/code/platform</span> <span class="p">main</span> <span class="d">✔</span>
+<span class="ps1">❯</span> <span class="cur"> </span>
+</pre></div>
+    </div>
+  </section>
+
+  <!-- 3 · the gate -->
+  <section class="screen">
+    <div class="cap"><span class="n">03</span><span class="t">Claude Code — the write is denied</span><span class="s">Terminal · PreToolUse hook · the enforcement screen</span></div>
+    <div class="win">
+      <div class="bar"><span class="lights"><i class="l1"></i><i class="l2"></i><i class="l3"></i></span><span class="title">claude — platform/.claude/worktrees/task-118 — 96×40</span></div>
+      <div class="term"><pre><span class="d">╭───────────────────────────────────────────────────────────────────────────────╮</span>
+<span class="d">│</span> <span class="p">✻</span> <span class="w">Claude Code</span>  <span class="d">v2.1.251 · opus-5 · worktree task-118 · circle-ai plugin on</span>  <span class="d">│</span>
+<span class="d">╰───────────────────────────────────────────────────────────────────────────────╯</span>
+
+<span class="ps1">&gt;</span> implement the fixed-window limiter from the plan
+
+<span class="d">● I'll start with the middleware itself, then mount it on the search route.</span>
+
+<span class="b">⏺ Write</span><span class="d">(src/mw/rate-limit.ts)</span>
+  <span class="r">⎿  Denied by hook · circle gate check</span>
+
+     <span class="w">No approved brief for task-118.</span>
+
+     <span class="d">The brief was generated 3m ago and is waiting on a human.</span>
+     <span class="d">Nothing can be written to the working tree until an approval</span>
+     <span class="d">event exists for this item.</span>
+
+     <span class="d">  open     .circle/items/tasks/task-118/brief.html</span>
+     <span class="d">  approve  circle brief approve task-118</span>
+
+<span class="d">● I can't write files yet — the gate is holding. The brief is ready
+  to read at .circle/items/tasks/task-118/brief.html. Approve it and
+  I'll pick up from unit 1 of the plan.
+
+  While you read, I can answer questions about the approach without
+  touching the tree.</span>
+
+<span class="d">───────────────────────────────────────────────────────────────────────────────</span>
+
+<span class="ps1">&gt;</span> <span class="cur"> </span>
+
+<span class="d">  ⏵⏵ circle:task-118  ·  brief </span><span class="a">pending</span><span class="d">  ·  gates </span><span class="g">5/5</span><span class="d">  ·  stack up 38m</span>
+</pre></div>
+    </div>
+  </section>
+
+  <!-- 4 · brief.html -->
+  <section class="screen">
+    <div class="cap"><span class="n">04</span><span class="t">brief.html</span><span class="s">Browser · the human comprehension gate · also renders as the PR body</span></div>
+    <div class="win">
+      <div class="bar">
+        <span class="lights"><i class="l1"></i><i class="l2"></i><i class="l3"></i></span>
+        <span class="navbtn">←  →  ⟳</span>
+        <span class="url">file:///Users/edward/code/platform/.circle/items/tasks/task-118/brief.html</span>
+      </div>
+
+      <div class="doc">
+        <div class="doc-stick">
+          <span class="pill">Pending approval</span>
+          <p>Implementation is blocked. Nothing is written to the working tree until this brief is approved.</p>
+          <code>circle brief approve task-118</code>
+        </div>
+
+        <div class="doc-in">
+          <header class="doc-hd">
+            <div class="doc-meta">
+              <span class="tag tg-id">task-118</span>
+              <span class="tag tg-mut">acme/platform</span>
+              <span class="tag tg-mut">3 files · 2 services</span>
+              <span class="tag tg-warn">1 unresolved</span>
+            </div>
+            <h1>Rate-limit the public search endpoint</h1>
+            <p class="sub">Search is the only unauthenticated path that reaches Redis. A single client can exhaust the connection pool for everyone. This puts a fixed-window limiter in front of it.</p>
+          </header>
+
+          <h2>Goal · what done means</h2>
+          <ul>
+            <li><span class="verif">Verified</span> — 100 requests in 60s from one IP returns <code>429</code> after the 60th. <code>pnpm vitest run mw/rate-limit</code></li>
+            <li><span class="verif">Verified</span> — authenticated traffic is unaffected. <code>pnpm playwright test search</code></li>
+            <li><span class="verif">Verified</span> — Redis pool utilisation stays below 60% at 500 rps. <code>make loadtest:search</code></li>
+            <li><span class="human">Human judgement</span> — the <code>429</code> body is actionable for API consumers.</li>
+          </ul>
+          <p style="margin-top:.8rem;font-size:.8125rem;color:#6B7683">3 of 4 machine-checkable. The fourth is marked, not hidden — it is the only part of the status score a model may speak to.</p>
+
+          <h2>Blast radius · what this touches</h2>
+          <p class="figcap">Fig 1 — assembled from the compose map and the import graph. The model labels; it does not draw.</p>
+          <div class="plate">
+            <pre class="mermaid">
+flowchart LR
+  subgraph W["web · compose service"]
+    RT["router<br/>src/routes/search.ts"]
+  end
+  subgraph A["api · compose service"]
+    MW["rate-limit<br/><b>NEW</b>"]
+    SVC["search service<br/>src/search/index.ts"]
+  end
+  RD[("redis")]
+  PG[("postgres")]
+  RT --> MW
+  MW --> SVC
+  MW -.->|"INCR counter"| RD
+  SVC --> RD
+  SVC --> PG
+  style MW fill:#E4EAF5,stroke:#2B4E8F,stroke-width:2px
+  style RT fill:#F4F6F8,stroke:#B4BEC9
+  style SVC fill:#F4F6F8,stroke:#B4BEC9
+            </pre>
+          </div>
+
+          <h2>Behaviour · how it will act</h2>
+          <p class="figcap">Fig 2 — planned runtime flow for a client crossing the limit.</p>
+          <div class="plate">
+            <pre class="mermaid">
+sequenceDiagram
+  autonumber
+  participant C as Client
+  participant M as rate-limit
+  participant R as Redis
+  participant S as search
+  C->>M: GET /search?q=shoes
+  M->>R: INCR ip:1.2.3.4 (TTL 60s)
+  R-->>M: 61
+  alt over limit
+    M-->>C: 429 + Retry-After: 23
+  else under limit
+    M->>S: forward
+    S-->>C: 200 results
+  end
+            </pre>
+          </div>
+
+          <h2>Plan · four units, in readiness order</h2>
+          <div class="scrollx">
+            <table>
+              <tr><th>#</th><th>Unit</th><th>Touches</th><th>Proven by</th><th>Blocked on</th></tr>
+              <tr><td class="m">1</td><td>Fixed-window limiter + config</td><td class="m">src/mw/rate-limit.ts</td><td class="m">test:unit</td><td>—</td></tr>
+              <tr><td class="m">2</td><td>Mount on the search route</td><td class="m">src/app.ts</td><td class="m">test:unit</td><td class="m">1</td></tr>
+              <tr><td class="m">3</td><td>429 body + Retry-After</td><td class="m">src/mw/rate-limit.ts</td><td class="m">test:e2e</td><td class="m">2</td></tr>
+              <tr><td class="m">4</td><td>Load check at 500 rps</td><td class="m">Makefile</td><td class="m">loadtest</td><td class="m">3</td></tr>
+            </table>
+          </div>
+
+          <h2>Example · before and after</h2>
+          <div class="scrollx">
+            <table>
+              <tr><th></th><th>Request 61, same IP, inside 60s</th></tr>
+              <tr><td class="m" style="color:#6B7683;white-space:nowrap">now</td><td class="m">200 OK · 340ms · redis pool 94%</td></tr>
+              <tr><td class="m" style="color:#26654A;white-space:nowrap">after</td><td class="m">429 · Retry-After: 23 · <span style="color:#6B7683">{"error":"rate_limited","retry_after":23}</span></td></tr>
+            </table>
+          </div>
+
+          <h2>Risks &amp; unknowns</h2>
+          <ul>
+            <li><b>A fixed window permits a 2× burst at the boundary.</b> Accepted for v1; sliding window is a follow-up, recorded as an addendum on this item.</li>
+            <li><b>Redis becomes a hard dependency of the request path.</b> The counter has no local fallback — if Redis is down, the limiter fails open, which is deliberate and tested.</li>
+            <li><span class="human">Unresolved</span> — no ADR covers limiter policy. <code>docs/adr/</code> is registered in the knowledge contract but empty.</li>
+          </ul>
+
+          <h2>Definitions consulted</h2>
+          <p style="font-size:.8125rem;color:#6B7683;margin:0">
+            <code>docs/architecture/services.md</code> · <code>docs/api/search.md</code> · <code>.circle/artifacts/prd/search-hardening.md</code>
+            <br><span style="color:#8B95A2">Traceability — what the agent actually read, drawn from the knowledge registry rather than from a grep.</span>
+          </p>
+
+          <div class="doc-foot">
+            <div class="stamp">Pending<br>approval<small>gate · blocks writes</small></div>
+            <div class="fc">
+              <p><b>Approval is an event, not a nod.</b> It records who approved it and when, and is invalidated automatically if the plan or the blast radius changes.</p>
+              <p><code>circle brief approve task-118</code></p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 5 · timeline -->
+  <section class="screen">
+    <div class="cap"><span class="n">05</span><span class="t">circle timeline show task-118</span><span class="s">Terminal · commits and changed files · no diffs</span></div>
+    <div class="win">
+      <div class="bar"><span class="lights"><i class="l1"></i><i class="l2"></i><i class="l3"></i></span><span class="title">edward@mbp — task-118 — zsh — 96×44</span></div>
+      <div class="term"><pre><span class="ps1">~/code/platform/.claude/worktrees/task-118</span> <span class="p">worktree-task-118</span> <span class="a">✚1</span>
+<span class="ps1">❯</span> circle timeline show task-118
+
+<span class="w">TIMELINE</span>  <span class="d">task-118 · Rate-limit the public search endpoint</span>
+<span class="d">baseline 4c1e08b · worktree-task-118 · opened 2026-08-29 09:14</span>
+
+<span class="d">  09:14</span>  <span class="d">●</span>  <span class="d">baseline</span> <span class="w">4c1e08b</span> <span class="d">main@{origin} — nothing recorded before this</span>
+<span class="d">         │</span>
+<span class="d">  09:33</span>  <span class="g">●</span>  <span class="g">brief approved</span> <span class="d">· eng@acme.co · gate opened</span>
+<span class="d">         │</span>
+<span class="d">  09:41</span>  <span class="g">●</span>  <span class="w">a3f81c9</span>  add fixed-window rate limiter
+<span class="d">         │</span>            <span class="g">A</span>  src/mw/rate-limit.ts
+<span class="d">         │</span>            <span class="g">A</span>  src/mw/rate-limit.test.ts
+<span class="d">         │</span>            <span class="d">2 files · task-118 · session 01MYnP</span>
+<span class="d">         │</span>
+<span class="d">  09:58</span>  <span class="d">◌</span>  <span class="d">7d20fa4  mount limiter on search</span>                    <span class="d">[REWRITTEN]</span>
+<span class="d">         │</span>            <span class="d">M  src/app.ts</span>
+<span class="d">         │</span>            <span class="d">└ amended into b91c3e0 · resolved by patch-id</span>
+<span class="d">         │</span>
+<span class="d">  10:02</span>  <span class="g">●</span>  <span class="w">b91c3e0</span>  mount limiter on search route
+<span class="d">         │</span>            <span class="a">M</span>  src/app.ts
+<span class="d">         │</span>            <span class="b">R</span>  src/mw/index.ts  <span class="d">← src/middleware/index.ts</span>
+<span class="d">         │</span>            <span class="d">2 files · task-118 · amend of 7d20fa4</span>
+<span class="d">         │</span>
+<span class="d">  10:31</span>  <span class="g">●</span>  <span class="w">c07b5d2</span>  429 body + Retry-After header
+<span class="d">         │</span>            <span class="a">M</span>  src/mw/rate-limit.ts
+<span class="d">         │</span>            <span class="a">M</span>  docs/api/search.md          <span class="a">⚠ outside blast radius</span>
+<span class="d">         │</span>            <span class="d">2 files · task-118 · session 01MYnP</span>
+<span class="d">         │</span>
+<span class="d">  10:44</span>  <span class="r">✕</span>  <span class="r">e4a9017  bump redis client</span>                          <span class="r">[PHANTOM]</span>
+<span class="d">         │</span>            <span class="d">claimed by the agent · not present in git</span>
+<span class="d">         │</span>
+<span class="d">  10:52</span>  <span class="a">◍</span>  <span class="a">working tree</span> <span class="d">— uncommitted at handoff</span>
+<span class="d">                      </span><span class="a">M</span>  Makefile
+
+<span class="d">───────────────────────────────────────────────────────────────────────────────</span>
+<span class="w">  4</span> <span class="d">live</span>   <span class="w">1</span> <span class="d">rewritten</span>   <span class="r">1</span> <span class="d">phantom</span>   <span class="w">1</span> <span class="d">uncommitted</span>   <span class="d">·</span>  <span class="w">7</span> <span class="d">files touched</span>
+  <span class="d">A added   </span><span class="a">M modified</span><span class="d">   D deleted   </span><span class="b">R renamed</span>
+
+  <span class="a">⚠ 1 file outside the approved blast radius</span> <span class="d">— circle timeline drift task-118</span>
+  <span class="r">✕ 1 phantom commit</span> <span class="d">— the agent reported a commit git does not have</span>
+
+<span class="ps1">❯</span> <span class="cur"> </span>
+</pre></div>
+    </div>
+  </section>
+
+  <!-- 6 · status -->
+  <section class="screen">
+    <div class="cap"><span class="n">06</span><span class="t">circle status</span><span class="s">Terminal · one score, every point traceable</span></div>
+    <div class="win">
+      <div class="bar"><span class="lights"><i class="l1"></i><i class="l2"></i><i class="l3"></i></span><span class="title">edward@mbp — task-118 — zsh — 96×34</span></div>
+      <div class="term"><pre><span class="ps1">~/code/platform/.claude/worktrees/task-118</span> <span class="p">worktree-task-118</span> <span class="a">✚1</span>
+<span class="ps1">❯</span> circle status
+
+<span class="w">task-118</span>  Rate-limit the public search endpoint            <span class="d">opened 1h 38m ago</span>
+<span class="d">worktree-task-118 · api:42011 web:42012 worker:42013 · stack up 38m</span>
+
+  <span class="w">STATUS</span>  <span class="w">74</span><span class="d">/100</span>   <span class="g">100% deterministic</span> <span class="d">— no model input in this number</span>
+
+    <span class="g">████████████████████████</span><span class="d">░░░░░░</span>  quality gates    <span class="w">40</span><span class="d">/40</span>  <span class="d">5/5 green, 4m ago</span>
+    <span class="a">██████████████████</span><span class="d">░░░░░░░░░░░░</span>  goal criteria    <span class="w">22</span><span class="d">/30</span>  <span class="d">3 of 4 verified</span>
+    <span class="g">██████████████████</span><span class="d">░░░░░░░░░░░░</span>  task closure     <span class="w">12</span><span class="d">/20</span>  <span class="d">3 of 4 closed</span>
+    <span class="r">░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░</span>  pr &amp; ci          <span class="w"> 0</span><span class="d">/10</span>  <span class="d">no PR opened</span>
+
+  <span class="w">CONTRACTS</span>   <span class="g">execution ✓</span>   <span class="g">quality ✓</span>   <span class="a">knowledge 7/9</span>
+  <span class="w">GATE</span>        <span class="g">brief approved</span> <span class="d">· eng@acme.co · 09:33 · plan unchanged since</span>
+  <span class="w">DRIFT</span>       <span class="a">1 file outside the approved blast radius</span>
+  <span class="w">CLAIMS</span>      <span class="r">1 phantom commit</span> <span class="d">· e4a9017 reported, not in git</span>
+
+  <span class="w">PLAN</span>        <span class="g">▮</span> 1 limiter        <span class="g">closed</span>
+              <span class="g">▮</span> 2 mount route    <span class="g">closed</span>
+              <span class="g">▮</span> 3 429 body       <span class="g">closed</span>
+              <span class="a">▯</span> 4 load check     <span class="a">open</span>  <span class="d">· blocked on test:e2e</span>
+
+  <span class="w">NEXT</span>
+    <span class="b">circle quality run test:e2e</span>          <span class="d">unblocks unit 4</span>
+    <span class="b">circle addendum add task-118</span>         <span class="d">record the docs/ change, or regenerate</span>
+    <span class="b">circle timeline drift task-118</span>       <span class="d">see the file that drifted</span>
+
+<span class="ps1">❯</span> <span class="cur"> </span>
+</pre></div>
+    </div>
+  </section>
+
+  <!-- 7 · web app -->
+  <section class="screen">
+    <div class="cap"><span class="n">07</span><span class="t">circle serve — observation app</span><span class="s">Browser · v0.2 · tracking and configuration only, never execution</span></div>
+    <div class="win">
+      <div class="bar">
+        <span class="lights"><i class="l1"></i><i class="l2"></i><i class="l3"></i></span>
+        <span class="navbtn">←  →  ⟳</span>
+        <span class="url">localhost:7777/items/task-118</span>
+      </div>
+      <div class="app">
+        <nav class="side">
+          <div class="brandline">Circle · platform</div>
+          <div class="grp">In flight</div>
+          <a href="#" class="on"><span class="dot dot-a"></span>task-118 · rate limit</a>
+          <a href="#"><span class="dot dot-g"></span>task-116 · search cache</a>
+          <a href="#"><span class="dot dot-r"></span>fix-204 · worker retry</a>
+          <div class="grp">Awaiting approval</div>
+          <a href="#"><span class="dot dot-a"></span>epic-31 · auth rework</a>
+          <div class="grp">Closed · 7d</div>
+          <a href="#"><span class="dot dot-m"></span>task-109 · pagination</a>
+          <a href="#"><span class="dot dot-m"></span>fix-198 · null org id</a>
+          <div class="meta">
+            contracts &nbsp;<span style="color:#D9A441">7/9</span><br>
+            sessions &nbsp;&nbsp;2 active<br>
+            tokens &nbsp;&nbsp;&nbsp;&nbsp;184k · ~$2.10
+          </div>
+        </nav>
+
+        <main class="main">
+          <div class="apphd">
+            <div>
+              <div class="crumb">task · acme/platform · worktree-task-118</div>
+              <h3>Rate-limit the public search endpoint</h3>
+            </div>
+            <span class="live"><i></i>Live</span>
+          </div>
+
+          <div class="cards">
+            <div class="card">
+              <div class="k">Status</div><div class="v">74</div>
+              <div class="s">100% deterministic</div>
+              <div class="bars">
+                <div class="barrow"><span class="lbl">gates</span><span class="trk"><span class="fg" style="width:100%"></span></span><span class="num">40/40</span></div>
+                <div class="barrow"><span class="lbl">goal</span><span class="trk"><span class="fa" style="width:73%"></span></span><span class="num">22/30</span></div>
+                <div class="barrow"><span class="lbl">tasks</span><span class="trk"><span class="fg" style="width:60%"></span></span><span class="num">12/20</span></div>
+                <div class="barrow"><span class="lbl">pr &amp; ci</span><span class="trk"><span class="fr" style="width:0%"></span></span><span class="num">0/10</span></div>
+              </div>
+            </div>
+            <div class="card">
+              <div class="k">Gate</div><div class="v" style="font-size:1.05rem;color:#26654A">Approved</div>
+              <div class="s">eng@acme.co · 09:33<br>plan unchanged since approval</div>
+            </div>
+            <div class="card">
+              <div class="k">Files touched</div><div class="v">7</div>
+              <div class="s" style="color:#8A5A12">1 outside blast radius</div>
+            </div>
+            <div class="card">
+              <div class="k">Claims</div><div class="v" style="color:#A8352A">1</div>
+              <div class="s">phantom commit e4a9017</div>
+            </div>
+          </div>
+
+          <div class="grid2">
+            <div class="panel">
+              <h4>Change timeline</h4>
+              <div class="tl">
+                <div class="row"><span class="tm">10:52</span><span class="ax"><i class="warn"></i></span><span><span class="sha" style="color:#8A5A12">working tree</span> <span class="fls">uncommitted · Makefile</span></span></div>
+                <div class="row"><span class="tm">10:44</span><span class="ax"><i class="bad"></i></span><span><span class="sha" style="color:#A8352A">e4a9017</span> bump redis client <span class="fls">phantom · not in git</span></span></div>
+                <div class="row"><span class="tm">10:31</span><span class="ax"><i class="ok"></i></span><span><span class="sha">c07b5d2</span> 429 body + Retry-After<br><span class="fls">M src/mw/rate-limit.ts · M docs/api/search.md ⚠</span></span></div>
+                <div class="row"><span class="tm">10:02</span><span class="ax"><i class="ok"></i></span><span><span class="sha">b91c3e0</span> mount limiter on search route<br><span class="fls">M src/app.ts · R src/mw/index.ts</span></span></div>
+                <div class="row"><span class="tm">09:58</span><span class="ax"><i></i></span><span><span class="sha strike">7d20fa4</span> <span class="fls">rewritten → b91c3e0</span></span></div>
+                <div class="row"><span class="tm">09:41</span><span class="ax"><i class="ok"></i></span><span><span class="sha">a3f81c9</span> add fixed-window rate limiter<br><span class="fls">A src/mw/rate-limit.ts · A rate-limit.test.ts</span></span></div>
+                <div class="row"><span class="tm">09:33</span><span class="ax"><i class="ok"></i></span><span style="color:#26654A">brief approved <span class="fls" style="color:#8B95A2">eng@acme.co</span></span></div>
+                <div class="row"><span class="tm">09:14</span><span class="ax"><i></i></span><span class="fls">baseline 4c1e08b</span></div>
+              </div>
+            </div>
+
+            <div>
+              <div class="panel" style="margin-bottom:.75rem">
+                <h4>Suggested — copy into Claude Code</h4>
+                <code class="sug"><span class="g">circle quality run</span> test:e2e</code>
+                <code class="sug"><span class="g">circle addendum add</span> task-118</code>
+                <code class="sug"><span class="g">/circle:verify</span></code>
+                <p class="noexec">No run button, anywhere. Suggestions are text you copy — a second execution path would break the single-execution-model rule.</p>
+              </div>
+              <div class="panel">
+                <h4>Contracts</h4>
+                <div class="kv">
+                  <span>execution</span><span class="st st-ok">ok</span>
+                  <span>quality</span><span class="st st-ok">5 gates</span>
+                  <span>knowledge</span><span class="st st-wn">7 / 9</span>
+                  <span>goal criteria</span><span class="st st-wn">55%</span>
+                </div>
+                <h4 style="margin-top:1rem">Stack</h4>
+                <div class="kv">
+                  <span>api</span><span class="st st-ok">:42011</span>
+                  <span>web</span><span class="st st-ok">:42012</span>
+                  <span>worker</span><span class="st st-ok">:42013</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </main>
+      </div>
+    </div>
+  </section>
+
+  <p class="foot">Circle AI · screens · iteration 2 · 2026-08-29 — companions: circle-ai.prd.md · circle-ai.cli.md</p>
+
+</div>

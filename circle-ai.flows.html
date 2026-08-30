@@ -1,0 +1,401 @@
+<title>Circle AI — Flows &amp; the Task Contract</title>
+
+<style>
+  :root{
+    --bg:#E8EBEE; --ink:#12161C; --mut:#5B6672; --fnt:#8B95A2; --rule:#CBD3DB;
+    --panel:#FFFFFF; --accent:#2B4E8F; --wash:#E4EAF5;
+    --ok:#26654A; --warn:#8A5A12; --bad:#A8352A;
+    --term-bg:#11151C; --term-fg:#C6D0DC;
+    --mono: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, "Liberation Mono", monospace;
+    --sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  }
+  @media (prefers-color-scheme: dark){
+    :root{--bg:#0B0F14;--ink:#DDE4EC;--mut:#96A2B1;--fnt:#67737F;--rule:#26313D;
+      --panel:#141B25;--accent:#7FA6DF;--wash:#1B2839;--ok:#5FB08A;--warn:#D9A441;--bad:#E0705F}
+  }
+  :root[data-theme="dark"]{--bg:#0B0F14;--ink:#DDE4EC;--mut:#96A2B1;--fnt:#67737F;--rule:#26313D;
+    --panel:#141B25;--accent:#7FA6DF;--wash:#1B2839;--ok:#5FB08A;--warn:#D9A441;--bad:#E0705F}
+  :root[data-theme="light"]{--bg:#E8EBEE;--ink:#12161C;--mut:#5B6672;--fnt:#8B95A2;--rule:#CBD3DB;
+    --panel:#FFFFFF;--accent:#2B4E8F;--wash:#E4EAF5;--ok:#26654A;--warn:#8A5A12;--bad:#A8352A}
+
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--sans);font-size:15px;line-height:1.62;-webkit-font-smoothing:antialiased}
+  .wrap{max-width:1080px;margin:0 auto;padding:2.5rem 1.25rem 5rem}
+
+  .eyebrow{font-family:var(--mono);font-size:.6875rem;font-weight:600;letter-spacing:.18em;text-transform:uppercase;color:var(--accent);margin:0 0 .75rem}
+  h1{font-family:var(--mono);font-size:clamp(1.4rem,1rem+1.8vw,2rem);font-weight:600;letter-spacing:-.02em;line-height:1.15;margin:0 0 .8rem;text-wrap:balance}
+  .lede{color:var(--mut);max-width:66ch;margin:0 0 .6rem}
+
+  h2{font-family:var(--mono);font-size:.75rem;font-weight:600;letter-spacing:.16em;text-transform:uppercase;
+    margin:3.25rem 0 1.15rem;padding-bottom:.6rem;border-bottom:1.5px solid var(--ink);display:flex;gap:.75rem;align-items:baseline}
+  h2 .aux{margin-left:auto;font-weight:400;color:var(--fnt);letter-spacing:.05em;text-transform:none;font-size:.6875rem}
+
+  .box{background:var(--panel);border:1px solid var(--rule);border-radius:6px;padding:1.35rem 1.5rem;margin-bottom:1.1rem}
+  .box h3{font-family:var(--mono);font-size:.6875rem;font-weight:600;letter-spacing:.13em;text-transform:uppercase;color:var(--accent);margin:0 0 .8rem}
+  .box h3.num::before{content:attr(data-n);color:var(--fnt);margin-right:.6rem}
+  .box p{margin:0 0 .7rem;color:var(--mut);max-width:76ch}
+  .box p:last-child{margin-bottom:0}
+  .box p b, .box li b{color:var(--ink)}
+  .box ul{margin:0 0 .7rem;padding-left:1.15em;color:var(--mut);max-width:76ch}
+  .box li{margin-bottom:.35rem}
+
+  .plate{background:#FBFCFD;border:1px solid #DCE2E8;border-radius:4px;padding:1rem;overflow-x:auto;color:#14181E}
+  .plate .mermaid{display:block}
+  .figcap{font-family:var(--mono);font-size:.625rem;letter-spacing:.1em;text-transform:uppercase;color:var(--fnt);margin:.55rem 0 0}
+
+  table{border-collapse:collapse;width:100%;font-size:.8125rem;margin:.4rem 0}
+  .scrollx{overflow-x:auto}
+  th{font-family:var(--mono);font-size:.5875rem;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--fnt);text-align:left;padding:.4rem .55rem;border-bottom:1px solid var(--rule);white-space:nowrap}
+  td{padding:.5rem .55rem;border-bottom:1px solid var(--rule);vertical-align:top;color:var(--mut)}
+  td b,td strong{color:var(--ink)}
+  tr:last-child td{border-bottom:0}
+  .m{font-family:var(--mono);font-variant-numeric:tabular-nums}
+  code{font-family:var(--mono);font-size:.8125rem;background:var(--wash);padding:.12em .38em;border-radius:3px;color:var(--ink)}
+
+  pre.code{background:var(--term-bg);color:var(--term-fg);font-family:var(--mono);font-size:.8125rem;line-height:1.6;padding:1rem 1.1rem;border-radius:5px;overflow-x:auto;margin:0}
+  pre.code .c{color:#66737F}
+  pre.code .k{color:#8AB0E6}
+  pre.code .s{color:#7FC29B}
+  pre.code .w{color:#F2F5F8;font-weight:700}
+  pre.code .r{color:#E5806F}
+  pre.code .a{color:#DFAE58}
+
+  .st{font-family:var(--mono);font-size:.5875rem;font-weight:700;letter-spacing:.09em;text-transform:uppercase;padding:.15em .45em;border:1px solid currentColor;white-space:nowrap;display:inline-block}
+  .st-ok{color:var(--ok)}.st-wn{color:var(--warn)}.st-bd{color:var(--bad)}.st-in{color:var(--accent)}.st-mu{color:var(--fnt)}
+
+  .surf{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:.9rem;margin:.5rem 0 0}
+  .surf .s{border:1px solid var(--rule);border-top:3px solid var(--accent);border-radius:5px;padding:.9rem;background:var(--panel)}
+  .surf .s.cc{border-top-color:var(--ok)}
+  .surf .s.ap{border-top-color:var(--warn)}
+  .surf .s h4{font-family:var(--mono);font-size:.6875rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;margin:0 0 .5rem}
+  .surf .s p{font-size:.8125rem;margin:0 0 .5rem;color:var(--mut)}
+  .surf .s .never{font-size:.75rem;color:var(--bad);font-family:var(--mono);border-top:1px dashed var(--rule);padding-top:.5rem;margin-top:.6rem}
+
+  .rulebox{border-left:3px solid var(--accent);background:var(--wash);padding:.8rem 1rem;margin:1rem 0;font-size:.875rem}
+  .rulebox b{color:var(--ink)}
+  .warnbox{border-left:3px solid var(--warn);background:var(--panel);padding:.8rem 1rem;margin:1rem 0;font-size:.875rem;color:var(--mut)}
+  .warnbox b{color:var(--ink)}
+
+  .foot{margin-top:3rem;padding-top:1rem;border-top:1.5px solid var(--ink);font-family:var(--mono);font-size:.6875rem;color:var(--fnt)}
+  a{color:var(--accent)}
+  :focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+  @media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
+
+<div class="wrap">
+
+  <p class="eyebrow">Circle AI · Interaction flows &amp; the task contract</p>
+  <h1>Three surfaces, one state,<br>and what a task must carry</h1>
+  <p class="lede">How the CLI, Claude Code, and the observation app divide the work — and the two model corrections behind this revision: <b>tasks are first-class and visible</b>, and <b>every task carries a goal and a way to test it</b>.</p>
+
+  <!-- ================= SURFACES ================= -->
+  <h2>The three surfaces <span class="aux">who is allowed to do what</span></h2>
+
+  <div class="box">
+    <p>All three read and write the same state in <code>.circle/</code>. Only one of them may change it, and only one of them may open a gate. Everything below follows from that.</p>
+    <div class="surf">
+      <div class="s">
+        <h4>circle · the CLI</h4>
+        <p><b>Authoritative for</b> all domain logic, all state writes, all validation, all gate decisions, all scoring.</p>
+        <p>Every other surface is a client of this one. There is no second implementation of any rule.</p>
+        <div class="never">never runs your app</div>
+      </div>
+      <div class="s cc">
+        <h4>Claude Code</h4>
+        <p><b>Authoritative for</b> execution — running commands, editing files, bringing the stack up, driving the app.</p>
+        <p>Writes state only by calling <code>circle</code>. Skills are the interface; hooks are the enforcement.</p>
+        <div class="never">never opens a gate</div>
+      </div>
+      <div class="s ap">
+        <h4>circle serve · the app</h4>
+        <p><b>Authoritative for</b> nothing. It reads state, renders it, and offers copyable commands.</p>
+        <p>Two exceptions: it can approve a brief, and it can edit three config files.</p>
+        <div class="never">never dispatches an agent</div>
+      </div>
+    </div>
+    <div class="rulebox">
+      <b>The one rule that resolves most questions:</b> Claude Code can do everything except open a gate. It can generate a brief but not approve it. It can run a quality gate but not decide the gate passed. It can close a task only when a command it ran actually passed. The agent never grants itself permission.
+    </div>
+  </div>
+
+  <div class="box">
+    <h3>The same action from three places</h3>
+    <div class="scrollx">
+      <table>
+        <tr><th>Action</th><th>Terminal</th><th>Claude Code</th><th>App</th></tr>
+        <tr><td><b>Validate contracts</b></td><td class="m">circle preflight</td><td class="m">any skill body, injected</td><td>Contracts screen</td></tr>
+        <tr><td><b>Start work</b></td><td class="m">circle item new</td><td class="m">/circle:start</td><td><span class="st st-mu">read only</span></td></tr>
+        <tr><td><b>Generate a brief</b></td><td class="m">circle brief generate</td><td class="m">/circle:brief</td><td><span class="st st-mu">read only</span></td></tr>
+        <tr><td><b>Approve a brief</b></td><td class="m">circle brief approve</td><td><span class="st st-bd">forbidden</span></td><td><b>Approve button</b></td></tr>
+        <tr><td><b>Run a quality gate</b></td><td class="m">circle quality run</td><td class="m">/circle:verify</td><td><span class="st st-mu">read only</span></td></tr>
+        <tr><td><b>Close a task</b></td><td class="m">circle task close</td><td class="m">during /circle:task-run</td><td><span class="st st-mu">read only</span></td></tr>
+        <tr><td><b>Edit the contract</b></td><td class="m">$EDITOR project.toml</td><td>only via <code>circle knowledge add</code></td><td>3 files only</td></tr>
+        <tr><td><b>See what happened</b></td><td class="m">circle timeline show</td><td class="m">injected into handoff</td><td>Session · Artifacts</td></tr>
+      </table>
+    </div>
+    <p style="margin-top:.7rem">Read the <b>Approve a brief</b> row as the shape of the whole system. Three surfaces, one forbidden.</p>
+  </div>
+
+  <!-- ================= TASK CONTRACT ================= -->
+  <h2>The task contract <span class="aux">correction: tasks were invisible and under-specified</span></h2>
+
+  <div class="box">
+    <h3>First, a naming fix</h3>
+    <p>Earlier drafts used three words for one thing — <em>item</em>, <em>task</em>, and <em>unit</em>. That is why tasks were hard to find in the screens. One word now:</p>
+    <div class="scrollx">
+      <table>
+        <tr><th>Term</th><th>Means</th><th>ID shape</th><th>Has</th></tr>
+        <tr><td><b>Item</b></td><td>The container a session works on. Kind: <code>epic</code>, <code>task</code>, or <code>fix</code></td><td class="m">epic-31 · task-118 · fix-204</td><td>brief, timeline, addenda</td></tr>
+        <tr><td><b>Task</b></td><td>The unit of work. Standalone, or a child of an epic or a larger task</td><td class="m">task-118.1 · epic-31.4</td><td><b>goal + verification</b>, dependencies, state</td></tr>
+        <tr><td><s>Unit</s></td><td colspan="3">Removed. It was a third name for a task.</td></tr>
+      </table>
+    </div>
+    <p>A standalone task is a task with no parent — the same record, so the fix and epic flows share one code path. Hierarchical IDs follow the model the PRD already cites from beads.</p>
+  </div>
+
+  <div class="box">
+    <h3>Every task carries a goal and a way to test it</h3>
+    <p>This is the requirement that changes the model. A task without a stated goal is a prompt; a task without a verification command closes on the agent's word. Both are now structurally impossible.</p>
+    <pre class="code"><span class="c"># .circle/items/tasks/task-118/tasks/task-118.3.toml</span>
+<span class="k">id</span>          = <span class="s">"task-118.3"</span>
+<span class="k">parent</span>      = <span class="s">"task-118"</span>
+<span class="k">title</span>       = <span class="s">"429 body + Retry-After header"</span>
+<span class="k">state</span>       = <span class="s">"ready"</span>          <span class="c"># ready | claimed | closed | blocked</span>
+<span class="k">depends_on</span>  = [<span class="s">"task-118.2"</span>]
+
+<span class="w">[goal]</span>
+<span class="k">statement</span> = <span class="s">"""A rate-limited client receives a 429 carrying a
+Retry-After header that tells it when it may retry."""</span>
+<span class="c"># REQUIRED. One sentence. What "done" means for this task alone.</span>
+
+<span class="w">[verification]</span>
+<span class="k">kind</span>    = <span class="s">"e2e"</span>                <span class="c"># unit | integration | e2e | manual</span>
+<span class="k">gate</span>    = <span class="s">"test:e2e"</span>           <span class="c"># must name a gate in [quality]</span>
+<span class="k">command</span> = <span class="s">"pnpm playwright test search/rate-limit"</span>
+<span class="k">expect</span>  = <span class="s">"exit 0"</span>
+<span class="c"># REQUIRED. kind = "manual" additionally requires a justification
+# and a reviewer, and counts against the machine-checkable ratio.</span></pre>
+
+    <div class="rulebox">
+      <b>Two hook-enforced rules make this real</b> — and they use the two Claude Code hooks that exist precisely for it.
+      <ul style="margin:.6rem 0 0;color:inherit">
+        <li><code>TaskCreated</code> → exit 2 <b>prevents creation</b> of a task with no goal statement, no verification, or a gate that isn't declared in the quality contract.</li>
+        <li><code>TaskCompleted</code> → exit 2 <b>prevents closure</b> until an event exists showing the verification command passed <em>after</em> the task's most recent commit.</li>
+      </ul>
+    </div>
+
+    <p><b>The consequence worth noticing:</b> the <em>task closure</em> component of the status score stops being an assertion and becomes a measurement. Before, closure meant the agent marked it done. Now it means a named command exited zero after the last change. That moves 20 points of the score from "claimed" to "proven" — the same shift the change timeline made for commits.</p>
+
+    <div class="warnbox">
+      <b>The cost, stated plainly.</b> Some tasks genuinely resist automated verification — a copy change, a log message, a design tweak. <code>kind = "manual"</code> exists for those, but it requires a written justification and a named reviewer, and it lowers the machine-checkable ratio that <code>circle goal validate</code> reports. That friction is deliberate: manual should be visible, not free. If it turns out most tasks land on <code>manual</code> in real repos, the 70% machine-checkable target is wrong and should be lowered rather than gamed.
+    </div>
+  </div>
+
+  <div class="box">
+    <h3>How a task graph is born</h3>
+    <p>Decomposition proposes; the contract validates; a human confirms. Same shape as scoring and impact detection.</p>
+    <div class="plate">
+      <pre class="mermaid">
+flowchart TD
+  A["/circle:epic-plan or /circle:start"] --> B["Claude proposes tasks<br/>title · goal · verification · depends_on"]
+  B --> C{"circle task validate"}
+  C -- "missing goal or verification" --> D["TaskCreated hook exit 2<br/>task is NOT created"]
+  D --> B
+  C -- "gate not in quality contract" --> D
+  C -- valid --> E["Task written to .circle/"]
+  E --> F["Appears in brief · Plan section"]
+  F --> G{"human approves brief"}
+  G -- no --> B
+  G -- yes --> H["Tasks become claimable<br/>circle task ready"]
+  style D fill:#FBE7E4,stroke:#A8352A,stroke-width:2px
+  style H fill:#DCEEE4,stroke:#26654A,stroke-width:2px
+      </pre>
+      <p class="figcap">Fig 1 — a task that cannot state how it will be tested never enters the graph</p>
+    </div>
+  </div>
+
+  <!-- ================= FLOWS ================= -->
+  <h2>Flows <span class="aux">who acts, on which surface, in what order</span></h2>
+
+  <div class="box">
+    <h3 class="num" data-n="F1">Cold start — a developer who has never seen the repo</h3>
+    <p>The flow the whole product is a bet on. No one explains anything; the repository does.</p>
+    <div class="plate">
+      <pre class="mermaid">
+sequenceDiagram
+  autonumber
+  actor H as You
+  participant T as Terminal · circle
+  participant CC as Claude Code
+  participant AP as App
+  H->>T: git clone && cd platform
+  H->>CC: /plugin install circle-ai
+  Note over CC: skills + enforcement hooks<br/>arrive together, no trust dialog
+  H->>T: circle doctor
+  T-->>H: git ✓ docker ✓ gh ✓
+  H->>T: circle preflight
+  T-->>H: FAILED · knowledge 7/9 · exit 2
+  H->>T: circle knowledge add docs/architecture --as definitions
+  H->>T: circle preflight
+  T-->>H: PASSED · exit 0
+  H->>T: circle serve
+  T-->>AP: localhost:7777
+  H->>CC: claude --worktree task-118
+  Note over CC: WorktreeCreate hook allocates<br/>COMPOSE_PROJECT_NAME + ports
+  CC-->>H: ready — contracts loaded, stack isolated
+      </pre>
+      <p class="figcap">Fig 2 — target: under 15 minutes, no questions asked of a colleague</p>
+    </div>
+  </div>
+
+  <div class="box">
+    <h3 class="num" data-n="F2">The task loop — the flow you will run most</h3>
+    <p>Note where each surface appears, and note that the human appears exactly twice: once to approve, once to read the outcome.</p>
+    <div class="plate">
+      <pre class="mermaid">
+sequenceDiagram
+  autonumber
+  actor H as You
+  participant CC as Claude Code
+  participant CLI as circle
+  participant AP as App
+  H->>CC: /circle:start
+  CC->>CLI: circle gate check --skill circle:start
+  CLI-->>CC: exit 0 · preflight passed
+  CC->>CLI: circle item new --kind task
+  CC->>CLI: circle task create ×4 (goal + verification each)
+  CLI-->>CC: 1 rejected — no verification on task 4
+  CC->>CLI: circle task create task-118.4 (fixed)
+  CC->>CLI: circle brief generate task-118
+  CC-->>H: brief ready — I cannot write until it is approved
+  H->>AP: read brief · Plan shows 4 tasks with goals
+  AP->>CLI: circle brief approve --approver eng@acme.co
+  CLI-->>CC: gate opened
+  loop each ready task
+    CC->>CLI: circle task claim
+    CC->>CC: implement
+    CC->>CLI: circle quality run test:unit
+    CLI-->>CC: pass · event recorded
+    CC->>CLI: circle task close task-118.n
+    Note over CLI: TaskCompleted hook verifies the<br/>gate passed AFTER the last commit
+  end
+  CC->>CLI: circle timeline sync
+  CC-->>H: /circle:handoff — 4 commits, 7 files, 1 drift
+  H->>AP: Session · Artifacts — read what actually landed
+      </pre>
+      <p class="figcap">Fig 3 — the human touches this twice: approve, then read</p>
+    </div>
+  </div>
+
+  <div class="box">
+    <h3 class="num" data-n="F3">The gate refusing — what a blocked write looks like end to end</h3>
+    <div class="plate">
+      <pre class="mermaid">
+sequenceDiagram
+  autonumber
+  actor H as You
+  participant CC as Claude Code
+  participant HK as PreToolUse hook
+  participant CLI as circle
+  CC->>HK: Write(src/mw/rate-limit.ts)
+  HK->>CLI: circle gate check --tool Write --path src/mw/...
+  CLI-->>HK: exit 2 · no approval event for task-118
+  HK-->>CC: permissionDecision deny
+  Note over CC: the tool call does not run —<br/>this is not a convention Claude follows
+  CC-->>H: blocked · the brief is at .circle/.../brief.html
+  H->>CLI: circle brief approve task-118
+  CLI-->>CLI: approval event written
+  CC->>HK: Write(src/mw/rate-limit.ts)
+  HK->>CLI: circle gate check
+  CLI-->>HK: exit 0 · approved, path inside blast radius
+  HK-->>CC: allow
+      </pre>
+      <p class="figcap">Fig 4 — the same command backs the deny and the allow</p>
+    </div>
+    <p style="margin-top:.7rem">Step 9 is the detail worth keeping: the gate checks the <b>path</b>, not just the approval. A brief approved for <code>src/mw/**</code> does not silently authorise edits to <code>infra/</code>.</p>
+  </div>
+
+  <div class="box">
+    <h3 class="num" data-n="F4">Drift — the plan and reality diverge mid-task</h3>
+    <div class="plate">
+      <pre class="mermaid">
+sequenceDiagram
+  autonumber
+  participant CC as Claude Code
+  participant CLI as circle
+  participant AP as App
+  actor H as You
+  CC->>CLI: git commit c07b5d2 (touches docs/api/search.md)
+  CLI->>CLI: timeline sync · path outside approved radius
+  CLI-->>AP: drift event · 1 file
+  AP-->>H: task-118 shows drift chip
+  CC->>CLI: circle task close task-118.3
+  CLI-->>CC: closed · gate passed
+  H->>AP: open the finding
+  alt the change was correct
+    H->>CLI: circle addendum add task-118
+    Note over CLI: recorded, radius widened,<br/>brief stays approved
+  else the plan was wrong
+    H->>CLI: circle brief generate --refresh
+    Note over CLI: approval INVALIDATED,<br/>writes blocked until re-approved
+  end
+      </pre>
+      <p class="figcap">Fig 5 — drift is a question put to a human, not an error</p>
+    </div>
+  </div>
+
+  <div class="box">
+    <h3 class="num" data-n="F5">Cold resume — a second person picks the work up</h3>
+    <p>The second half of the replication claim. Nothing is in anyone's scrollback.</p>
+    <div class="plate">
+      <pre class="mermaid">
+sequenceDiagram
+  autonumber
+  actor H2 as Second developer
+  participant AP as App
+  participant CC as Claude Code
+  participant CLI as circle
+  H2->>AP: Sessions → sess-7f3a → Artifacts
+  AP-->>H2: 6 written · 5 read · 3 generated
+  Note over AP: what the agent read is recorded,<br/>not just what it wrote
+  H2->>AP: Item → Tasks
+  AP-->>H2: 3 closed with passing gates · 1 open, blocked on test:e2e
+  H2->>CC: claude --worktree task-118
+  CC->>CLI: circle timeline show · circle task ready
+  CLI-->>CC: baseline, 4 commits, 1 uncommitted, next task + its goal
+  CC-->>H2: resuming task-118.4 — goal and verification command are on the task
+      </pre>
+      <p class="figcap">Fig 6 — the open task states its own goal and its own test</p>
+    </div>
+  </div>
+
+  <!-- ================= CLI ADDITIONS ================= -->
+  <h2>CLI additions <span class="aux">what the task contract adds to the surface</span></h2>
+  <div class="box">
+    <div class="scrollx">
+      <table>
+        <tr><th>Command</th><th>Purpose</th><th>Notes</th></tr>
+        <tr><td class="m">circle task create &lt;parent&gt; --title --goal --verify-kind --verify-gate [--verify-command]</td><td>Create a task</td><td><b>Rejects</b> a missing goal or verification. <code>--verify-kind manual</code> additionally demands <code>--justification</code> and <code>--reviewer</code></td></tr>
+        <tr><td class="m">circle task validate [&lt;id&gt;]</td><td>Check the contract on one task or all</td><td><code>TaskCreated</code> hook target</td></tr>
+        <tr><td class="m">circle task ready</td><td>Claimable tasks — dependencies met</td><td>Prints goal and verification alongside the title</td></tr>
+        <tr><td class="m">circle task claim &lt;id&gt;</td><td>Take a task</td><td>File-locked, safe across concurrent sessions</td></tr>
+        <tr><td class="m">circle task close &lt;id&gt;</td><td>Close a task</td><td><b>Exit 5</b> unless the verification gate passed after the task's last commit. <code>TaskCompleted</code> hook target</td></tr>
+        <tr><td class="m">circle task show &lt;id&gt;</td><td>Goal, verification, deps, commits, gate history</td><td>—</td></tr>
+        <tr><td class="m">circle task list [--state] [--unverified]</td><td>The graph</td><td><code>--unverified</code> lists tasks closed without a passing gate — should always be empty</td></tr>
+      </table>
+    </div>
+  </div>
+
+  <!-- ================= OPEN ================= -->
+  <h2>Open for your call <span class="aux">three things this change forces</span></h2>
+  <div class="box">
+    <ul>
+      <li><b>Does a <code>fix</code> need tasks at all?</b> The PRD calls the fix flow a “short-circuit path — no task graph.” But under this rule a fix still needs a goal and a verification, or it closes on the agent's word. Proposal: a fix is a <b>single task</b> whose verification is the reproduction command from <code>circle hunt</code>. Same rule, no graph.</li>
+      <li><b>Is <code>manual</code> verification allowed at all in v0.1?</b> Forbidding it is cleaner and forces the discipline, but will make Circle unusable on repos with real copy and design work. I have kept it, with friction.</li>
+      <li><b>Does a task need its own blast radius?</b> Today the brief declares one radius for the whole item, so a four-task item cannot express that task 1 touches <code>src/mw/</code> and task 4 touches <code>Makefile</code>. Per-task paths would make the write-block far more precise — and would be the reason <code>docs/api/search.md</code> in F4 was flagged against the item instead of the task that actually touched it.</li>
+    </ul>
+  </div>
+
+  <p class="foot">Circle AI · flows &amp; task contract · 2026-08-29 — companions: circle-ai.prd.md · circle-ai.cli.md · circle-ai.screens.html · circle-ai.screens-app.html</p>
+
+</div>

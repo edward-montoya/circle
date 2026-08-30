@@ -1,0 +1,1086 @@
+<title>Circle AI — App Design Guidelines</title>
+
+<style>
+  :root{
+    --gal-bg:#E8EBEE; --gal-ink:#12161C; --gal-mut:#616C7A; --gal-fnt:#8B95A2;
+    --gal-rule:#CFD6DD; --accent:#2B4E8F; --gal-panel:#FFFFFF;
+    --chrome:#DDE2E8; --chrome-ink:#4A5461; --chrome-rule:#C3CBD4;
+    --mono: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, "Liberation Mono", monospace;
+    --sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  }
+  @media (prefers-color-scheme: dark){
+    :root{--gal-bg:#0B0F14;--gal-ink:#DDE4EC;--gal-mut:#93A0AF;--gal-fnt:#67737F;--gal-rule:#242E39;
+      --accent:#7FA6DF;--gal-panel:#141B25;--chrome:#1C242F;--chrome-ink:#8A97A6;--chrome-rule:#2B3540}
+  }
+  :root[data-theme="dark"]{--gal-bg:#0B0F14;--gal-ink:#DDE4EC;--gal-mut:#93A0AF;--gal-fnt:#67737F;--gal-rule:#242E39;
+    --accent:#7FA6DF;--gal-panel:#141B25;--chrome:#1C242F;--chrome-ink:#8A97A6;--chrome-rule:#2B3540}
+  :root[data-theme="light"]{--gal-bg:#E8EBEE;--gal-ink:#12161C;--gal-mut:#616C7A;--gal-fnt:#8B95A2;--gal-rule:#CFD6DD;
+    --accent:#2B4E8F;--gal-panel:#FFFFFF;--chrome:#DDE2E8;--chrome-ink:#4A5461;--chrome-rule:#C3CBD4}
+
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--gal-bg);color:var(--gal-ink);font-family:var(--sans);font-size:15px;line-height:1.6;-webkit-font-smoothing:antialiased}
+  .gal{max-width:1180px;margin:0 auto;padding:2.5rem 1.25rem 5rem}
+
+  .intro{margin-bottom:2.5rem;max-width:64ch}
+  .eyebrow{font-family:var(--mono);font-size:.6875rem;font-weight:600;letter-spacing:.18em;text-transform:uppercase;color:var(--accent);margin:0 0 .75rem}
+  .intro h1{font-family:var(--mono);font-size:clamp(1.4rem,1rem+1.8vw,2rem);font-weight:600;letter-spacing:-.02em;line-height:1.15;margin:0 0 .75rem}
+  .intro p{margin:0 0 .6rem;color:var(--gal-mut)}
+
+  h2.sec{font-family:var(--mono);font-size:.75rem;font-weight:600;letter-spacing:.16em;text-transform:uppercase;color:var(--gal-ink);
+    margin:3.5rem 0 1.25rem;padding-bottom:.6rem;border-bottom:1.5px solid var(--gal-ink);display:flex;gap:.75rem;align-items:baseline}
+  h2.sec span{margin-left:auto;font-weight:400;color:var(--gal-fnt);letter-spacing:.06em;text-transform:none;font-size:.6875rem}
+
+  .spec{background:var(--gal-panel);border:1px solid var(--gal-rule);border-radius:6px;padding:1.35rem 1.5rem;margin-bottom:1.25rem}
+  .spec h3{font-family:var(--mono);font-size:.6875rem;font-weight:600;letter-spacing:.13em;text-transform:uppercase;color:var(--accent);margin:0 0 .85rem}
+  .spec p{margin:0 0 .7rem;color:var(--gal-mut);max-width:74ch}
+  .spec p:last-child{margin-bottom:0}
+  .spec .plate{background:var(--gal-bg);border:1px solid var(--gal-rule);border-radius:4px;padding:1rem;overflow-x:auto}
+  .spec table{margin-top:.35rem}
+
+  .screen{margin-bottom:3.5rem}
+  .cap{display:flex;flex-wrap:wrap;align-items:baseline;gap:.75rem;margin-bottom:.7rem;font-family:var(--mono);font-size:.75rem}
+  .cap .n{font-weight:600;color:var(--accent)}
+  .cap .t{font-weight:600}
+  .cap .s{color:var(--gal-fnt);margin-left:auto;font-size:.6875rem}
+  .win{border-radius:9px;overflow:hidden;box-shadow:0 1px 2px rgba(0,0,0,.12),0 14px 40px -12px rgba(0,0,0,.32);border:1px solid var(--chrome-rule)}
+  .bar{background:var(--chrome);border-bottom:1px solid var(--chrome-rule);display:flex;align-items:center;gap:.6rem;padding:.5rem .75rem;font-family:var(--mono);font-size:.6875rem;color:var(--chrome-ink)}
+  .lights{display:flex;gap:.4rem;flex:none}
+  .lights i{width:11px;height:11px;border-radius:50%;display:block}
+  .l1{background:#EC6A5E}.l2{background:#F4BF4F}.l3{background:#61C554}
+  .navbtn{color:var(--gal-fnt);flex:none;letter-spacing:.1em}
+  .url{flex:1;background:var(--gal-bg);border:1px solid var(--chrome-rule);border-radius:5px;padding:.2rem .6rem;color:var(--chrome-ink);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .note{margin-top:.7rem;font-size:.8125rem;color:var(--gal-mut);max-width:78ch}
+  .note b{color:var(--gal-ink)}
+
+  /* ================= APP SHELL — identical on every screen ================= */
+  .app{display:grid;grid-template-columns:198px minmax(0,1fr);background:#F4F6F8;color:#171B21;font-size:14px;min-height:580px}
+  @media(max-width:780px){.app{grid-template-columns:minmax(0,1fr)}}
+
+  .side{background:#151B24;color:#B9C4D0;padding:.95rem 0 0;font-size:.8125rem;display:flex;flex-direction:column}
+  .brand{font-family:var(--mono);font-size:.75rem;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:#fff;padding:0 .95rem .8rem;border-bottom:1px solid #232D39}
+  .brand span{display:block;font-size:.5875rem;font-weight:400;letter-spacing:.1em;color:#5E6B7A;margin-top:.15rem}
+  .grp{font-family:var(--mono);font-size:.5875rem;letter-spacing:.14em;text-transform:uppercase;color:#4E5A68;padding:0 .95rem;margin:.85rem 0 .3rem}
+  .side a{display:flex;gap:.55rem;align-items:center;padding:.36rem .95rem;color:#B9C4D0;text-decoration:none}
+  .side a:hover{background:#1A2230}
+  .side a.on{background:#1F2937;color:#fff;box-shadow:inset 3px 0 0 #7FA6DF;font-weight:600}
+  .side a .ic{width:13px;text-align:center;color:#5E6B7A;flex:none;font-size:.75rem}
+  .side a.on .ic{color:#7FA6DF}
+  .side a .ct{margin-left:auto;font-family:var(--mono);font-size:.625rem;color:#5E6B7A}
+  .side a .ct.warn{color:#D9A441}.side a .ct.ok{color:#5FB08A}.side a .ct.bad{color:#E0705F}
+  .sfoot{font-family:var(--mono);font-size:.625rem;color:#5E6B7A;padding:.85rem .95rem;border-top:1px solid #232D39;margin-top:auto;line-height:1.85}
+  .sfoot b{color:#8B98A7;font-weight:600}
+  .sfoot .ok{color:#5FB08A}.sfoot .warn{color:#D9A441}
+
+  .main{padding:1.1rem 1.4rem 1.5rem;overflow:hidden;display:flex;flex-direction:column}
+  .hd{display:flex;flex-wrap:wrap;gap:.75rem;align-items:flex-end;padding-bottom:.75rem}
+  .hd-main{min-width:0}
+  .crumb{font-family:var(--mono);font-size:.6875rem;color:#8B95A2}
+  .crumb a{color:#8B95A2;text-decoration:none}
+  .crumb .sep{color:#C3CBD4;padding:0 .2rem}
+  .crumb .here{color:#4A5461}
+  .hd h3{margin:.15rem 0 0;font-size:1.12rem;font-weight:600;letter-spacing:-.01em}
+  .hd-side{margin-left:auto;display:flex;gap:.45rem;align-items:center;flex-wrap:wrap}
+  .live{font-family:var(--mono);font-size:.625rem;letter-spacing:.1em;text-transform:uppercase;color:#26654A;display:flex;align-items:center;gap:.35rem}
+  .live i{width:6px;height:6px;border-radius:50%;background:#26654A;display:block}
+
+  .tabs{display:flex;gap:1.05rem;font-family:var(--mono);font-size:.6875rem;letter-spacing:.08em;text-transform:uppercase;border-bottom:1px solid #DFE5EB;margin-bottom:1rem}
+  .tabs a{padding:0 0 .5rem;color:#8B95A2;text-decoration:none;border-bottom:2px solid transparent;margin-bottom:-1px;white-space:nowrap}
+  .tabs a.on{color:#2B4E8F;border-bottom-color:#2B4E8F;font-weight:600}
+  .tabs a .b{color:#8A5A12}
+  .noTabs{border-bottom:1px solid #DFE5EB;margin-bottom:1rem}
+
+  .cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:.65rem;margin-bottom:1rem}
+  .card{background:#fff;border:1px solid #DFE5EB;border-radius:5px;padding:.7rem .8rem}
+  .card .k{font-family:var(--mono);font-size:.5875rem;letter-spacing:.11em;text-transform:uppercase;color:#8B95A2}
+  .card .v{font-family:var(--mono);font-size:1.45rem;font-weight:600;line-height:1.15;font-variant-numeric:tabular-nums;margin-top:.1rem}
+  .card .s{font-size:.75rem;color:#6B7683;margin-top:.1rem}
+  .panel{background:#fff;border:1px solid #DFE5EB;border-radius:5px;padding:.8rem}
+  .panel h4{font-family:var(--mono);font-size:.5875rem;font-weight:600;letter-spacing:.13em;text-transform:uppercase;color:#8B95A2;margin:0 0 .6rem;display:flex;gap:.5rem;align-items:baseline}
+  .panel h4 .aux{margin-left:auto;font-weight:400;letter-spacing:.05em;text-transform:none;font-size:.625rem}
+  .g2{display:grid;grid-template-columns:1.4fr 1fr;gap:.65rem}
+  .g2e{display:grid;grid-template-columns:1fr 1fr;gap:.65rem}
+  .gMD{display:grid;grid-template-columns:270px minmax(0,1fr);gap:.65rem}
+  @media(max-width:880px){.g2,.g2e,.gMD{grid-template-columns:minmax(0,1fr)}}
+
+  table{border-collapse:collapse;width:100%;font-size:.8125rem}
+  .scrollx{overflow-x:auto}
+  th{font-family:var(--mono);font-size:.5875rem;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:#8B95A2;text-align:left;padding:.32rem .5rem;border-bottom:1px solid #DFE5EB;white-space:nowrap}
+  td{padding:.42rem .5rem;border-bottom:1px solid #F0F3F6;vertical-align:top}
+  tr:last-child td{border-bottom:0}
+  td.m,.m{font-family:var(--mono);font-variant-numeric:tabular-nums}
+  tr.sel td{background:#F0F5FC}
+  tr.click:hover td{background:#F7F9FC;cursor:pointer}
+
+  .st{font-family:var(--mono);font-size:.5875rem;font-weight:700;letter-spacing:.09em;text-transform:uppercase;padding:.15em .45em;border:1px solid currentColor;white-space:nowrap;display:inline-block}
+  .st-ok{color:#26654A}.st-wn{color:#8A5A12}.st-bd{color:#A8352A}.st-in{color:#2B4E8F}.st-mu{color:#8B95A2}
+  .ab{font-family:var(--mono);font-size:.5875rem;font-weight:700;width:26px;height:19px;display:inline-flex;align-items:center;justify-content:center;border-radius:3px;flex:none}
+  .ab-w{background:#DCEEE4;color:#1E5540}.ab-r{background:#E1EAF7;color:#24457E}
+  .ab-g{background:#EAEDF1;color:#5A6674}.ab-p{background:#FBE7E4;color:#8E2E24}
+  .prov{font-family:var(--mono);font-size:.625rem;color:#8B95A2}
+  .fname{font-family:var(--mono);font-size:.75rem}
+  .fpath{font-family:var(--mono);font-size:.625rem;color:#9AA4B0}
+
+  .btn{font-family:var(--mono);font-size:.6875rem;font-weight:600;letter-spacing:.06em;text-transform:uppercase;padding:.3rem .65rem;border:1.5px solid currentColor;border-radius:3px;background:transparent;cursor:pointer;white-space:nowrap}
+  .btn-primary{color:#26654A}.btn-danger{color:#A8352A}.btn-mute{color:#6B7683}
+  .sug{font-family:var(--mono);font-size:.75rem;background:#11151C;color:#C6D0DC;padding:.4rem .6rem;border-radius:4px;margin-bottom:.35rem;display:block;overflow-x:auto;white-space:nowrap}
+  .sug .g{color:#7FC29B}
+  .kv{display:grid;grid-template-columns:1fr auto;gap:.26rem .6rem;font-size:.8125rem;align-items:center}
+
+  .banner{border-radius:5px;padding:.7rem .85rem;font-size:.8125rem;display:flex;gap:.75rem;align-items:flex-start;margin-bottom:.9rem}
+  .bn-warn{background:#FDF6E9;border:1px solid #E3CB92;color:#6B5320}
+  .bn-bad{background:#FDF0EE;border:1px solid #E4B4AC;color:#7E2F25}
+  .bn-ok{background:#EDF7F1;border:1px solid #A9CFBB;color:#1E5540}
+  .banner b{display:block}
+  .banner .act{margin-left:auto;flex:none}
+
+  .trk{height:6px;background:#E4E9EE;border-radius:3px;overflow:hidden}
+  .trk span{display:block;height:100%}
+  .fg{background:#26654A}.fa{background:#B8862B}.fr{background:#A8352A}
+  .barrow{display:grid;grid-template-columns:92px 1fr 44px;gap:.5rem;align-items:center;margin-bottom:.32rem}
+  .barrow .lbl{font-family:var(--mono);font-size:.6875rem;color:#6B7683}
+  .barrow .num{font-family:var(--mono);font-size:.6875rem;text-align:right;color:#6B7683}
+
+  .tl{font-family:var(--mono);font-size:.75rem;line-height:1.4}
+  .tl .row{display:grid;grid-template-columns:42px 12px 1fr;gap:.5rem;padding:.36rem 0;border-bottom:1px solid #F0F3F6}
+  .tl .row:last-child{border-bottom:0}
+  .tl .tm{color:#8B95A2}
+  .tl .ax{position:relative}
+  .tl .ax::before{content:"";position:absolute;left:4px;top:-.36rem;bottom:-.36rem;width:1px;background:#DFE5EB}
+  .tl .row:first-child .ax::before{top:.45rem}
+  .tl .row:last-child .ax::before{bottom:auto;height:.45rem}
+  .tl .ax i{position:absolute;left:1px;top:.3rem;width:7px;height:7px;border-radius:50%;background:#fff;border:1.5px solid #8B95A2;display:block}
+  .tl .ax i.ok{border-color:#26654A;background:#26654A}
+  .tl .ax i.bad{border-color:#A8352A;background:#A8352A}
+  .tl .ax i.warn{border-color:#B8862B;background:#B8862B}
+  .tl .ax i.blu{border-color:#2B4E8F;background:#2B4E8F}
+  .tl .sha{font-weight:600}
+  .tl .fls{color:#6B7683;font-size:.6875rem}
+  .tl .strike{text-decoration:line-through;color:#A9B2BC}
+
+  .alist a{display:grid;grid-template-columns:auto 1fr;gap:.5rem;align-items:center;padding:.4rem .5rem;border-radius:4px;text-decoration:none;color:#171B21;border-bottom:1px solid #F0F3F6}
+  .alist a:last-child{border-bottom:0}
+  .alist a.on{background:#F0F5FC;box-shadow:inset 2px 0 0 #2B4E8F}
+  .alist a:hover{background:#F7F9FC}
+  .docprev{background:#fff;border:1px solid #DFE5EB;border-radius:5px;padding:1rem 1.15rem;font-size:.8125rem;line-height:1.6}
+  .docprev h6{font-family:var(--mono);font-size:.5875rem;letter-spacing:.14em;text-transform:uppercase;color:#2B4E8F;margin:1rem 0 .45rem;padding-bottom:.3rem;border-bottom:1px solid #EDF1F5}
+  .docprev h6:first-child{margin-top:0}
+  .docprev p{margin:0 0 .45rem}
+  .docprev ul{margin:0;padding-left:1.1em}
+  .docprev li{margin-bottom:.28rem}
+  .docprev code{font-family:var(--mono);font-size:.75rem;background:#EDF1F5;padding:.1em .35em;border-radius:3px}
+  .mplate{background:#FBFCFD;border:1px solid #E4E9EE;border-radius:4px;padding:.85rem;overflow-x:auto}
+
+  .empty{text-align:center;padding:2rem 1rem;max-width:52ch;margin:0 auto}
+  .empty h5{font-family:var(--mono);font-size:.75rem;letter-spacing:.12em;text-transform:uppercase;color:#8B95A2;margin:0 0 .6rem}
+  .empty p{color:#6B7683;font-size:.875rem;margin:0 0 1rem}
+  .steps{list-style:none;margin:0;padding:0;text-align:left;font-size:.8125rem}
+  .steps li{display:grid;grid-template-columns:auto 1fr;gap:.65rem;padding:.5rem 0;border-bottom:1px solid #F0F3F6;align-items:start}
+  .steps li:last-child{border-bottom:0}
+  .steps .mk{font-family:var(--mono);font-weight:700;font-size:.75rem}
+  .dim a{opacity:.35;pointer-events:none}
+
+  .foot{margin-top:1rem;font-family:var(--mono);font-size:.6875rem;color:var(--gal-fnt)}
+  a{color:var(--accent)}
+  :focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+  @media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
+
+<div class="gal">
+
+  <div class="intro">
+    <p class="eyebrow">Circle AI · Observation app · Iteration 5 — design guidelines</p>
+    <h1>One shell, eleven screens,<br>one navigation model</h1>
+    <p>Iteration 3 drew ten separate pictures. This is one application: the sidebar is byte-identical on every screen, contextual navigation lives only in the tab row, and every screen is reachable from the flow below.</p>
+    <p><b>New in iteration 5 — tasks.</b> They were missing entirely: the brief called them “units” and nothing listed them. <b>S04</b> makes the task graph a first-class tab, and every task now carries a one-sentence goal, a verification kind and command, and the evidence that closed it. See <span class="m">circle-ai.flows.html</span> for the contract and the cross-surface flows.</p>
+    <p>All screens show <b>one world state</b> — <span class="m">acme/platform</span>, preflight passing, 5 items, 14 sessions, 2 briefs pending, <span class="m">task-118</span> in flight with drift and a phantom commit. The only exception is S10, which is labelled as a different moment in time.</p>
+  </div>
+
+  <!-- ====================== NAVIGATION MODEL ====================== -->
+  <h2 class="sec">Navigation model <span>the rules every screen obeys</span></h2>
+
+  <div class="spec">
+    <h3>Three navigation levels — and nothing else</h3>
+    <div class="scrollx">
+      <table>
+        <tr><th>Level</th><th>Where it lives</th><th>Contents</th><th>Rule</th></tr>
+        <tr>
+          <td class="m">1 · Global</td><td class="m">Sidebar</td>
+          <td>Overview · Items · Sessions ‖ Approvals · Activity · Quality · Contracts</td>
+          <td><b>Identical on every screen.</b> Same seven entries, same order, same badges. Only the active state moves. Never holds contextual items.</td>
+        </tr>
+        <tr>
+          <td class="m">2 · Object</td><td class="m">Tab row</td>
+          <td>Fixed tab set per object type</td>
+          <td>Appears only on a detail screen. An <b>Item</b> always shows the same six tabs; a <b>Session</b> always shows the same five. Never varies by state.</td>
+        </tr>
+        <tr>
+          <td class="m">3 · Within</td><td class="m">Master–detail</td>
+          <td>List on the left, reader on the right</td>
+          <td>Selecting an artifact never navigates away. Global nav and tabs stay on screen — the fault in iteration 3.</td>
+        </tr>
+      </table>
+    </div>
+  </div>
+
+  <div class="spec">
+    <h3>Flow</h3>
+    <div class="plate">
+      <pre class="mermaid">
+flowchart TD
+  START(["circle serve"]) --> NR{"preflight<br/>passing?"}
+  NR -- no --> S11["S11 · Not ready<br/>nav disabled"]
+  S11 -.->|fix contracts| S10
+  NR -- yes --> S01["S01 · Overview"]
+
+  S01 -->|blocked banner| S09["S09 · Approvals"]
+  S01 -->|item row| S03["S03 · Item · Brief"]
+  S01 -->|activity row| S05["S05 · Item · Timeline"]
+
+  S02["S02 · Items"] --> S03
+  S06["S06 · Sessions"] --> S07["S07 · Session · Artifacts"]
+
+  S09 -->|read brief| S03
+  S03 -->|approve| S09
+  S03 <-->|tabs| S04["S04 · Item · Tasks<br/>goal + verification"]
+  S03 <-->|tabs| S05
+  S03 <-->|tabs| S08["S08 · Item · Quality"]
+  S03 -->|sessions tab| S07
+  S04 -->|select task| S04
+  S07 -->|tasks tab| S04
+  S07 -->|select artifact| S07
+
+  S01 --> S02
+  S01 --> S06
+  S01 --> S10["S10 · Contracts"]
+
+  classDef req fill:#E4EAF5,stroke:#2B4E8F,stroke-width:2px
+  class S07,S04 req
+      </pre>
+    </div>
+    <p style="margin-top:.75rem"><b>Two entry points matter.</b> A user arriving to <em>unblock something</em> lands on Overview and follows the banner to Approvals. A user arriving to <em>understand what happened</em> goes Sessions → Session → Artifacts. Everything else is reachable in one hop from the sidebar.</p>
+  </div>
+
+  <div class="spec">
+    <h3>Routes</h3>
+    <div class="scrollx">
+      <table>
+        <tr><th></th><th>Route</th><th>Screen</th><th>Level 2</th></tr>
+        <tr><td class="m">S01</td><td class="m">/</td><td>Overview</td><td class="prov">—</td></tr>
+        <tr><td class="m">S02</td><td class="m">/items</td><td>Items</td><td class="prov">filter tabs</td></tr>
+        <tr><td class="m">S03</td><td class="m">/items/task-118/brief</td><td>Item · Brief</td><td class="prov">item tabs</td></tr>
+        <tr><td class="m">S04</td><td class="m">/items/task-118/tasks<span style="color:#9AA4B0">[/:id]</span></td><td><b>Item · Tasks</b></td><td class="prov">item tabs + master–detail</td></tr>
+        <tr><td class="m">S05</td><td class="m">/items/task-118/timeline</td><td>Item · Timeline</td><td class="prov">item tabs</td></tr>
+        <tr><td class="m">S06</td><td class="m">/sessions</td><td>Sessions</td><td class="prov">filter tabs</td></tr>
+        <tr><td class="m">S07</td><td class="m">/sessions/sess-7f3a/artifacts<span style="color:#9AA4B0">[/:id]</span></td><td>Session · Artifacts</td><td class="prov">session tabs + master–detail</td></tr>
+        <tr><td class="m">S08</td><td class="m">/items/task-118/quality</td><td>Item · Quality</td><td class="prov">item tabs</td></tr>
+        <tr><td class="m">S09</td><td class="m">/approvals</td><td>Approvals</td><td class="prov">—</td></tr>
+        <tr><td class="m">S10</td><td class="m">/contracts</td><td>Contracts</td><td class="prov">—</td></tr>
+        <tr><td class="m">S11</td><td class="m">/</td><td>Not ready</td><td class="prov">nav disabled</td></tr>
+      </table>
+    </div>
+    <p style="margin-top:.75rem"><b>Tab sets are fixed.</b> Item: Brief · <b>Tasks</b> · Timeline · Quality · Sessions · Addenda. Session: Artifacts · <b>Tasks</b> · Timeline · Gate events · Claude sessions · Usage. A tab with nothing in it renders empty, never disappears — a nav that changes shape is a nav you cannot learn.</p>
+    <p style="margin-top:.5rem"><b>Tasks appear on both objects, deliberately.</b> An item owns its task graph; a session shows the subset it worked on, with the Claude session that closed each one. Same records, two questions: <em>what is left to do</em> versus <em>what did this session actually do</em>.</p>
+  </div>
+
+  <!-- ====================== VOCABULARY ====================== -->
+  <h2 class="sec">Component vocabulary <span>the only pieces any screen may use</span></h2>
+  <div class="spec">
+    <div class="g2e">
+      <div>
+        <h3>Status chips — closed set</h3>
+        <table>
+          <tr><td><span class="st st-ok">approved</span> <span class="st st-ok">pass</span> <span class="st st-ok">live</span> <span class="st st-ok">merged</span></td><td style="font-size:.8125rem;color:var(--gal-mut)">Green · confirmed by an executed command or a recorded event</td></tr>
+          <tr><td><span class="st st-wn">pending</span> <span class="st st-wn">drift</span> <span class="st st-wn">forced</span></td><td style="font-size:.8125rem;color:var(--gal-mut)">Amber · needs a human, but nothing is broken</td></tr>
+          <tr><td><span class="st st-bd">phantom</span> <span class="st st-bd">gate red</span> <span class="st st-bd">dead</span></td><td style="font-size:.8125rem;color:var(--gal-mut)">Red · a claim that failed verification</td></tr>
+          <tr><td><span class="st st-in">syncing</span> <span class="st st-in">event</span></td><td style="font-size:.8125rem;color:var(--gal-mut)">Blue · informational, in progress</td></tr>
+          <tr><td><span class="st st-mu">rewritten</span> <span class="st st-mu">abandoned</span> <span class="st st-mu">human</span></td><td style="font-size:.8125rem;color:var(--gal-mut)">Grey · true but inert</td></tr>
+        </table>
+      </div>
+      <div>
+        <h3>Artifact provenance badges</h3>
+        <table>
+          <tr><td><span class="ab ab-w">BR</span></td><td style="font-size:.8125rem;color:var(--gal-mut)"><b style="color:var(--gal-ink)">Written</b> — produced by the session, committed with the repo</td></tr>
+          <tr><td><span class="ab ab-r">DOC</span></td><td style="font-size:.8125rem;color:var(--gal-mut)"><b style="color:var(--gal-ink)">Read</b> — consulted from the knowledge registry. The traceability record</td></tr>
+          <tr><td><span class="ab ab-g">FIG</span></td><td style="font-size:.8125rem;color:var(--gal-mut)"><b style="color:var(--gal-ink)">Generated</b> — derived, regenerable, not authored</td></tr>
+          <tr><td><span class="ab ab-p">ADR</span></td><td style="font-size:.8125rem;color:var(--gal-mut)"><b style="color:var(--gal-ink)">Missing</b> — registered but unresolved. Shown as a gap, never omitted</td></tr>
+        </table>
+        <h3 style="margin-top:1rem">Actions — three kinds only</h3>
+        <p style="margin:0"><button class="btn btn-primary">Approve</button> <button class="btn btn-danger">Reject</button> <button class="btn btn-mute">Open</button> &nbsp;<span style="font-size:.8125rem">Consequential · destructive · neutral. <b>No action ever dispatches an agent.</b></span></p>
+      </div>
+    </div>
+  </div>
+
+  <!-- ====================== S01 OVERVIEW ====================== -->
+  <h2 class="sec">Screens <span>identical shell · only the main region changes</span></h2>
+
+  <section class="screen">
+    <div class="cap"><span class="n">S01</span><span class="t">Overview</span><span class="s">/ · entry point for “what needs me”</span></div>
+    <div class="win">
+      <div class="bar"><span class="lights"><i class="l1"></i><i class="l2"></i><i class="l3"></i></span><span class="navbtn">←  →  ⟳</span><span class="url">localhost:7777/</span></div>
+      <div class="app">
+        <nav class="side">
+          <div class="brand">Circle<span>acme/platform</span></div>
+          <div class="grp">Work</div>
+          <a href="#" class="on"><span class="ic">◈</span>Overview</a>
+          <a href="#"><span class="ic">▤</span>Items<span class="ct">5</span></a>
+          <a href="#"><span class="ic">◷</span>Sessions<span class="ct">14</span></a>
+          <div class="grp">Monitor</div>
+          <a href="#"><span class="ic">⚑</span>Approvals<span class="ct warn">2</span></a>
+          <a href="#"><span class="ic">≡</span>Activity</a>
+          <a href="#"><span class="ic">✓</span>Quality<span class="ct ok">5/5</span></a>
+          <a href="#"><span class="ic">◫</span>Contracts<span class="ct ok">9/9</span></a>
+          <div class="sfoot"><div><b>preflight</b> <span class="ok">passing</span></div><div>2 sessions live</div><div>184k · ~$2.10</div></div>
+        </nav>
+        <main class="main">
+          <div class="hd">
+            <div class="hd-main"><div class="crumb"><span class="here">Overview</span></div><h3>What needs a human</h3></div>
+            <div class="hd-side"><span class="live"><i></i>Live</span></div>
+          </div>
+          <div class="noTabs"></div>
+
+          <div class="banner bn-warn">
+            <div><b>2 briefs are waiting on a human.</b>Implementation is blocked on both — epic-31 for 2h 14m, task-121 for 14m.</div>
+            <span class="act"><button class="btn btn-mute">Approvals →</button></span>
+          </div>
+
+          <div class="cards">
+            <div class="card"><div class="k">Items in flight</div><div class="v">3</div><div class="s">2 more blocked</div></div>
+            <div class="card"><div class="k">Contracts</div><div class="v" style="color:#26654A">9/9</div><div class="s">preflight passing</div></div>
+            <div class="card"><div class="k">Gates</div><div class="v" style="color:#26654A">5/5</div><div class="s">full run 4m ago</div></div>
+            <div class="card"><div class="k">Drift</div><div class="v" style="color:#8A5A12">1</div><div class="s">file outside radius</div></div>
+            <div class="card"><div class="k">Claims</div><div class="v" style="color:#A8352A">1</div><div class="s">phantom commit</div></div>
+          </div>
+
+          <div class="g2">
+            <div class="panel">
+              <h4>Items <span class="aux">→ item · brief</span></h4>
+              <div class="scrollx">
+                <table>
+                  <tr><th>Item</th><th>Title</th><th>Status</th><th>Gate</th><th>Sess</th><th>Flags</th></tr>
+                  <tr class="click sel"><td class="m">task-118</td><td>Rate-limit search endpoint</td><td class="m">74</td><td><span class="st st-ok">approved</span></td><td class="m">2</td><td><span class="st st-wn">drift</span> <span class="st st-bd">phantom</span></td></tr>
+                  <tr class="click"><td class="m">task-116</td><td>Search result cache</td><td class="m">91</td><td><span class="st st-ok">approved</span></td><td class="m">1</td><td></td></tr>
+                  <tr class="click"><td class="m">fix-204</td><td>Worker retries on 502</td><td class="m">38</td><td><span class="st st-ok">approved</span></td><td class="m">1</td><td><span class="st st-bd">gate red</span></td></tr>
+                  <tr class="click"><td class="m">epic-31</td><td>Auth rework</td><td class="m" style="color:#9AA4B0">—</td><td><span class="st st-wn">pending 2h</span></td><td class="m">0</td><td></td></tr>
+                  <tr class="click"><td class="m">task-121</td><td>Rotate service tokens</td><td class="m" style="color:#9AA4B0">—</td><td><span class="st st-wn">pending 14m</span></td><td class="m">0</td><td></td></tr>
+                </table>
+              </div>
+            </div>
+            <div class="panel">
+              <h4>Activity <span class="aux">→ item · timeline</span></h4>
+              <div class="tl">
+                <div class="row"><span class="tm">10:52</span><span class="ax"><i class="warn"></i></span><span>task-118 <span class="fls">uncommitted · Makefile</span></span></div>
+                <div class="row"><span class="tm">10:44</span><span class="ax"><i class="bad"></i></span><span style="color:#A8352A">task-118 <span class="fls">phantom commit</span></span></div>
+                <div class="row"><span class="tm">10:38</span><span class="ax"><i class="bad"></i></span><span>fix-204 <span class="fls">test:unit failed</span></span></div>
+                <div class="row"><span class="tm">10:31</span><span class="ax"><i class="ok"></i></span><span>task-118 <span class="fls">c07b5d2 · 2 files</span></span></div>
+                <div class="row"><span class="tm">10:12</span><span class="ax"><i class="blu"></i></span><span>task-121 <span class="fls">brief generated</span></span></div>
+                <div class="row"><span class="tm">10:02</span><span class="ax"><i class="ok"></i></span><span>task-118 <span class="fls">b91c3e0 · 2 files</span></span></div>
+                <div class="row"><span class="tm">09:41</span><span class="ax"><i class="ok"></i></span><span>task-118 <span class="fls">a3f81c9 · 2 files</span></span></div>
+                <div class="row"><span class="tm">09:33</span><span class="ax"><i class="ok"></i></span><span style="color:#26654A">task-118 <span class="fls">brief approved</span></span></div>
+              </div>
+            </div>
+          </div>
+        </main>
+      </div>
+    </div>
+    <p class="note"><b>Sorted by what blocks a human</b>, not by recency. The banner is the only element permitted above the metric row, and only when something is blocked.</p>
+  </section>
+
+  <!-- ====================== S02 ITEMS ====================== -->
+  <section class="screen">
+    <div class="cap"><span class="n">S02</span><span class="t">Items</span><span class="s">/items · filter tabs are level 2 for a list screen</span></div>
+    <div class="win">
+      <div class="bar"><span class="lights"><i class="l1"></i><i class="l2"></i><i class="l3"></i></span><span class="navbtn">←  →  ⟳</span><span class="url">localhost:7777/items</span></div>
+      <div class="app">
+        <nav class="side">
+          <div class="brand">Circle<span>acme/platform</span></div>
+          <div class="grp">Work</div>
+          <a href="#"><span class="ic">◈</span>Overview</a>
+          <a href="#" class="on"><span class="ic">▤</span>Items<span class="ct">5</span></a>
+          <a href="#"><span class="ic">◷</span>Sessions<span class="ct">14</span></a>
+          <div class="grp">Monitor</div>
+          <a href="#"><span class="ic">⚑</span>Approvals<span class="ct warn">2</span></a>
+          <a href="#"><span class="ic">≡</span>Activity</a>
+          <a href="#"><span class="ic">✓</span>Quality<span class="ct ok">5/5</span></a>
+          <a href="#"><span class="ic">◫</span>Contracts<span class="ct ok">9/9</span></a>
+          <div class="sfoot"><div><b>preflight</b> <span class="ok">passing</span></div><div>2 sessions live</div><div>184k · ~$2.10</div></div>
+        </nav>
+        <main class="main">
+          <div class="hd">
+            <div class="hd-main"><div class="crumb"><span class="here">Items</span></div><h3>Work items</h3></div>
+            <div class="hd-side"><span class="live"><i></i>Live</span></div>
+          </div>
+          <div class="tabs"><a href="#" class="on">All</a><a href="#">In flight</a><a href="#">Blocked <span class="b">2</span></a><a href="#">Closed</a><a href="#">Epics</a><a href="#">Fixes</a></div>
+          <div class="panel">
+            <div class="scrollx">
+              <table>
+                <tr><th>Item</th><th>Kind</th><th>Title</th><th>Status</th><th>Gate</th><th>Units</th><th>Sessions</th><th>Files</th><th>Flags</th></tr>
+                <tr class="click sel"><td class="m">task-118</td><td class="prov">task</td><td>Rate-limit search endpoint</td><td class="m">74</td><td><span class="st st-ok">approved</span></td><td class="m">3/4</td><td class="m">2</td><td class="m">7</td><td><span class="st st-wn">drift</span> <span class="st st-bd">phantom</span></td></tr>
+                <tr class="click"><td class="m">task-116</td><td class="prov">task</td><td>Search result cache</td><td class="m">91</td><td><span class="st st-ok">approved</span></td><td class="m">5/5</td><td class="m">1</td><td class="m">9</td><td></td></tr>
+                <tr class="click"><td class="m">fix-204</td><td class="prov">fix</td><td>Worker retries on 502</td><td class="m">38</td><td><span class="st st-ok">approved</span></td><td class="m">1/2</td><td class="m">1</td><td class="m">3</td><td><span class="st st-bd">gate red</span></td></tr>
+                <tr class="click"><td class="m">epic-31</td><td class="prov">epic</td><td>Auth rework</td><td class="m" style="color:#9AA4B0">—</td><td><span class="st st-wn">pending 2h</span></td><td class="m">0/11</td><td class="m">0</td><td class="m">0</td><td><span class="st st-mu">blocked</span></td></tr>
+                <tr class="click"><td class="m">task-121</td><td class="prov">task</td><td>Rotate service tokens</td><td class="m" style="color:#9AA4B0">—</td><td><span class="st st-wn">pending 14m</span></td><td class="m">0/4</td><td class="m">0</td><td class="m">0</td><td><span class="st st-mu">blocked</span></td></tr>
+              </table>
+            </div>
+          </div>
+        </main>
+      </div>
+    </div>
+  </section>
+
+  <!-- ====================== S03 ITEM BRIEF ====================== -->
+  <section class="screen">
+    <div class="cap"><span class="n">S03</span><span class="t">Item · Brief</span><span class="s">/items/task-118/brief · the six item tabs, always the same six</span></div>
+    <div class="win">
+      <div class="bar"><span class="lights"><i class="l1"></i><i class="l2"></i><i class="l3"></i></span><span class="navbtn">←  →  ⟳</span><span class="url">localhost:7777/items/task-118/brief</span></div>
+      <div class="app">
+        <nav class="side">
+          <div class="brand">Circle<span>acme/platform</span></div>
+          <div class="grp">Work</div>
+          <a href="#"><span class="ic">◈</span>Overview</a>
+          <a href="#" class="on"><span class="ic">▤</span>Items<span class="ct">5</span></a>
+          <a href="#"><span class="ic">◷</span>Sessions<span class="ct">14</span></a>
+          <div class="grp">Monitor</div>
+          <a href="#"><span class="ic">⚑</span>Approvals<span class="ct warn">2</span></a>
+          <a href="#"><span class="ic">≡</span>Activity</a>
+          <a href="#"><span class="ic">✓</span>Quality<span class="ct ok">5/5</span></a>
+          <a href="#"><span class="ic">◫</span>Contracts<span class="ct ok">9/9</span></a>
+          <div class="sfoot"><div><b>preflight</b> <span class="ok">passing</span></div><div>2 sessions live</div><div>184k · ~$2.10</div></div>
+        </nav>
+        <main class="main">
+          <div class="hd">
+            <div class="hd-main">
+              <div class="crumb"><a href="#">Items</a><span class="sep">/</span><span class="here">task-118</span></div>
+              <h3>Rate-limit the public search endpoint</h3>
+            </div>
+            <div class="hd-side"><span class="st st-ok">approved 09:33</span><button class="btn btn-mute">Raw</button></div>
+          </div>
+          <div class="tabs"><a href="#" class="on">Brief</a><a href="#">Tasks <span class="b">4</span></a><a href="#">Timeline</a><a href="#">Quality</a><a href="#">Sessions</a><a href="#">Addenda <span class="b">2</span></a></div>
+
+          <div class="banner bn-ok">
+            <div><b>Approved by eng@acme.co at 09:33.</b>Plan and blast radius unchanged since approval, so the gate is open. Any change to either invalidates it and re-blocks writes.</div>
+          </div>
+
+          <div class="g2">
+            <div class="docprev">
+              <h6>Goal · what done means</h6>
+              <ul>
+                <li>100 requests in 60s from one IP returns <code>429</code> after the 60th — <code>vitest run mw/rate-limit</code></li>
+                <li>Authenticated traffic unaffected — <code>playwright test search</code></li>
+                <li>Redis pool below 60% at 500 rps — <code>make loadtest:search</code></li>
+                <li><span style="color:#8A5A12">Human judgement</span> — the <code>429</code> body is actionable</li>
+              </ul>
+              <h6>Blast radius</h6>
+              <div class="mplate">
+                <pre class="mermaid">
+flowchart LR
+  RT["router"] --> MW["rate-limit<br/>NEW"]
+  MW --> SVC["search"]
+  MW -.-> RD[("redis")]
+  SVC --> RD
+  style MW fill:#E4EAF5,stroke:#2B4E8F,stroke-width:2px
+                </pre>
+              </div>
+              <h6>Risks</h6>
+              <ul>
+                <li>Fixed window permits a 2× burst at the boundary — accepted, addendum 001</li>
+                <li>Redis becomes a hard dependency of the request path; limiter fails open</li>
+              </ul>
+            </div>
+            <div>
+              <div class="panel" style="margin-bottom:.65rem">
+                <h4>Provenance</h4>
+                <div class="kv">
+                  <span>Generated by</span><span class="m" style="font-size:.75rem">sess-7f3a</span>
+                  <span>Structure</span><span class="st st-ok">deterministic</span>
+                  <span>Labels</span><span class="st st-mu">opus-5</span>
+                  <span>Approved by</span><span class="m" style="font-size:.75rem">eng@acme.co</span>
+                </div>
+              </div>
+              <div class="panel" style="margin-bottom:.65rem">
+                <h4>Drift against this brief</h4>
+                <table>
+                  <tr><td class="m" style="color:#8A5A12">M</td><td class="m" style="font-size:.75rem">docs/api/search.md</td><td class="m" style="font-size:.6875rem;color:#8B95A2">c07b5d2</td></tr>
+                </table>
+                <code class="sug" style="margin-top:.45rem"><span class="g">circle addendum add</span> task-118</code>
+              </div>
+              <div class="panel">
+                <h4>Sessions on this item</h4>
+                <table>
+                  <tr class="click"><td class="m" style="font-size:.75rem">sess-7f3a</td><td class="m" style="font-size:.6875rem;color:#8B95A2">14 artifacts</td><td><span class="st st-ok">live</span></td></tr>
+                  <tr class="click"><td class="m" style="font-size:.75rem">sess-7c02</td><td class="m" style="font-size:.6875rem;color:#8B95A2">3 artifacts</td><td><span class="st st-mu">ended</span></td></tr>
+                </table>
+              </div>
+            </div>
+          </div>
+        </main>
+      </div>
+    </div>
+    <p class="note"><b>This is the same brief as the terminal screen set</b>, rendered inside the app shell rather than as a standalone page. The item tabs are the same six on every item, including an epic with an empty Addenda tab.</p>
+  </section>
+
+  <!-- ====================== S04 ITEM TASKS ====================== -->
+  <section class="screen">
+    <div class="cap"><span class="n">S04</span><span class="t">Item · Tasks</span><span class="s">/items/task-118/tasks/task-118.3 · every task carries a goal and a test</span></div>
+    <div class="win">
+      <div class="bar"><span class="lights"><i class="l1"></i><i class="l2"></i><i class="l3"></i></span><span class="navbtn">←  →  ⟳</span><span class="url">localhost:7777/items/task-118/tasks/task-118.3</span></div>
+      <div class="app">
+        <nav class="side">
+          <div class="brand">Circle<span>acme/platform</span></div>
+          <div class="grp">Work</div>
+          <a href="#"><span class="ic">◈</span>Overview</a>
+          <a href="#" class="on"><span class="ic">▤</span>Items<span class="ct">5</span></a>
+          <a href="#"><span class="ic">◷</span>Sessions<span class="ct">14</span></a>
+          <div class="grp">Monitor</div>
+          <a href="#"><span class="ic">⚑</span>Approvals<span class="ct warn">2</span></a>
+          <a href="#"><span class="ic">≡</span>Activity</a>
+          <a href="#"><span class="ic">✓</span>Quality<span class="ct ok">5/5</span></a>
+          <a href="#"><span class="ic">◫</span>Contracts<span class="ct ok">9/9</span></a>
+          <div class="sfoot"><div><b>preflight</b> <span class="ok">passing</span></div><div>2 sessions live</div><div>184k · ~$2.10</div></div>
+        </nav>
+        <main class="main">
+          <div class="hd">
+            <div class="hd-main"><div class="crumb"><a href="#">Items</a><span class="sep">/</span><span class="here">task-118</span></div><h3>Rate-limit the public search endpoint</h3></div>
+            <div class="hd-side"><span class="st st-ok">3 of 4 closed</span><span class="live"><i></i>Live</span></div>
+          </div>
+          <div class="tabs"><a href="#">Brief</a><a href="#" class="on">Tasks <span class="b">4</span></a><a href="#">Timeline</a><a href="#">Quality</a><a href="#">Sessions</a><a href="#">Addenda <span class="b">2</span></a></div>
+
+          <div class="gMD">
+            <div class="panel">
+              <h4>Task graph <span class="aux">3 / 4</span></h4>
+              <div class="alist">
+                <a href="#"><span class="ab ab-w">✓</span><span><span class="fname">task-118.1</span><div class="fpath">fixed-window limiter · unit</div></span></a>
+                <a href="#"><span class="ab ab-w">✓</span><span><span class="fname">task-118.2</span><div class="fpath">mount on search route · unit</div></span></a>
+                <a href="#" class="on"><span class="ab ab-w">✓</span><span><span class="fname">task-118.3</span><div class="fpath">429 body + Retry-After · e2e</div></span></a>
+                <a href="#"><span class="ab ab-p">○</span><span><span class="fname">task-118.4</span><div class="fpath" style="color:#8A5A12">load check · blocked on e2e</div></span></a>
+              </div>
+              <h4 style="margin-top:.9rem">Verification mix <span class="aux">machine-checkable</span></h4>
+              <div class="kv">
+                <span class="m" style="font-size:.75rem">unit</span><span class="st st-ok">2</span>
+                <span class="m" style="font-size:.75rem">e2e</span><span class="st st-ok">1</span>
+                <span class="m" style="font-size:.75rem">loadtest</span><span class="st st-ok">1</span>
+                <span class="m" style="font-size:.75rem">manual</span><span class="st st-mu">0</span>
+              </div>
+              <p style="font-size:.6875rem;color:#8B95A2;margin:.6rem 0 0;line-height:1.5">4 of 4 verified by a command. No task in this item closes on an assertion.</p>
+            </div>
+
+            <div>
+              <div class="panel" style="margin-bottom:.65rem">
+                <h4>task-118.3 · 429 body + Retry-After header <span class="aux"><span class="st st-ok">closed 10:33</span></span></h4>
+                <div class="g2e">
+                  <div>
+                    <div class="prov" style="margin-bottom:.25rem">Goal</div>
+                    <p style="font-size:.8125rem;margin:0 0 .8rem;color:#2E3A47">A rate-limited client receives a <span class="m">429</span> carrying a <span class="m">Retry-After</span> header that tells it when it may retry.</p>
+                    <div class="prov" style="margin-bottom:.25rem">Verification</div>
+                    <div class="kv" style="font-size:.75rem">
+                      <span class="m">kind</span><span class="st st-in">e2e</span>
+                      <span class="m">gate</span><span class="st st-mu">test:e2e</span>
+                      <span class="m">expect</span><span class="st st-mu">exit 0</span>
+                    </div>
+                    <code class="sug" style="margin-top:.45rem">pnpm playwright test <span class="g">search/rate-limit</span></code>
+                  </div>
+                  <div>
+                    <div class="prov" style="margin-bottom:.25rem">Closure evidence</div>
+                    <table>
+                      <tr><td><span class="st st-ok">pass</span></td><td class="m" style="font-size:.75rem">10:48</td><td class="m" style="font-size:.6875rem;color:#8B95A2">1m 51s</td></tr>
+                      <tr><td class="m" style="font-size:.75rem" colspan="3">ran <b>after</b> c07b5d2 — the task's last commit</td></tr>
+                    </table>
+                    <p style="font-size:.6875rem;color:#26654A;margin:.5rem 0 0;line-height:1.5">The <span class="m">TaskCompleted</span> hook allowed this closure because a named command exited zero after the last change. Closure is measured, not claimed.</p>
+                    <div class="prov" style="margin:.7rem 0 .25rem">Depends on</div>
+                    <p class="m" style="font-size:.75rem;margin:0">task-118.2 <span class="st st-ok">closed</span></p>
+                  </div>
+                </div>
+              </div>
+
+              <div class="panel">
+                <h4>All tasks <span class="aux">goal and verification are required fields</span></h4>
+                <div class="scrollx">
+                  <table>
+                    <tr><th>Task</th><th>Goal</th><th>Verify</th><th>Gate</th><th>Evidence</th><th>State</th></tr>
+                    <tr class="click"><td class="m">.1</td><td style="font-size:.75rem">Requests beyond the window limit are counted and rejected</td><td><span class="st st-in">unit</span></td><td class="m" style="font-size:.6875rem">test:unit</td><td class="m" style="font-size:.6875rem;color:#26654A">pass 09:44</td><td><span class="st st-ok">closed</span></td></tr>
+                    <tr class="click"><td class="m">.2</td><td style="font-size:.75rem">The limiter runs on the search route and nowhere else</td><td><span class="st st-in">unit</span></td><td class="m" style="font-size:.6875rem">test:unit</td><td class="m" style="font-size:.6875rem;color:#26654A">pass 10:05</td><td><span class="st st-ok">closed</span></td></tr>
+                    <tr class="click sel"><td class="m">.3</td><td style="font-size:.75rem">A limited client gets a 429 with a Retry-After header</td><td><span class="st st-in">e2e</span></td><td class="m" style="font-size:.6875rem">test:e2e</td><td class="m" style="font-size:.6875rem;color:#26654A">pass 10:48</td><td><span class="st st-ok">closed</span></td></tr>
+                    <tr class="click"><td class="m">.4</td><td style="font-size:.75rem">Redis pool stays below 60% at 500 rps</td><td><span class="st st-in">loadtest</span></td><td class="m" style="font-size:.6875rem">loadtest</td><td class="m" style="font-size:.6875rem;color:#8B95A2">not run</td><td><span class="st st-wn">blocked</span></td></tr>
+                  </table>
+                </div>
+                <p style="font-size:.6875rem;color:#8B95A2;margin:.6rem 0 0;line-height:1.5">A task with an empty Goal or Verify column cannot exist — the <span class="m">TaskCreated</span> hook rejects it at creation, so these columns are never blank.</p>
+              </div>
+            </div>
+          </div>
+        </main>
+      </div>
+    </div>
+    <p class="note"><b>This screen is the correction.</b> Tasks were invisible in iteration 4 — the brief called them “units” and nothing listed them. They are now a first-class tab on every item, each carrying a one-sentence goal, a verification kind and command, and the evidence that closed it.</p>
+  </section>
+
+  <!-- ====================== S05 ITEM TIMELINE ====================== -->
+  <section class="screen">
+    <div class="cap"><span class="n">S05</span><span class="t">Item · Timeline</span><span class="s">/items/task-118/timeline · same shell, same tabs, different tab active</span></div>
+    <div class="win">
+      <div class="bar"><span class="lights"><i class="l1"></i><i class="l2"></i><i class="l3"></i></span><span class="navbtn">←  →  ⟳</span><span class="url">localhost:7777/items/task-118/timeline</span></div>
+      <div class="app">
+        <nav class="side">
+          <div class="brand">Circle<span>acme/platform</span></div>
+          <div class="grp">Work</div>
+          <a href="#"><span class="ic">◈</span>Overview</a>
+          <a href="#" class="on"><span class="ic">▤</span>Items<span class="ct">5</span></a>
+          <a href="#"><span class="ic">◷</span>Sessions<span class="ct">14</span></a>
+          <div class="grp">Monitor</div>
+          <a href="#"><span class="ic">⚑</span>Approvals<span class="ct warn">2</span></a>
+          <a href="#"><span class="ic">≡</span>Activity</a>
+          <a href="#"><span class="ic">✓</span>Quality<span class="ct ok">5/5</span></a>
+          <a href="#"><span class="ic">◫</span>Contracts<span class="ct ok">9/9</span></a>
+          <div class="sfoot"><div><b>preflight</b> <span class="ok">passing</span></div><div>2 sessions live</div><div>184k · ~$2.10</div></div>
+        </nav>
+        <main class="main">
+          <div class="hd">
+            <div class="hd-main"><div class="crumb"><a href="#">Items</a><span class="sep">/</span><span class="here">task-118</span></div><h3>Rate-limit the public search endpoint</h3></div>
+            <div class="hd-side"><span class="live"><i></i>Live</span></div>
+          </div>
+          <div class="tabs"><a href="#">Brief</a><a href="#">Tasks <span class="b">4</span></a><a href="#" class="on">Timeline</a><a href="#">Quality</a><a href="#">Sessions</a><a href="#">Addenda <span class="b">2</span></a></div>
+
+          <div class="cards">
+            <div class="card"><div class="k">Baseline</div><div class="v" style="font-size:1rem">4c1e08b</div><div class="s">09:14 · worktree-task-118</div></div>
+            <div class="card"><div class="k">Live commits</div><div class="v">4</div><div class="s">1 rewritten, superseded</div></div>
+            <div class="card"><div class="k">Files touched</div><div class="v">7</div><div class="s" style="color:#8A5A12">1 outside radius</div></div>
+            <div class="card"><div class="k">Uncommitted</div><div class="v" style="color:#8A5A12">1</div><div class="s">Makefile</div></div>
+          </div>
+
+          <div class="panel">
+            <h4>Change timeline <span class="aux">git-truth · commits and files, no diffs</span></h4>
+            <div class="scrollx">
+              <table>
+                <tr><th>Time</th><th>Commit</th><th>Subject</th><th>Files changed</th><th>State</th></tr>
+                <tr><td class="m">10:52</td><td class="m" style="color:#9AA4B0">working tree</td><td style="color:#6B7683">uncommitted at handoff</td><td class="m" style="font-size:.75rem"><span style="color:#8A5A12">M</span> Makefile</td><td><span class="st st-wn">uncommitted</span></td></tr>
+                <tr><td class="m">10:44</td><td class="m" style="color:#A8352A">e4a9017</td><td style="color:#A8352A">bump redis client<div class="fpath">claimed by agent · absent from git</div></td><td class="m" style="color:#9AA4B0">—</td><td><span class="st st-bd">phantom</span></td></tr>
+                <tr><td class="m">10:31</td><td class="m">c07b5d2</td><td>429 body + Retry-After<div class="fpath">sess-7f3a · 01QRt8 · unit 3</div></td><td class="m" style="font-size:.75rem;line-height:1.7"><span style="color:#8A5A12">M</span> src/mw/rate-limit.ts<br><span style="color:#8A5A12">M</span> docs/api/search.md <span style="color:#8A5A12">⚠</span></td><td><span class="st st-ok">live</span></td></tr>
+                <tr><td class="m">10:02</td><td class="m">b91c3e0</td><td>mount limiter on search route<div class="fpath">sess-7f3a · 01MYnP · amend of 7d20fa4</div></td><td class="m" style="font-size:.75rem;line-height:1.7"><span style="color:#8A5A12">M</span> src/app.ts<br><span style="color:#2B4E8F">R</span> src/mw/index.ts <span style="color:#9AA4B0">← src/middleware/</span></td><td><span class="st st-ok">live</span></td></tr>
+                <tr><td class="m" style="color:#9AA4B0">09:58</td><td class="m" style="text-decoration:line-through;color:#9AA4B0">7d20fa4</td><td style="color:#9AA4B0">mount limiter on search<div class="fpath">→ b91c3e0 · resolved by patch-id</div></td><td class="m" style="font-size:.75rem;color:#9AA4B0">M src/app.ts</td><td><span class="st st-mu">rewritten</span></td></tr>
+                <tr><td class="m">09:41</td><td class="m">a3f81c9</td><td>add fixed-window rate limiter<div class="fpath">sess-7f3a · 01MYnP · unit 1</div></td><td class="m" style="font-size:.75rem;line-height:1.7"><span style="color:#26654A">A</span> src/mw/rate-limit.ts<br><span style="color:#26654A">A</span> src/mw/rate-limit.test.ts</td><td><span class="st st-ok">live</span></td></tr>
+                <tr><td class="m">09:33</td><td class="m" style="color:#26654A">gate</td><td style="color:#26654A">brief approved · eng@acme.co</td><td class="m" style="color:#9AA4B0">—</td><td><span class="st st-ok">event</span></td></tr>
+                <tr><td class="m">09:14</td><td class="m" style="color:#9AA4B0">4c1e08b</td><td style="color:#9AA4B0">baseline · worktree created</td><td class="m" style="color:#9AA4B0">—</td><td><span class="st st-mu">baseline</span></td></tr>
+              </table>
+            </div>
+          </div>
+        </main>
+      </div>
+    </div>
+  </section>
+
+  <!-- ====================== S05 SESSIONS ====================== -->
+  <section class="screen">
+    <div class="cap"><span class="n">S06</span><span class="t">Sessions</span><span class="s">/sessions · entry point for “what happened”</span></div>
+    <div class="win">
+      <div class="bar"><span class="lights"><i class="l1"></i><i class="l2"></i><i class="l3"></i></span><span class="navbtn">←  →  ⟳</span><span class="url">localhost:7777/sessions</span></div>
+      <div class="app">
+        <nav class="side">
+          <div class="brand">Circle<span>acme/platform</span></div>
+          <div class="grp">Work</div>
+          <a href="#"><span class="ic">◈</span>Overview</a>
+          <a href="#"><span class="ic">▤</span>Items<span class="ct">5</span></a>
+          <a href="#" class="on"><span class="ic">◷</span>Sessions<span class="ct">14</span></a>
+          <div class="grp">Monitor</div>
+          <a href="#"><span class="ic">⚑</span>Approvals<span class="ct warn">2</span></a>
+          <a href="#"><span class="ic">≡</span>Activity</a>
+          <a href="#"><span class="ic">✓</span>Quality<span class="ct ok">5/5</span></a>
+          <a href="#"><span class="ic">◫</span>Contracts<span class="ct ok">9/9</span></a>
+          <div class="sfoot"><div><b>preflight</b> <span class="ok">passing</span></div><div>2 sessions live</div><div>184k · ~$2.10</div></div>
+        </nav>
+        <main class="main">
+          <div class="hd">
+            <div class="hd-main"><div class="crumb"><span class="here">Sessions</span></div><h3>Sessions</h3></div>
+            <div class="hd-side"><span class="live"><i></i>2 live</span></div>
+          </div>
+          <div class="tabs"><a href="#" class="on">All</a><a href="#">Live <span class="b">2</span></a><a href="#">With drift</a><a href="#">Forced preflight</a><a href="#">Abandoned</a></div>
+          <div class="panel">
+            <div class="scrollx">
+              <table>
+                <tr><th>Session</th><th>Item</th><th>Opened</th><th>Dur</th><th>Claude</th><th>Artifacts</th><th>Commits</th><th>Files</th><th>Cost</th><th>Outcome</th></tr>
+                <tr class="click sel"><td class="m">sess-7f3a</td><td class="m">task-118</td><td class="m">08-29 09:14</td><td class="m">1:38</td><td class="m">2</td><td class="m">14</td><td class="m">4</td><td class="m">7</td><td class="m">$2.10</td><td><span class="st st-ok">live</span></td></tr>
+                <tr class="click"><td class="m">sess-6b91</td><td class="m">task-116</td><td class="m">08-29 08:02</td><td class="m">2:11</td><td class="m">1</td><td class="m">11</td><td class="m">6</td><td class="m">9</td><td class="m">$3.05</td><td><span class="st st-ok">merged</span></td></tr>
+                <tr class="click"><td class="m">sess-6a40</td><td class="m">fix-204</td><td class="m">08-28 16:44</td><td class="m">0:52</td><td class="m">1</td><td class="m">8</td><td class="m">2</td><td class="m">3</td><td class="m">$1.20</td><td><span class="st st-bd">gate red</span></td></tr>
+                <tr class="click"><td class="m">sess-5e17</td><td class="m">task-109</td><td class="m">08-28 11:20</td><td class="m">3:04</td><td class="m">3</td><td class="m">19</td><td class="m">11</td><td class="m">22</td><td class="m">$5.80</td><td><span class="st st-ok">merged</span></td></tr>
+                <tr class="click"><td class="m">sess-5c02</td><td class="m">fix-198</td><td class="m">08-27 15:31</td><td class="m">0:24</td><td class="m">1</td><td class="m">5</td><td class="m">1</td><td class="m">1</td><td class="m">$0.40</td><td><span class="st st-ok">merged</span></td></tr>
+                <tr class="click"><td class="m">sess-4d88</td><td class="m">task-104</td><td class="m">08-27 09:10</td><td class="m">1:47</td><td class="m">2</td><td class="m">12</td><td class="m">5</td><td class="m">14</td><td class="m">$2.65</td><td><span class="st st-wn">forced</span></td></tr>
+                <tr class="click"><td class="m">sess-4a12</td><td class="m">epic-28</td><td class="m">08-26 14:02</td><td class="m">4:31</td><td class="m">4</td><td class="m">27</td><td class="m">14</td><td class="m">38</td><td class="m">$8.90</td><td><span class="st st-ok">merged</span></td></tr>
+                <tr class="click"><td class="m">sess-39f5</td><td class="m" style="color:#9AA4B0">—</td><td class="m">08-26 10:15</td><td class="m">0:06</td><td class="m">1</td><td class="m">0</td><td class="m">0</td><td class="m">0</td><td class="m">$0.05</td><td><span class="st st-mu">abandoned</span></td></tr>
+              </table>
+            </div>
+          </div>
+        </main>
+      </div>
+    </div>
+    <p class="note"><b>Abandoned and forced sessions stay in the list.</b> A six-minute session that produced nothing, and a preflight bypass, are both signals about the workflow — hiding them would make the history flattering rather than true.</p>
+  </section>
+
+  <!-- ====================== S06 SESSION ARTIFACTS ====================== -->
+  <section class="screen">
+    <div class="cap"><span class="n">S07</span><span class="t">Session · Artifacts</span><span class="s">/sessions/sess-7f3a/artifacts/brief · master–detail, nav never lost</span></div>
+    <div class="win">
+      <div class="bar"><span class="lights"><i class="l1"></i><i class="l2"></i><i class="l3"></i></span><span class="navbtn">←  →  ⟳</span><span class="url">localhost:7777/sessions/sess-7f3a/artifacts/brief</span></div>
+      <div class="app">
+        <nav class="side">
+          <div class="brand">Circle<span>acme/platform</span></div>
+          <div class="grp">Work</div>
+          <a href="#"><span class="ic">◈</span>Overview</a>
+          <a href="#"><span class="ic">▤</span>Items<span class="ct">5</span></a>
+          <a href="#" class="on"><span class="ic">◷</span>Sessions<span class="ct">14</span></a>
+          <div class="grp">Monitor</div>
+          <a href="#"><span class="ic">⚑</span>Approvals<span class="ct warn">2</span></a>
+          <a href="#"><span class="ic">≡</span>Activity</a>
+          <a href="#"><span class="ic">✓</span>Quality<span class="ct ok">5/5</span></a>
+          <a href="#"><span class="ic">◫</span>Contracts<span class="ct ok">9/9</span></a>
+          <div class="sfoot"><div><b>preflight</b> <span class="ok">passing</span></div><div>2 sessions live</div><div>184k · ~$2.10</div></div>
+        </nav>
+        <main class="main">
+          <div class="hd">
+            <div class="hd-main">
+              <div class="crumb"><a href="#">Sessions</a><span class="sep">/</span><a href="#">sess-7f3a</a><span class="sep">/</span><span class="here">artifacts</span></div>
+              <h3>task-118 · Rate-limit the public search endpoint</h3>
+            </div>
+            <div class="hd-side"><span class="st st-mu">1h 38m</span><span class="live"><i></i>Live</span></div>
+          </div>
+          <div class="tabs"><a href="#" class="on">Artifacts <span class="b">14</span></a><a href="#">Tasks <span class="b">4</span></a><a href="#">Timeline</a><a href="#">Gate events</a><a href="#">Claude sessions <span class="b">2</span></a><a href="#">Usage</a></div>
+
+          <div class="panel" style="margin-bottom:.65rem">
+            <h4>Tasks worked in this session <span class="aux">→ item · tasks</span></h4>
+            <div class="scrollx">
+              <table>
+                <tr><th>Task</th><th>Goal</th><th>Verify</th><th>Closed by</th><th>Claude session</th><th>State</th></tr>
+                <tr class="click"><td class="m">task-118.1</td><td style="font-size:.75rem">Requests beyond the limit are counted and rejected</td><td><span class="st st-in">unit</span></td><td class="m" style="font-size:.6875rem;color:#26654A">pass 09:44</td><td class="m" style="font-size:.6875rem">01MYnP</td><td><span class="st st-ok">closed</span></td></tr>
+                <tr class="click"><td class="m">task-118.2</td><td style="font-size:.75rem">Limiter runs on the search route and nowhere else</td><td><span class="st st-in">unit</span></td><td class="m" style="font-size:.6875rem;color:#26654A">pass 10:05</td><td class="m" style="font-size:.6875rem">01MYnP</td><td><span class="st st-ok">closed</span></td></tr>
+                <tr class="click"><td class="m">task-118.3</td><td style="font-size:.75rem">Limited client gets a 429 with Retry-After</td><td><span class="st st-in">e2e</span></td><td class="m" style="font-size:.6875rem;color:#26654A">pass 10:48</td><td class="m" style="font-size:.6875rem">01QRt8</td><td><span class="st st-ok">closed</span></td></tr>
+                <tr class="click"><td class="m">task-118.4</td><td style="font-size:.75rem">Redis pool below 60% at 500 rps</td><td><span class="st st-in">loadtest</span></td><td class="m" style="font-size:.6875rem;color:#8B95A2">not run</td><td class="m" style="font-size:.6875rem;color:#9AA4B0">—</td><td><span class="st st-wn">blocked</span></td></tr>
+              </table>
+            </div>
+          </div>
+
+          <div class="gMD">
+            <div class="panel">
+              <h4>Artifacts <span class="aux">14</span></h4>
+              <div class="alist">
+                <div class="prov" style="padding:.3rem .5rem">Written · 6</div>
+                <a href="#" class="on"><span class="ab ab-w">BR</span><span><span class="fname">brief.md</span><div class="fpath">approved 09:33</div></span></a>
+                <a href="#"><span class="ab ab-w">BR</span><span><span class="fname">brief.html</span><div class="fpath">2 diagrams</div></span></a>
+                <a href="#"><span class="ab ab-w">TL</span><span><span class="fname">timeline.jsonl</span><div class="fpath">6 entries</div></span></a>
+                <a href="#"><span class="ab ab-w">AD</span><span><span class="fname">001-fixed-window.md</span><div class="fpath">decision</div></span></a>
+                <a href="#"><span class="ab ab-p">AD</span><span><span class="fname">002-docs-drift.md</span><div class="fpath" style="color:#8A5A12">finding · needs review</div></span></a>
+                <a href="#"><span class="ab ab-w">SM</span><span><span class="fname">summary.md</span><div class="fpath">pending handoff</div></span></a>
+                <div class="prov" style="padding:.3rem .5rem;margin-top:.3rem">Read · 5</div>
+                <a href="#"><span class="ab ab-r">PRD</span><span><span class="fname">search-hardening.md</span><div class="fpath">definitions · 09:18</div></span></a>
+                <a href="#"><span class="ab ab-r">DOC</span><span><span class="fname">architecture/services.md</span><div class="fpath">docs · 09:19</div></span></a>
+                <a href="#"><span class="ab ab-r">DOC</span><span><span class="fname">api/search.md</span><div class="fpath">docs · 09:21</div></span></a>
+                <a href="#"><span class="ab ab-r">VAL</span><span><span class="fname">e2e/search.spec.ts</span><div class="fpath">validations · 09:24</div></span></a>
+                <a href="#"><span class="ab ab-p">ADR</span><span><span class="fname">docs/adr/</span><div class="fpath" style="color:#A8352A">registered · unresolved</div></span></a>
+                <div class="prov" style="padding:.3rem .5rem;margin-top:.3rem">Generated · 3</div>
+                <a href="#"><span class="ab ab-g">FIG</span><span><span class="fname">fig-1-module.mmd</span><div class="fpath">compose + imports</div></span></a>
+                <a href="#"><span class="ab ab-g">FIG</span><span><span class="fname">fig-2-sequence.mmd</span><div class="fpath">plan graph</div></span></a>
+                <a href="#"><span class="ab ab-g">MAP</span><span><span class="fname">compose.map.toml</span><div class="fpath">docker-compose.yml</div></span></a>
+              </div>
+            </div>
+
+            <div>
+              <div class="panel" style="margin-bottom:.65rem">
+                <h4>brief.md <span class="aux">written 09:31 · 118 lines · <span class="st st-ok">approved</span></span></h4>
+                <div class="docprev" style="border:0;padding:0">
+                  <h6>Goal · what done means</h6>
+                  <ul>
+                    <li>100 requests in 60s returns <code>429</code> after the 60th</li>
+                    <li>Authenticated traffic unaffected</li>
+                    <li>Redis pool below 60% at 500 rps</li>
+                    <li><span style="color:#8A5A12">Human judgement</span> — the <code>429</code> body is actionable</li>
+                  </ul>
+                  <h6>Blast radius</h6>
+                  <div class="mplate">
+                    <pre class="mermaid">
+flowchart LR
+  RT["router"] --> MW["rate-limit"]
+  MW --> SVC["search"]
+  MW -.-> RD[("redis")]
+  style MW fill:#E4EAF5,stroke:#2B4E8F,stroke-width:2px
+                    </pre>
+                  </div>
+                </div>
+              </div>
+              <div class="g2e">
+                <div class="panel">
+                  <h4>Provenance</h4>
+                  <div class="kv">
+                    <span>Session</span><span class="m" style="font-size:.75rem">sess-7f3a</span>
+                    <span>Claude session</span><span class="m" style="font-size:.75rem">01MYnP…</span>
+                    <span>Structure</span><span class="st st-ok">deterministic</span>
+                    <span>Labels</span><span class="st st-mu">opus-5</span>
+                    <span>Approved</span><span class="m" style="font-size:.75rem">eng@acme.co</span>
+                  </div>
+                </div>
+                <div class="panel">
+                  <h4>Related</h4>
+                  <div class="kv">
+                    <span>Addenda</span><span class="st st-wn">1 open</span>
+                    <span>Commits</span><span class="st st-in">4</span>
+                    <span>Quality</span><span class="st st-ok">5/5</span>
+                    <span>Drift</span><span class="st st-wn">1 file</span>
+                    <span>PR</span><span class="st st-mu">none</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </main>
+      </div>
+    </div>
+    <p class="note"><b>This is the screen your requirement asks for.</b> One session, every artifact it touched, split into <span class="ab ab-w" style="vertical-align:middle">W</span> written · <span class="ab ab-r" style="vertical-align:middle">R</span> read · <span class="ab ab-g" style="vertical-align:middle">G</span> generated. Selecting one loads it into the reader beside the list — the URL changes, the navigation does not.</p>
+  </section>
+
+  <!-- ====================== S07 ITEM QUALITY ====================== -->
+  <section class="screen">
+    <div class="cap"><span class="n">S08</span><span class="t">Item · Quality</span><span class="s">/items/task-118/quality · every point of the score, traced</span></div>
+    <div class="win">
+      <div class="bar"><span class="lights"><i class="l1"></i><i class="l2"></i><i class="l3"></i></span><span class="navbtn">←  →  ⟳</span><span class="url">localhost:7777/items/task-118/quality</span></div>
+      <div class="app">
+        <nav class="side">
+          <div class="brand">Circle<span>acme/platform</span></div>
+          <div class="grp">Work</div>
+          <a href="#"><span class="ic">◈</span>Overview</a>
+          <a href="#" class="on"><span class="ic">▤</span>Items<span class="ct">5</span></a>
+          <a href="#"><span class="ic">◷</span>Sessions<span class="ct">14</span></a>
+          <div class="grp">Monitor</div>
+          <a href="#"><span class="ic">⚑</span>Approvals<span class="ct warn">2</span></a>
+          <a href="#"><span class="ic">≡</span>Activity</a>
+          <a href="#"><span class="ic">✓</span>Quality<span class="ct ok">5/5</span></a>
+          <a href="#"><span class="ic">◫</span>Contracts<span class="ct ok">9/9</span></a>
+          <div class="sfoot"><div><b>preflight</b> <span class="ok">passing</span></div><div>2 sessions live</div><div>184k · ~$2.10</div></div>
+        </nav>
+        <main class="main">
+          <div class="hd">
+            <div class="hd-main"><div class="crumb"><a href="#">Items</a><span class="sep">/</span><span class="here">task-118</span></div><h3>Rate-limit the public search endpoint</h3></div>
+            <div class="hd-side"><span class="st st-ok">5 / 5 green</span></div>
+          </div>
+          <div class="tabs"><a href="#">Brief</a><a href="#">Tasks <span class="b">4</span></a><a href="#">Timeline</a><a href="#" class="on">Quality</a><a href="#">Sessions</a><a href="#">Addenda <span class="b">2</span></a></div>
+
+          <div class="g2e" style="margin-bottom:.65rem">
+            <div class="panel">
+              <h4>Status score <span class="aux">74 / 100 · 100% deterministic</span></h4>
+              <div class="barrow"><span class="lbl">quality gates</span><span class="trk"><span class="fg" style="width:100%"></span></span><span class="num">40/40</span></div>
+              <div class="barrow"><span class="lbl">goal criteria</span><span class="trk"><span class="fa" style="width:73%"></span></span><span class="num">22/30</span></div>
+              <div class="barrow"><span class="lbl">task closure</span><span class="trk"><span class="fg" style="width:60%"></span></span><span class="num">12/20</span></div>
+              <div class="barrow"><span class="lbl">pr &amp; ci</span><span class="trk"><span class="fr" style="width:0"></span></span><span class="num">0/10</span></div>
+              <p style="font-size:.75rem;color:#6B7683;margin:.55rem 0 0">No model contributed. The one human-judgement criterion is the visible 8-point gap.</p>
+            </div>
+            <div class="panel">
+              <h4>Goal criteria <span class="aux">3 of 4 machine-checkable</span></h4>
+              <table>
+                <tr><td><span class="st st-ok">pass</span></td><td style="font-size:.75rem">429 after 60 requests in 60s</td><td class="prov">vitest</td></tr>
+                <tr><td><span class="st st-ok">pass</span></td><td style="font-size:.75rem">auth traffic unaffected</td><td class="prov">playwright</td></tr>
+                <tr><td><span class="st st-wn">unrun</span></td><td style="font-size:.75rem">redis pool &lt; 60% at 500 rps</td><td class="prov">loadtest</td></tr>
+                <tr><td><span class="st st-mu">human</span></td><td style="font-size:.75rem;color:#8A5A12">429 body is actionable</td><td class="prov">judgement</td></tr>
+              </table>
+            </div>
+          </div>
+
+          <div class="panel">
+            <h4>Gate runs <span class="aux">every result is an event · the score reads from here</span></h4>
+            <div class="scrollx">
+              <table>
+                <tr><th>Gate</th><th>Command</th><th>Last run</th><th>Dur</th><th>Result</th><th>Last 8</th></tr>
+                <tr><td class="m">format</td><td class="m" style="font-size:.75rem">pnpm prettier --check .</td><td class="m">10:48</td><td class="m">1.2s</td><td><span class="st st-ok">pass</span></td><td class="m" style="letter-spacing:.12em;color:#26654A">▪▪▪▪▪▪▪▪</td></tr>
+                <tr><td class="m">lint</td><td class="m" style="font-size:.75rem">pnpm eslint .</td><td class="m">10:48</td><td class="m">6.8s</td><td><span class="st st-ok">pass</span></td><td class="m" style="letter-spacing:.12em;color:#26654A">▪▪▪<span style="color:#A8352A">▪</span>▪▪▪▪</td></tr>
+                <tr><td class="m">typecheck</td><td class="m" style="font-size:.75rem">pnpm tsc --noEmit</td><td class="m">10:48</td><td class="m">14.1s</td><td><span class="st st-ok">pass</span></td><td class="m" style="letter-spacing:.12em;color:#26654A">▪▪▪▪▪▪▪▪</td></tr>
+                <tr><td class="m">test:unit</td><td class="m" style="font-size:.75rem">pnpm vitest run</td><td class="m">10:48</td><td class="m">22.4s</td><td><span class="st st-ok">pass</span><div class="fpath">cov 84.2% · floor 80</div></td><td class="m" style="letter-spacing:.12em;color:#26654A"><span style="color:#A8352A">▪▪</span>▪▪▪▪▪▪</td></tr>
+                <tr><td class="m">test:e2e</td><td class="m" style="font-size:.75rem">pnpm playwright test</td><td class="m">10:48</td><td class="m">1m 51s</td><td><span class="st st-ok">pass</span></td><td class="m" style="letter-spacing:.12em;color:#26654A">▪▪▪▪▪<span style="color:#B8862B">▪</span>▪▪</td></tr>
+              </table>
+            </div>
+          </div>
+        </main>
+      </div>
+    </div>
+  </section>
+
+  <!-- ====================== S08 APPROVALS ====================== -->
+  <section class="screen">
+    <div class="cap"><span class="n">S09</span><span class="t">Approvals</span><span class="s">/approvals · the only screen with consequential actions</span></div>
+    <div class="win">
+      <div class="bar"><span class="lights"><i class="l1"></i><i class="l2"></i><i class="l3"></i></span><span class="navbtn">←  →  ⟳</span><span class="url">localhost:7777/approvals</span></div>
+      <div class="app">
+        <nav class="side">
+          <div class="brand">Circle<span>acme/platform</span></div>
+          <div class="grp">Work</div>
+          <a href="#"><span class="ic">◈</span>Overview</a>
+          <a href="#"><span class="ic">▤</span>Items<span class="ct">5</span></a>
+          <a href="#"><span class="ic">◷</span>Sessions<span class="ct">14</span></a>
+          <div class="grp">Monitor</div>
+          <a href="#" class="on"><span class="ic">⚑</span>Approvals<span class="ct warn">2</span></a>
+          <a href="#"><span class="ic">≡</span>Activity</a>
+          <a href="#"><span class="ic">✓</span>Quality<span class="ct ok">5/5</span></a>
+          <a href="#"><span class="ic">◫</span>Contracts<span class="ct ok">9/9</span></a>
+          <div class="sfoot"><div><b>preflight</b> <span class="ok">passing</span></div><div>2 sessions live</div><div>184k · ~$2.10</div></div>
+        </nav>
+        <main class="main">
+          <div class="hd">
+            <div class="hd-main"><div class="crumb"><span class="here">Approvals</span></div><h3>Awaiting a human</h3></div>
+            <div class="hd-side"><span class="st st-wn">oldest 2h 14m</span></div>
+          </div>
+          <div class="noTabs"></div>
+
+          <div class="banner bn-bad">
+            <div><b>epic-31 has been blocked for 2h 14m.</b>No writes are possible on this item until someone reads the brief. Median time-to-approval on this repo is 11 minutes.</div>
+          </div>
+
+          <div class="panel" style="margin-bottom:.65rem">
+            <h4>epic-31 · Auth rework <span class="aux">generated 08:38 · sess-7c19</span></h4>
+            <div class="g2">
+              <div>
+                <p style="font-size:.8125rem;margin:0 0 .5rem;color:#4A5461">Replace session-cookie auth with short-lived JWTs from the auth service, keeping the cookie path behind a flag for one release.</p>
+                <div class="scrollx">
+                  <table>
+                    <tr><th>Reads in</th><th>Units</th><th>Repos</th><th>Blast radius</th><th>Risks</th></tr>
+                    <tr><td class="m">6 min</td><td class="m">11</td><td class="m">3</td><td class="m">28 files · 4 services</td><td class="m" style="color:#8A5A12">2 high</td></tr>
+                  </table>
+                </div>
+                <p style="font-size:.75rem;color:#8A5A12;margin:.5rem 0 0">⚠ Touches auth and a schema migration — both in the closed risk enum.</p>
+              </div>
+              <div style="display:flex;flex-direction:column;gap:.4rem;justify-content:center">
+                <button class="btn btn-mute" style="width:100%">Read brief →</button>
+                <button class="btn btn-primary" style="width:100%">Approve as eng@acme.co</button>
+                <button class="btn btn-danger" style="width:100%">Reject with reason</button>
+              </div>
+            </div>
+          </div>
+
+          <div class="panel">
+            <h4>task-121 · Rotate service tokens <span class="aux">generated 10:12 · sess-8b02</span></h4>
+            <div class="g2">
+              <div>
+                <p style="font-size:.8125rem;margin:0 0 .5rem;color:#4A5461">Move the three long-lived service tokens to 24h rotation with an overlap window.</p>
+                <div class="scrollx">
+                  <table>
+                    <tr><th>Reads in</th><th>Units</th><th>Repos</th><th>Blast radius</th><th>Risks</th></tr>
+                    <tr><td class="m">3 min</td><td class="m">4</td><td class="m">1</td><td class="m">6 files · 2 services</td><td class="m">1 medium</td></tr>
+                  </table>
+                </div>
+                <p style="font-size:.75rem;color:#A8352A;margin:.5rem 0 0">⚠ You authored this plan. Self-approval is permitted but recorded as such.</p>
+              </div>
+              <div style="display:flex;flex-direction:column;gap:.4rem;justify-content:center">
+                <button class="btn btn-mute" style="width:100%">Read brief →</button>
+                <button class="btn btn-danger" style="width:100%">Approve own plan</button>
+                <button class="btn btn-mute" style="width:100%">Request a reviewer</button>
+              </div>
+            </div>
+          </div>
+        </main>
+      </div>
+    </div>
+    <p class="note"><b>Open question for you.</b> Approving here writes a gate event from the browser. It is not agent dispatch, so it does not break the never-execute rule — but it is the app's only consequential action. Self-approval is styled as destructive, not as the happy path.</p>
+  </section>
+
+  <!-- ====================== S09 CONTRACTS ====================== -->
+  <section class="screen">
+    <div class="cap"><span class="n">S10</span><span class="t">Contracts</span><span class="s">/contracts · the app's only write surface</span></div>
+    <div class="win">
+      <div class="bar"><span class="lights"><i class="l1"></i><i class="l2"></i><i class="l3"></i></span><span class="navbtn">←  →  ⟳</span><span class="url">localhost:7777/contracts</span></div>
+      <div class="app">
+        <nav class="side">
+          <div class="brand">Circle<span>acme/platform</span></div>
+          <div class="grp">Work</div>
+          <a href="#"><span class="ic">◈</span>Overview</a>
+          <a href="#"><span class="ic">▤</span>Items<span class="ct">5</span></a>
+          <a href="#"><span class="ic">◷</span>Sessions<span class="ct">14</span></a>
+          <div class="grp">Monitor</div>
+          <a href="#"><span class="ic">⚑</span>Approvals<span class="ct warn">2</span></a>
+          <a href="#"><span class="ic">≡</span>Activity</a>
+          <a href="#"><span class="ic">✓</span>Quality<span class="ct ok">5/5</span></a>
+          <a href="#" class="on"><span class="ic">◫</span>Contracts<span class="ct ok">9/9</span></a>
+          <div class="sfoot"><div><b>preflight</b> <span class="ok">passing</span></div><div>2 sessions live</div><div>184k · ~$2.10</div></div>
+        </nav>
+        <main class="main">
+          <div class="hd">
+            <div class="hd-main"><div class="crumb"><span class="here">Contracts</span></div><h3>.circle/project.toml</h3></div>
+            <div class="hd-side"><span class="st st-ok">preflight passing</span></div>
+          </div>
+          <div class="noTabs"></div>
+
+          <div class="g2e">
+            <div class="panel">
+              <h4>Knowledge <span class="aux">where the truth lives</span></h4>
+              <div class="scrollx">
+                <table>
+                  <tr><th>Path</th><th>Class</th><th>Matches</th><th></th></tr>
+                  <tr><td class="m" style="font-size:.75rem">docs/</td><td class="prov">docs</td><td class="m">9</td><td><span class="st st-ok">ok</span></td></tr>
+                  <tr><td class="m" style="font-size:.75rem">README.md</td><td class="prov">docs</td><td class="m">1</td><td><span class="st st-ok">ok</span></td></tr>
+                  <tr><td class="m" style="font-size:.75rem">services/*/README.md</td><td class="prov">docs</td><td class="m">3</td><td><span class="st st-ok">ok</span></td></tr>
+                  <tr><td class="m" style="font-size:.75rem">.circle/artifacts/</td><td class="prov">definitions</td><td class="m">4</td><td><span class="st st-ok">ok</span></td></tr>
+                  <tr><td class="m" style="font-size:.75rem">docs/architecture/</td><td class="prov">definitions</td><td class="m">6</td><td><span class="st st-ok">ok</span></td></tr>
+                  <tr><td class="m" style="font-size:.75rem">tests/ · e2e/</td><td class="prov">validations</td><td class="m">61</td><td><span class="st st-ok">ok</span></td></tr>
+                </table>
+              </div>
+            </div>
+            <div>
+              <div class="panel" style="margin-bottom:.65rem">
+                <h4>Execution <span class="aux">how to run it</span></h4>
+                <div class="kv">
+                  <span class="m" style="font-size:.75rem">docker-compose.yml</span><span class="st st-ok">parsed</span>
+                  <span class="m" style="font-size:.75rem">app: api web worker</span><span class="st st-ok">confirmed</span>
+                  <span class="m" style="font-size:.75rem">ports 42000–42999</span><span class="st st-ok">free</span>
+                  <span class="m" style="font-size:.75rem">seeded from run-platform</span><span class="st st-mu">skill</span>
+                </div>
+              </div>
+              <div class="panel">
+                <h4>Editable here <span class="aux">everything else is CLI-only</span></h4>
+                <div class="kv">
+                  <span class="m" style="font-size:.75rem">workspace.md</span><button class="btn btn-mute">Edit</button>
+                  <span class="m" style="font-size:.75rem">goal.md</span><button class="btn btn-mute">Edit</button>
+                  <span class="m" style="font-size:.75rem">settings.toml</span><button class="btn btn-mute">Edit</button>
+                </div>
+                <p style="font-size:.75rem;color:#8B95A2;margin:.6rem 0 0;line-height:1.5">project.toml and the artifacts are read-only here. Editing definition artifacts in the app would drag definition work into an implementation-only tool.</p>
+              </div>
+            </div>
+          </div>
+        </main>
+      </div>
+    </div>
+  </section>
+
+  <!-- ====================== S10 NOT READY ====================== -->
+  <section class="screen">
+    <div class="cap"><span class="n">S11</span><span class="t">Not ready</span><span class="s">/ · a different moment: 4 minutes after circle init</span></div>
+    <div class="win">
+      <div class="bar"><span class="lights"><i class="l1"></i><i class="l2"></i><i class="l3"></i></span><span class="navbtn">←  →  ⟳</span><span class="url">localhost:7777/</span></div>
+      <div class="app">
+        <nav class="side">
+          <div class="brand">Circle<span>acme/platform</span></div>
+          <div class="grp">Work</div>
+          <a href="#" class="on"><span class="ic">◈</span>Overview</a>
+          <span class="dim"><a href="#"><span class="ic">▤</span>Items<span class="ct">0</span></a></span>
+          <span class="dim"><a href="#"><span class="ic">◷</span>Sessions<span class="ct">0</span></a></span>
+          <div class="grp">Monitor</div>
+          <span class="dim"><a href="#"><span class="ic">⚑</span>Approvals<span class="ct">0</span></a></span>
+          <span class="dim"><a href="#"><span class="ic">≡</span>Activity</a></span>
+          <span class="dim"><a href="#"><span class="ic">✓</span>Quality</a></span>
+          <a href="#"><span class="ic">◫</span>Contracts<span class="ct bad">7/9</span></a>
+          <div class="sfoot"><div><b>preflight</b> <span class="warn">failing</span></div><div>no sessions yet</div><div>—</div></div>
+        </nav>
+        <main class="main">
+          <div class="hd">
+            <div class="hd-main"><div class="crumb"><span class="here">Overview</span></div><h3>Not ready</h3></div>
+          </div>
+          <div class="noTabs"></div>
+          <div class="empty">
+            <h5>Preflight is failing</h5>
+            <p>There is nothing to observe until a session can start, and a session cannot start until the three contracts pass. Two of them already do.</p>
+            <ul class="steps">
+              <li><span class="mk" style="color:#26654A">✓</span><span><b>Execution contract</b><br><span style="color:#6B7683">6 services parsed, 3 marked as application containers.</span></span></li>
+              <li><span class="mk" style="color:#26654A">✓</span><span><b>Quality contract</b><br><span style="color:#6B7683">5 gates detected from package.json. Coverage floor defaulted to 80.</span></span></li>
+              <li><span class="mk" style="color:#A8352A">✗</span><span><b>Knowledge contract — 7 of 9 paths resolve</b><br><span style="color:#6B7683">Fix in the terminal, or repoint them under Contracts — the one nav entry that stays live.</span>
+                <code class="sug" style="margin-top:.4rem">circle knowledge add docs/architecture <span class="g">--as definitions</span></code></span></li>
+              <li><span class="mk" style="color:#8A5A12">⚠</span><span><b>Goal criteria — 55% machine-checkable</b><br><span style="color:#6B7683">Advisory. Does not block, but caps how much of the status score can ever be deterministic.</span></span></li>
+            </ul>
+            <p style="margin-top:1rem;font-size:.75rem;color:#8B95A2">No spinner, no empty chart. If there is nothing to observe, the screen names the contract responsible.</p>
+          </div>
+        </main>
+      </div>
+    </div>
+    <p class="note"><b>Nav is disabled, not hidden.</b> The shape of the app stays learnable from the first second, and Contracts — the only screen that can unblock you — stays live. The empty state is the onboarding; there is no separate wizard.</p>
+  </section>
+
+  <p class="foot">Circle AI · observation app · iteration 4 · 2026-08-29 — companions: circle-ai.screens.html · circle-ai.prd.md · circle-ai.cli.md</p>
+
+</div>

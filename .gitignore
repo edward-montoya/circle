@@ -1,0 +1,14 @@
+# Build output
+/bin/
+/dist/
+circle
+
+# Go
+*.test
+*.out
+
+# Circle runtime — volatile, regenerable (PRD: volatile/durable split)
+.circle/runtime/
+
+# Worktrees
+.claude/worktrees/

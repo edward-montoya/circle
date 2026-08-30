@@ -1,0 +1,746 @@
+<title>Circle AI — Mockup Set 01</title>
+
+<style>
+  :root {
+    --paper:      #EDF0F3;
+    --surface:    #F7F9FB;
+    --panel:      #FFFFFF;
+    --ink:        #14181E;
+    --muted:      #5C6773;
+    --faint:      #8A94A1;
+    --rule:       #C7CED7;
+    --rule-soft:  #DDE3E9;
+    --blueprint:  #2B4E8F;
+    --blueprint-w:#E4EAF5;
+    --stamp:      #A8352A;
+    --approve:    #26654A;
+    --amber:      #8A5A12;
+
+    --term-bg:    #12161D;
+    --term-fg:    #C8D1DC;
+    --term-dim:   #6C7A8B;
+    --term-green: #7FC29B;
+    --term-red:   #E58072;
+    --term-amber: #DFAE58;
+    --term-blue:  #8AB0E6;
+
+    --mono: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, "Liberation Mono", monospace;
+    --sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+
+    --s1: .25rem; --s2: .5rem; --s3: .75rem; --s4: 1rem;
+    --s5: 1.5rem; --s6: 2rem; --s7: 3rem; --s8: 4.5rem;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --paper:      #0E141C;
+      --surface:    #141B25;
+      --panel:      #18202B;
+      --ink:        #DCE3EB;
+      --muted:      #98A4B3;
+      --faint:      #6B7887;
+      --rule:       #2C3846;
+      --rule-soft:  #232E3A;
+      --blueprint:  #7FA6DF;
+      --blueprint-w:#1B2839;
+      --stamp:      #E0705F;
+      --approve:    #5FB08A;
+      --amber:      #D9A441;
+    }
+  }
+  :root[data-theme="dark"] {
+    --paper:#0E141C; --surface:#141B25; --panel:#18202B; --ink:#DCE3EB;
+    --muted:#98A4B3; --faint:#6B7887; --rule:#2C3846; --rule-soft:#232E3A;
+    --blueprint:#7FA6DF; --blueprint-w:#1B2839; --stamp:#E0705F;
+    --approve:#5FB08A; --amber:#D9A441;
+  }
+  :root[data-theme="light"] {
+    --paper:#EDF0F3; --surface:#F7F9FB; --panel:#FFFFFF; --ink:#14181E;
+    --muted:#5C6773; --faint:#8A94A1; --rule:#C7CED7; --rule-soft:#DDE3E9;
+    --blueprint:#2B4E8F; --blueprint-w:#E4EAF5; --stamp:#A8352A;
+    --approve:#26654A; --amber:#8A5A12;
+  }
+
+  * { box-sizing: border-box; }
+
+  body {
+    margin: 0;
+    background: var(--paper);
+    color: var(--ink);
+    font-family: var(--sans);
+    font-size: 15px;
+    line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  .wrap { max-width: 1180px; margin: 0 auto; padding: var(--s6) var(--s5) var(--s8); }
+
+  /* ---------- masthead ---------- */
+  .masthead {
+    border: 1.5px solid var(--ink);
+    background: var(--panel);
+    display: grid;
+    grid-template-columns: 1fr auto;
+    margin-bottom: var(--s7);
+  }
+  .masthead-main { padding: var(--s5); border-right: 1.5px solid var(--ink); }
+  .eyebrow {
+    font-family: var(--mono); font-size: .6875rem; font-weight: 600;
+    letter-spacing: .18em; text-transform: uppercase; color: var(--blueprint);
+    margin: 0 0 var(--s3);
+  }
+  h1 {
+    font-family: var(--mono); font-size: clamp(1.5rem, 1rem + 2vw, 2.25rem);
+    font-weight: 600; letter-spacing: -.02em; line-height: 1.1;
+    margin: 0 0 var(--s3); text-wrap: balance;
+  }
+  .masthead-main p { margin: 0; max-width: 62ch; color: var(--muted); }
+  .titleblock {
+    font-family: var(--mono); font-size: .6875rem; line-height: 1.5;
+    display: grid; align-content: start; min-width: 190px;
+  }
+  .tb-row { padding: var(--s2) var(--s3); border-bottom: 1px solid var(--rule); display: grid; gap: 1px; }
+  .tb-row:last-child { border-bottom: 0; }
+  .tb-k { color: var(--faint); letter-spacing: .1em; text-transform: uppercase; font-size: .625rem; }
+  .tb-v { color: var(--ink); font-weight: 600; }
+
+  /* ---------- sheets ---------- */
+  .sheet { margin-bottom: var(--s7); }
+  .sheet-grid { display: grid; grid-template-columns: 170px minmax(0,1fr); gap: var(--s5); align-items: start; }
+  @media (max-width: 860px) { .sheet-grid { grid-template-columns: minmax(0,1fr); gap: var(--s4); } }
+
+  .rail { position: sticky; top: var(--s4); font-family: var(--mono); font-size: .6875rem; line-height: 1.55; }
+  @media (max-width: 860px) { .rail { position: static; } }
+  .rail-no {
+    font-size: 1.75rem; font-weight: 600; letter-spacing: -.03em;
+    color: var(--blueprint); line-height: 1; margin-bottom: var(--s2);
+    font-variant-numeric: tabular-nums;
+  }
+  .rail-label { text-transform: uppercase; letter-spacing: .12em; color: var(--faint); font-size: .625rem; margin-bottom: var(--s3); }
+  .rail-req {
+    border-left: 2px solid var(--blueprint); padding: var(--s2) 0 var(--s2) var(--s3);
+    color: var(--muted); background: var(--blueprint-w);
+  }
+  .rail-req strong { color: var(--ink); display: block; margin-bottom: 2px; font-weight: 600; }
+
+  .frame { border: 1.5px solid var(--ink); background: var(--panel); overflow: hidden; }
+  .frame-hd {
+    display: flex; flex-wrap: wrap; align-items: baseline; gap: var(--s3);
+    padding: var(--s3) var(--s4); border-bottom: 1.5px solid var(--ink);
+    font-family: var(--mono); font-size: .75rem;
+  }
+  .frame-hd h2 { font: inherit; font-weight: 600; margin: 0; letter-spacing: .02em; }
+  .frame-hd .hd-note { color: var(--faint); font-size: .6875rem; margin-left: auto; }
+  .frame-body { padding: var(--s4); }
+  .frame-body > :first-child { margin-top: 0; }
+  .frame-body > :last-child { margin-bottom: 0; }
+
+  /* ---------- terminal ---------- */
+  .term {
+    background: var(--term-bg); color: var(--term-fg);
+    font-family: var(--mono); font-size: .8125rem; line-height: 1.65;
+    padding: var(--s4); overflow-x: auto;
+  }
+  .term pre { margin: 0; font: inherit; }
+  .c-dim{color:var(--term-dim)} .c-grn{color:var(--term-green)} .c-red{color:var(--term-red)}
+  .c-amb{color:var(--term-amber)} .c-blu{color:var(--term-blue)} .c-b{font-weight:700;color:#fff}
+  .term .prompt { color: var(--term-blue); font-weight: 700; }
+
+  /* ---------- generic bits ---------- */
+  .lede { color: var(--muted); margin: 0 0 var(--s4); max-width: 68ch; }
+  .kicker {
+    font-family: var(--mono); font-size: .625rem; font-weight: 600;
+    letter-spacing: .14em; text-transform: uppercase; color: var(--faint);
+    margin: 0 0 var(--s2);
+  }
+  .chip {
+    display: inline-flex; align-items: center; gap: .35em;
+    font-family: var(--mono); font-size: .625rem; font-weight: 600;
+    letter-spacing: .08em; text-transform: uppercase;
+    padding: .2em .5em; border: 1px solid currentColor; white-space: nowrap;
+  }
+  .chip-block { color: var(--stamp); }
+  .chip-ok    { color: var(--approve); }
+  .chip-wait  { color: var(--amber); }
+  .chip-info  { color: var(--blueprint); }
+  .chip-mute  { color: var(--faint); }
+
+  table { border-collapse: collapse; width: 100%; font-size: .8125rem; }
+  .scroll { overflow-x: auto; }
+  th, td { text-align: left; padding: var(--s2) var(--s3); border-bottom: 1px solid var(--rule-soft); vertical-align: top; }
+  th {
+    font-family: var(--mono); font-size: .625rem; font-weight: 600;
+    letter-spacing: .1em; text-transform: uppercase; color: var(--faint);
+    border-bottom: 1px solid var(--rule); white-space: nowrap;
+  }
+  td.mono, .mono { font-family: var(--mono); font-variant-numeric: tabular-nums; }
+  tr:last-child td { border-bottom: 0; }
+
+  /* ---------- brief mockup ---------- */
+  .brief-hd { border-bottom: 1px solid var(--rule); padding-bottom: var(--s4); margin-bottom: var(--s4); }
+  .brief-hd h3 {
+    font-size: 1.5rem; line-height: 1.15; margin: var(--s2) 0 var(--s3);
+    letter-spacing: -.015em; text-wrap: balance; font-weight: 600;
+  }
+  .metaline { display: flex; flex-wrap: wrap; gap: var(--s2); align-items: center; }
+  .brief-sec { margin: var(--s5) 0; }
+  .brief-sec h4 {
+    font-family: var(--mono); font-size: .6875rem; font-weight: 600;
+    letter-spacing: .14em; text-transform: uppercase; color: var(--blueprint);
+    margin: 0 0 var(--s3); padding-bottom: var(--s2); border-bottom: 1px solid var(--rule-soft);
+  }
+  .brief-sec p { margin: 0 0 var(--s3); max-width: 68ch; }
+  .brief-sec ul { margin: 0; padding-left: 1.15em; }
+  .brief-sec li { margin-bottom: var(--s2); }
+  .brief-sec li:last-child { margin-bottom: 0; }
+
+  /* diagrams sit on paper in both themes — a drawing is always on paper */
+  .plate {
+    background: #FBFCFD; border: 1px solid var(--rule); padding: var(--s4);
+    overflow-x: auto; color: #14181E;
+  }
+  .plate .mermaid { display: block; min-width: 0; }
+  .plate-cap {
+    font-family: var(--mono); font-size: .625rem; letter-spacing: .1em;
+    text-transform: uppercase; color: var(--faint); margin-top: var(--s2);
+  }
+
+  .cols { display: grid; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); gap: var(--s4); }
+
+  .stat { border: 1px solid var(--rule); padding: var(--s3); background: var(--surface); }
+  .stat-k { font-family: var(--mono); font-size: .625rem; letter-spacing: .1em; text-transform: uppercase; color: var(--faint); }
+  .stat-v { font-family: var(--mono); font-size: 1.5rem; font-weight: 600; font-variant-numeric: tabular-nums; line-height: 1.2; margin-top: 2px; }
+  .stat-s { font-size: .75rem; color: var(--muted); }
+
+  /* approval bar + stamp */
+  .approve-bar {
+    margin-top: var(--s5); border: 1.5px solid var(--stamp); background: var(--panel);
+    display: flex; flex-wrap: wrap; align-items: center; gap: var(--s4); padding: var(--s4);
+  }
+  .stamp {
+    border: 2.5px solid var(--stamp); color: var(--stamp);
+    font-family: var(--mono); font-weight: 700; font-size: .8125rem;
+    letter-spacing: .12em; text-transform: uppercase; text-align: center;
+    padding: var(--s2) var(--s4); transform: rotate(-4deg); flex: none; line-height: 1.3;
+  }
+  .stamp small { display: block; font-size: .5625rem; letter-spacing: .1em; font-weight: 600; opacity: .8; }
+  .approve-copy { flex: 1 1 260px; min-width: 0; }
+  .approve-copy p { margin: 0 0 var(--s2); font-size: .875rem; }
+  .approve-copy p:last-child { margin: 0; }
+  .cmd {
+    font-family: var(--mono); font-size: .8125rem; background: var(--term-bg); color: var(--term-fg);
+    padding: .35em .6em; display: inline-block; overflow-wrap: anywhere;
+  }
+  .cmd .c-grn { color: var(--term-green); }
+
+  /* dashboard */
+  .dash { display: grid; grid-template-columns: 1fr; gap: 1px; background: var(--rule); border: 1px solid var(--rule); }
+  @media (min-width: 720px) { .dash { grid-template-columns: 1.4fr 1fr; } }
+  .pane { background: var(--panel); padding: var(--s4); }
+  .pane h5 {
+    font-family: var(--mono); font-size: .625rem; font-weight: 600; letter-spacing: .12em;
+    text-transform: uppercase; color: var(--faint); margin: 0 0 var(--s3);
+  }
+  .meter { height: 6px; background: var(--rule-soft); overflow: hidden; margin: var(--s2) 0; }
+  .meter span { display: block; height: 100%; background: var(--approve); }
+  .meter.warn span { background: var(--amber); }
+  .feed { font-family: var(--mono); font-size: .75rem; line-height: 1.8; }
+  .feed div { display: flex; gap: var(--s3); }
+  .feed .t { color: var(--faint); font-variant-numeric: tabular-nums; flex: none; }
+
+  /* legend + checklist */
+  .check { list-style: none; margin: 0; padding: 0; }
+  .check li {
+    display: grid; grid-template-columns: auto 1fr; gap: var(--s3);
+    padding: var(--s3) 0; border-bottom: 1px solid var(--rule-soft); align-items: start;
+  }
+  .check li:last-child { border-bottom: 0; }
+  .check .mark { font-family: var(--mono); font-weight: 700; color: var(--blueprint); font-size: .8125rem; padding-top: 2px; }
+  .check b { display: block; font-weight: 600; }
+  .check span { color: var(--muted); font-size: .875rem; }
+
+  .note {
+    border-left: 2px solid var(--amber); background: var(--surface);
+    padding: var(--s3) var(--s4); font-size: .875rem; color: var(--muted); margin: var(--s4) 0 0;
+  }
+  .note strong { color: var(--ink); }
+
+  a { color: var(--blueprint); }
+  :focus-visible { outline: 2px solid var(--blueprint); outline-offset: 2px; }
+  @media (prefers-reduced-motion: reduce) { * { animation: none !important; transition: none !important; } }
+
+  footer {
+    margin-top: var(--s7); padding-top: var(--s4); border-top: 1.5px solid var(--ink);
+    font-family: var(--mono); font-size: .6875rem; color: var(--faint);
+    display: flex; flex-wrap: wrap; gap: var(--s4); justify-content: space-between;
+  }
+</style>
+
+<div class="wrap">
+
+  <header class="masthead">
+    <div class="masthead-main">
+      <p class="eyebrow">Circle AI · Mockup set 01 · First iteration</p>
+      <h1>Six sheets, drawn to check<br>the requirements</h1>
+      <p>Every sheet carries a margin note naming the requirement it implements. Read the margin first — if a note describes something other than what you asked for, the misunderstanding is there, not in the pixels. Nothing here is built; these are drawings.</p>
+    </div>
+    <div class="titleblock">
+      <div class="tb-row"><span class="tb-k">Project</span><span class="tb-v">Circle AI</span></div>
+      <div class="tb-row"><span class="tb-k">Scope</span><span class="tb-v">v0.1 · Ph 1–7</span></div>
+      <div class="tb-row"><span class="tb-k">Sheets</span><span class="tb-v">6</span></div>
+      <div class="tb-row"><span class="tb-k">Status</span><span class="tb-v" style="color:var(--amber)">For review</span></div>
+      <div class="tb-row"><span class="tb-k">Date</span><span class="tb-v">2026-08-29</span></div>
+    </div>
+  </header>
+
+  <!-- ================= SHEET 00 ================= -->
+  <section class="sheet">
+    <div class="sheet-grid">
+      <div class="rail">
+        <div class="rail-no">00</div>
+        <div class="rail-label">Legend</div>
+        <div class="rail-req"><strong>What to check</strong>Each row is a requirement I extracted. Correct the ones I got wrong.</div>
+      </div>
+      <div class="frame">
+        <div class="frame-hd"><h2>Requirements this set claims to satisfy</h2><span class="hd-note">sheet ref in brackets</span></div>
+        <div class="frame-body">
+          <ul class="check">
+            <li><span class="mark">[01]</span><span><b>Teach Claude how to run and test the project, once, in the repo.</b><span>The three contracts live in <code class="mono">project.toml</code>. A stranger runs <code class="mono">circle preflight</code> and either the project is runnable or the output says exactly what is missing.</span></span></li>
+            <li><span class="mark">[02]</span><span><b>Quality and gates are enforced, not suggested.</b><span>A write is denied at the tool layer when no approval exists. This is the correction from the review — skills cannot block, hooks can.</span></span></li>
+            <li><span class="mark">[03]</span><span><b>Humans cannot read hundreds of lines. Summaries and diagrams are the keys.</b><span>One screen per section, diagrams before prose, and implementation blocked until a human signs off.</span></span></li>
+            <li><span class="mark">[04]</span><span><b>Track the commits made in the session and the files each one changed.</b><span>Commit number and file list. No diffs. Presented as a timeline.</span></span></li>
+            <li><span class="mark">[05]</span><span><b>Know where the work stands without leaving the terminal.</b><span>One score, every point of it traceable to a command that actually ran.</span></span></li>
+            <li><span class="mark">[06]</span><span><b>Observation surface — tracking and configuration only, never execution.</b><span>Deferred to v0.2. Included so the shape is agreed now.</span></span></li>
+          </ul>
+          <p class="note"><strong>Not drawn:</strong> epic decomposition, multi-repo PR fan-out, bug hunting, and the skill forge. All v0.2 under the revised plan. Say if one of them belongs in v0.1 and I will redraw.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= SHEET 01 ================= -->
+  <section class="sheet">
+    <div class="sheet-grid">
+      <div class="rail">
+        <div class="rail-no">01</div>
+        <div class="rail-label">Terminal · preflight</div>
+        <div class="rail-req"><strong>Requirement</strong>“Simplification of the workflow — teach Claude how to test, how to keep quality, how to execute the app locally. Easy to replicate.”</div>
+      </div>
+      <div class="frame">
+        <div class="frame-hd">
+          <h2>circle preflight --explain</h2>
+          <span class="chip chip-block">Exit 2 · blocks</span>
+          <span class="hd-note">first run on a fresh clone</span>
+        </div>
+        <div class="term"><pre><span class="prompt">$</span> circle preflight --explain
+
+<span class="c-b">CONTRACT</span>  <span class="c-dim">.circle/project.toml · scoring_v1 · anchor: acme/platform</span>
+
+<span class="c-grn">  ✓</span> <span class="c-b">execution</span>   compose docker-compose.yml · 6 services · 2 marked app
+              <span class="c-dim">└ api, web        (build: present, human-confirmed)</span>
+              <span class="c-dim">└ seeded from .claude/skills/run-platform/SKILL.md</span>
+<span class="c-grn">  ✓</span> <span class="c-b">quality</span>     5 gates · format lint typecheck test:unit test:e2e
+              <span class="c-dim">└ coverage floor 80% · last run 4m ago · all green</span>
+<span class="c-red">  ✗</span> <span class="c-b">knowledge</span>   7 of 9 paths resolve
+              <span class="c-red">└ docs/adr/          does not exist</span>       <span class="c-dim">[definitions]</span>
+              <span class="c-red">└ services/*/README  matched 0 files</span>       <span class="c-dim">[docs]</span>
+
+<span class="c-amb">  ⚠</span> <span class="c-b">goal</span>        6 of 11 criteria machine-checkable  <span class="c-dim">(55% · target 70%)</span>
+              <span class="c-dim">└ 5 criteria have no command attached</span>
+
+<span class="c-red">PREFLIGHT FAILED</span>  <span class="c-dim">2 blocking · 1 advisory</span>
+
+<span class="c-b">Fix, in order:</span>
+  <span class="c-blu">circle knowledge add docs/architecture --as definitions</span>
+  <span class="c-blu">circle knowledge list --unresolved</span>      <span class="c-dim"># then remove or repoint</span>
+  <span class="c-blu">circle goal validate --ratio</span>              <span class="c-dim"># advisory, not blocking</span>
+
+<span class="c-dim">Bypass is recorded and degrades the status score:</span>
+  <span class="c-dim">circle preflight --force --reason "&lt;why&gt;"</span>
+
+<span class="prompt">$</span> echo $?
+<span class="c-red">2</span>
+</pre></div>
+        <div class="frame-body">
+          <p class="kicker">Why it reads this way</p>
+          <p class="lede">Every failing line names the file that caused it and the command that fixes it. The PRD's risk table predicts developers route around a gate that only says no — so the output is a ratio with a fix list, and the one advisory item is visibly <em>not</em> blocking. Exit 2 is what the <code class="mono">PreToolUse</code> hook and the skill-body injection both read.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= SHEET 02 ================= -->
+  <section class="sheet">
+    <div class="sheet-grid">
+      <div class="rail">
+        <div class="rail-no">02</div>
+        <div class="rail-label">Enforcement</div>
+        <div class="rail-req"><strong>Requirement</strong>Implementation is blocked until a human approves. Not a convention the agent follows — a tool call that does not run.</div>
+      </div>
+      <div class="frame">
+        <div class="frame-hd">
+          <h2>The gate, as Claude experiences it</h2>
+          <span class="chip chip-block">PreToolUse · deny</span>
+        </div>
+        <div class="term"><pre><span class="c-dim">● Claude is working on task-118 …</span>
+
+<span class="c-blu">⏺ Write</span>(src/mw/rate-limit.ts)
+  <span class="c-red">⎿  Denied by hook · circle gate check</span>
+
+     <span class="c-b">No approved brief for task-118.</span>
+     <span class="c-dim">Brief generated 3m ago · awaiting approval from a human.</span>
+     <span class="c-dim">Approve with:  circle brief approve task-118</span>
+
+<span class="c-dim">● I can't write files until the brief is approved. The brief is
+  ready at .circle/items/tasks/task-118/brief.html — open it,
+  and I'll continue once the approval event exists.</span>
+</pre></div>
+        <div class="frame-body">
+          <div class="cols">
+            <div>
+              <p class="kicker">Second gate · same command</p>
+              <div class="term" style="font-size:.75rem;padding:var(--s3)"><pre><span class="prompt">&gt;</span> /circle:brief
+
+<span class="c-red">Shell command failed for pattern
+"circle gate check --skill circle:brief"</span>
+<span class="c-dim">[stderr] preflight not passed: knowledge
+7/9 paths resolve. run circle preflight</span></pre></div>
+              <p style="font-size:.875rem;color:var(--muted);margin:var(--s3) 0 0">A failed injected command aborts the whole skill invocation. Claude never receives the skill body — so a skill cannot be talked into skipping preflight.</p>
+            </div>
+            <div>
+              <p class="kicker">The three mechanisms</p>
+              <table>
+                <tr><td class="mono" style="white-space:nowrap"><span class="chip chip-block">deny</span></td><td><b>PreToolUse</b> on Edit/Write — the write block</td></tr>
+                <tr><td class="mono"><span class="chip chip-block">abort</span></td><td><b>Injected command</b> in every skill body — the preflight gate</td></tr>
+                <tr><td class="mono"><span class="chip chip-info">arm</span></td><td><b>Skill frontmatter hooks</b> — <code class="mono">/circle:start</code> installs the block for the session</td></tr>
+              </table>
+              <p class="note" style="margin-top:var(--s3)"><strong>Ships in the plugin.</strong> Hooks in project settings need a workspace-trust dialog first; plugin hooks run the moment the plugin is enabled. That difference is the whole replication story.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= SHEET 03 ================= -->
+  <section class="sheet">
+    <div class="sheet-grid">
+      <div class="rail">
+        <div class="rail-no">03</div>
+        <div class="rail-label">brief.html</div>
+        <div class="rail-req"><strong>Requirement</strong>“Humans cannot read hundreds of lines + multiple documents. Summaries and diagrams are the keys.”</div>
+      </div>
+      <div class="frame">
+        <div class="frame-hd">
+          <h2>The comprehension gate</h2>
+          <span class="chip chip-wait">Awaiting approval</span>
+          <span class="hd-note">also renders as brief.md — the PR body</span>
+        </div>
+        <div class="frame-body">
+
+          <div class="brief-hd">
+            <div class="metaline">
+              <span class="chip chip-info">task-118</span>
+              <span class="chip chip-mute">acme/platform</span>
+              <span class="chip chip-mute">3 files · 2 services</span>
+            </div>
+            <h3>Rate-limit the public search endpoint</h3>
+            <p class="lede" style="margin:0">Search is the only unauthenticated write-path to Redis. One client can currently exhaust the connection pool for everyone. This adds a fixed-window limiter in front of it.</p>
+          </div>
+
+          <div class="brief-sec">
+            <h4>Goal · what "done" means</h4>
+            <ul>
+              <li><b>Verified by command</b> — 100 requests in 60s from one IP returns <code class="mono">429</code> after the 60th. <code class="mono">pnpm vitest run mw/rate-limit</code></li>
+              <li><b>Verified by command</b> — authenticated traffic is unaffected. <code class="mono">pnpm playwright test search</code></li>
+              <li><b>Verified by command</b> — Redis pool utilisation stays under 60% at 500 rps. <code class="mono">make loadtest:search</code></li>
+              <li><span style="color:var(--amber)"><b>Human judgement</b></span> — the 429 body is actionable for API consumers.</li>
+            </ul>
+            <p style="margin-top:var(--s3);font-size:.8125rem;color:var(--muted)">3 of 4 machine-checkable · the fourth is marked, not hidden.</p>
+          </div>
+
+          <div class="brief-sec">
+            <h4>Blast radius · what this touches</h4>
+            <div class="plate">
+              <pre class="mermaid">
+flowchart LR
+  subgraph edge["web · compose service"]
+    RT["router<br/>src/routes/search.ts"]
+  end
+  subgraph api["api · compose service"]
+    MW["rate-limit<br/>NEW"]
+    SVC["search service"]
+  end
+  RD[("redis")]
+  RT --> MW
+  MW --> SVC
+  MW -.->|counter| RD
+  SVC --> RD
+  style MW fill:#E4EAF5,stroke:#2B4E8F,stroke-width:2px
+              </pre>
+              <p class="plate-cap">Fig 1 — assembled from the compose map and the import graph. The model labels; it does not draw.</p>
+            </div>
+          </div>
+
+          <div class="brief-sec">
+            <h4>Behaviour · how it will act</h4>
+            <div class="plate">
+              <pre class="mermaid">
+sequenceDiagram
+  autonumber
+  participant C as Client
+  participant M as rate-limit
+  participant R as Redis
+  participant S as search
+  C->>M: GET /search?q=…
+  M->>R: INCR ip:1.2.3.4 (TTL 60s)
+  R-->>M: 61
+  alt over limit
+    M-->>C: 429 + Retry-After
+  else under limit
+    M->>S: forward
+    S-->>C: 200 results
+  end
+              </pre>
+              <p class="plate-cap">Fig 2 — planned runtime flow.</p>
+            </div>
+          </div>
+
+          <div class="brief-sec">
+            <h4>Plan · 4 units, in readiness order</h4>
+            <div class="scroll">
+              <table>
+                <tr><th>#</th><th>Unit</th><th>Touches</th><th>Gate</th></tr>
+                <tr><td class="mono">1</td><td>Fixed-window limiter + config</td><td class="mono">src/mw/rate-limit.ts</td><td class="mono">test:unit</td></tr>
+                <tr><td class="mono">2</td><td>Mount on the search route</td><td class="mono">src/app.ts</td><td class="mono">test:unit</td></tr>
+                <tr><td class="mono">3</td><td>429 body + Retry-After</td><td class="mono">src/mw/rate-limit.ts</td><td class="mono">test:e2e</td></tr>
+                <tr><td class="mono">4</td><td>Load check at 500 rps</td><td class="mono">Makefile</td><td class="mono">loadtest</td></tr>
+              </table>
+            </div>
+          </div>
+
+          <div class="brief-sec">
+            <h4>Risks &amp; unknowns</h4>
+            <ul>
+              <li><b>Fixed window allows a 2× burst at the boundary.</b> Accepted for v1 — sliding window is a follow-up, recorded as an addendum.</li>
+              <li><b>No shared clock across api replicas.</b> Redis is the counter, so this is contained — but it makes Redis a hard dependency of the request path.</li>
+              <li><span style="color:var(--amber)"><b>Unresolved</b></span> — no ADR covers limiter policy. <code class="mono">docs/adr/</code> is registered but empty.</li>
+            </ul>
+          </div>
+
+          <div class="brief-sec">
+            <h4>Definitions consulted</h4>
+            <p style="font-size:.8125rem;color:var(--muted);margin:0">
+              <code class="mono">docs/architecture/services.md</code> · <code class="mono">docs/api/search.md</code> · <code class="mono">.circle/artifacts/prd/search-hardening.md</code> — traceability: what the agent actually read, from the knowledge registry.
+            </p>
+          </div>
+
+          <div class="approve-bar">
+            <div class="stamp">Pending<br>approval<small>gate · blocks writes</small></div>
+            <div class="approve-copy">
+              <p><b>Nothing is written until this is approved.</b> The approval records who approved it, and is invalidated if the plan or blast radius changes.</p>
+              <p><span class="cmd">circle brief approve <span class="c-grn">task-118</span></span></p>
+            </div>
+          </div>
+
+          <p class="note"><strong>Read time is the metric, not approval rate.</strong> Target: a reviewer who did not write the plan answers scope, blast radius, and risk correctly in under five minutes without opening a source document. Sections are capped at one screen by construction.</p>
+
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= SHEET 04 ================= -->
+  <section class="sheet">
+    <div class="sheet-grid">
+      <div class="rail">
+        <div class="rail-no">04</div>
+        <div class="rail-label">Change timeline</div>
+        <div class="rail-req"><strong>Requirement</strong>“Identify all the commits executed in the session and list all the changed files. Not the exact changes — commit number and file changes. Like a timeline.”</div>
+      </div>
+      <div class="frame">
+        <div class="frame-hd">
+          <h2>circle timeline show task-118</h2>
+          <span class="chip chip-info">Git-truth</span>
+          <span class="hd-note">renders into brief.md → the PR body</span>
+        </div>
+        <div class="frame-body">
+          <div class="cols" style="margin-bottom:var(--s4)">
+            <div class="stat"><div class="stat-k">Baseline</div><div class="stat-v">4c1e08b</div><div class="stat-s">worktree-task-118 · 2026-08-29 09:14</div></div>
+            <div class="stat"><div class="stat-k">Commits</div><div class="stat-v">5</div><div class="stat-s">4 live · 1 superseded</div></div>
+            <div class="stat"><div class="stat-k">Files touched</div><div class="stat-v">7</div><div class="stat-s">1 outside blast radius</div></div>
+          </div>
+
+          <div class="scroll">
+            <table>
+              <tr><th>#</th><th>Commit</th><th>Subject</th><th>Files</th><th>State</th></tr>
+              <tr>
+                <td class="mono">1</td><td class="mono">a3f81c9</td>
+                <td>add fixed-window rate limiter<div style="font-size:.75rem;color:var(--faint)" class="mono">09:41 · task-118</div></td>
+                <td class="mono" style="font-size:.75rem;line-height:1.7">
+                  <span style="color:var(--approve)">A</span> src/mw/rate-limit.ts<br>
+                  <span style="color:var(--approve)">A</span> src/mw/rate-limit.test.ts
+                </td>
+                <td><span class="chip chip-ok">Live</span></td>
+              </tr>
+              <tr>
+                <td class="mono">2</td><td class="mono" style="text-decoration:line-through;color:var(--faint)">7d20fa4</td>
+                <td style="color:var(--muted)">mount limiter on search<div style="font-size:.75rem;color:var(--faint)" class="mono">09:58 → amended into <span style="color:var(--blueprint)">b91c3e0</span></div></td>
+                <td class="mono" style="font-size:.75rem;color:var(--faint)"><span>M</span> src/app.ts</td>
+                <td><span class="chip chip-mute">Rewritten</span></td>
+              </tr>
+              <tr>
+                <td class="mono">3</td><td class="mono">b91c3e0</td>
+                <td>mount limiter on search route<div style="font-size:.75rem;color:var(--faint)" class="mono">10:02 · task-118 · amend</div></td>
+                <td class="mono" style="font-size:.75rem;line-height:1.7">
+                  <span style="color:var(--amber)">M</span> src/app.ts<br>
+                  <span style="color:var(--blueprint)">R</span> src/mw/index.ts <span style="color:var(--faint)">← src/middleware/index.ts</span>
+                </td>
+                <td><span class="chip chip-ok">Live</span></td>
+              </tr>
+              <tr>
+                <td class="mono">4</td><td class="mono">c07b5d2</td>
+                <td>429 body + Retry-After header<div style="font-size:.75rem;color:var(--faint)" class="mono">10:31 · task-118</div></td>
+                <td class="mono" style="font-size:.75rem;line-height:1.7">
+                  <span style="color:var(--amber)">M</span> src/mw/rate-limit.ts<br>
+                  <span style="color:var(--amber)">M</span> docs/api/search.md
+                </td>
+                <td><span class="chip chip-ok">Live</span></td>
+              </tr>
+              <tr>
+                <td class="mono">5</td><td class="mono" style="color:var(--stamp)">e4a9017</td>
+                <td style="color:var(--stamp)">bump redis client<div style="font-size:.75rem;color:var(--faint)" class="mono">10:44 · claimed by agent · not in git</div></td>
+                <td class="mono" style="font-size:.75rem;color:var(--faint)">—</td>
+                <td><span class="chip chip-block">Phantom</span></td>
+              </tr>
+              <tr>
+                <td class="mono">—</td><td class="mono" style="color:var(--faint)">working tree</td>
+                <td style="color:var(--muted)">uncommitted at handoff</td>
+                <td class="mono" style="font-size:.75rem"><span style="color:var(--amber)">M</span> Makefile</td>
+                <td><span class="chip chip-wait">Uncommitted</span></td>
+              </tr>
+            </table>
+          </div>
+
+          <div class="cols" style="margin-top:var(--s5)">
+            <div>
+              <p class="kicker">Three states you asked for implicitly</p>
+              <table>
+                <tr><td><span class="chip chip-mute">Rewritten</span></td><td style="font-size:.8125rem">Amended, rebased, or squash-merged. Superseded, never deleted — otherwise the timeline empties itself the moment the PR lands.</td></tr>
+                <tr><td><span class="chip chip-block">Phantom</span></td><td style="font-size:.8125rem">The agent reported a commit git doesn't have. A known Claude Code failure mode; surfaced rather than trusted.</td></tr>
+                <tr><td><span class="chip chip-wait">Uncommitted</span></td><td style="font-size:.8125rem">Most sessions end here. Omitting it would lie by omission at exactly the moment someone resumes cold.</td></tr>
+              </table>
+            </div>
+            <div>
+              <p class="kicker">Drift · timeline vs. approved brief</p>
+              <div class="term" style="font-size:.75rem;padding:var(--s3)"><pre><span class="prompt">$</span> circle timeline drift task-118
+
+<span class="c-amb">⚠ 1 file outside the approved
+  blast radius</span>
+
+  <span class="c-amb">M</span> docs/api/search.md
+    <span class="c-dim">c07b5d2 · not in brief Fig 1</span>
+
+<span class="c-dim">Approved: src/mw/**, src/app.ts
+Record an addendum, or
+regenerate the brief.</span>
+<span class="prompt">$</span> echo $?
+<span class="c-amb">7</span></pre></div>
+            </div>
+          </div>
+
+          <p class="note"><strong>No diffs, by design.</strong> You ruled them out, the size cost is real, and <code class="mono">gh pr diff</code> already exists. Commit, subject, file, and change letter only — <span class="mono" style="color:var(--approve)">A</span>dded, <span class="mono" style="color:var(--amber)">M</span>odified, <span class="mono">D</span>eleted, <span class="mono" style="color:var(--blueprint)">R</span>enamed.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= SHEET 05 ================= -->
+  <section class="sheet">
+    <div class="sheet-grid">
+      <div class="rail">
+        <div class="rail-no">05</div>
+        <div class="rail-label">Terminal · status</div>
+        <div class="rail-req"><strong>Requirement</strong>Know where the work stands. Every point traceable to a command that ran — no inference.</div>
+      </div>
+      <div class="frame">
+        <div class="frame-hd"><h2>circle status</h2><span class="chip chip-info">Status only · v0.1</span></div>
+        <div class="term"><pre><span class="prompt">$</span> circle status
+
+<span class="c-b">task-118</span>  Rate-limit the public search endpoint
+<span class="c-dim">worktree-task-118 · api:42011 web:42012 · stack up 38m</span>
+
+<span class="c-b">STATUS  74</span> <span class="c-dim">/100 ·</span> <span class="c-grn">100% deterministic</span>
+
+  <span class="c-grn">████████████████████░░░░░░</span>  quality gates      <span class="c-dim">40/40</span>
+  <span class="c-amb">██████████████░░░░░░░░░░░░</span>  goal criteria      <span class="c-dim">22/30</span>  <span class="c-dim">3 of 4 verified</span>
+  <span class="c-grn">████████████████████░░░░░░</span>  task closure       <span class="c-dim">12/20</span>  <span class="c-dim">3 of 4 closed</span>
+  <span class="c-red">░░░░░░░░░░░░░░░░░░░░░░░░░░</span>  pr &amp; ci            <span class="c-dim"> 0/10</span>  <span class="c-dim">no PR opened</span>
+
+<span class="c-b">GATE</span>    <span class="c-grn">brief approved</span> <span class="c-dim">· eng@acme.co · 2026-08-29 09:33</span>
+<span class="c-b">DRIFT</span>   <span class="c-amb">1 file outside blast radius</span> <span class="c-dim">· circle timeline drift</span>
+<span class="c-b">CLAIMS</span>  <span class="c-red">1 phantom commit</span> <span class="c-dim">· circle timeline show --state phantom</span>
+
+<span class="c-b">Next:</span>
+  <span class="c-blu">circle quality run test:e2e</span>       <span class="c-dim"># unblocks unit 3</span>
+  <span class="c-blu">circle addendum add task-118</span>       <span class="c-dim"># or regenerate the brief</span>
+</pre></div>
+        <div class="frame-body">
+          <p class="lede">Four components, fixed weights, arithmetic in Rust. The model contributes nothing to this number in v0.1 — the one human-judgement goal criterion is visible as the 8-point gap in <span class="mono">goal criteria</span> rather than being guessed at. <b>Unknown and Complexity are not drawn</b> because they are cut from v0.1; if you want them back, that is a conversation about the month.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= SHEET 06 ================= -->
+  <section class="sheet">
+    <div class="sheet-grid">
+      <div class="rail">
+        <div class="rail-no">06</div>
+        <div class="rail-label">Web app · v0.2</div>
+        <div class="rail-req"><strong>Requirement</strong>Tracking and configuration only. It suggests; it never dispatches. All interaction stays in Claude Code.</div>
+      </div>
+      <div class="frame">
+        <div class="frame-hd"><h2>circle serve</h2><span class="chip chip-mute">Deferred · shape only</span></div>
+        <div class="frame-body">
+          <div class="dash">
+            <div class="pane">
+              <h5>task-118 · status 74</h5>
+              <div class="meter"><span style="width:74%"></span></div>
+              <p style="font-size:.8125rem;color:var(--muted);margin:var(--s2) 0 var(--s4)">Blocked on: e2e gate, no PR. Brief approved by eng@acme.co.</p>
+              <h5>Change timeline</h5>
+              <div class="feed">
+                <div><span class="t">10:44</span><span style="color:var(--stamp)">phantom e4a9017</span></div>
+                <div><span class="t">10:31</span><span>c07b5d2 · 2 files</span></div>
+                <div><span class="t">10:02</span><span>b91c3e0 · 2 files <span style="color:var(--faint)">(amend)</span></span></div>
+                <div><span class="t">09:41</span><span>a3f81c9 · 2 files</span></div>
+                <div><span class="t">09:33</span><span style="color:var(--approve)">brief approved</span></div>
+                <div><span class="t">09:14</span><span style="color:var(--faint)">baseline 4c1e08b</span></div>
+              </div>
+            </div>
+            <div class="pane">
+              <h5>Suggested — copy into Claude Code</h5>
+              <p style="margin:0 0 var(--s2)"><span class="cmd">/circle:verify</span></p>
+              <p style="margin:0 0 var(--s4)"><span class="cmd">circle addendum add task-118</span></p>
+              <h5>Contracts</h5>
+              <table>
+                <tr><td style="font-size:.8125rem">execution</td><td><span class="chip chip-ok">ok</span></td></tr>
+                <tr><td style="font-size:.8125rem">quality</td><td><span class="chip chip-ok">ok</span></td></tr>
+                <tr><td style="font-size:.8125rem">knowledge</td><td><span class="chip chip-wait">7/9</span></td></tr>
+              </table>
+              <h5 style="margin-top:var(--s4)">Session</h5>
+              <p style="font-size:.8125rem;color:var(--muted);margin:0">38m · 2 Claude sessions · 184k tokens · ~$2.10</p>
+            </div>
+          </div>
+          <p class="note"><strong>No run button anywhere.</strong> Suggestions are text you copy into Claude Code. That constraint is what keeps a second execution path from existing.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <footer>
+    <span>Circle AI · mockup set 01 · drawn 2026-08-29</span>
+    <span>Companion: circle-ai.prd.md · circle-ai.cli.md · circle-ai.review.md</span>
+  </footer>
+
+</div>
