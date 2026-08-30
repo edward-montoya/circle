@@ -129,3 +129,81 @@ honesty; surebets stresses scale, distribution, and the competing hypothesis.
   whether a *human stranger* succeeds — only that the mechanism works.
 - Whether surebets' 494 lines of CLAUDE.md already solve cold start, which is
   the single most important measurement left.
+
+---
+
+# Iteration 2 — the Go core
+
+*Same day. Phases 1, 2, 4 and 6 built; Phase 3 and 5 not started.*
+
+The hand-written Phase 0 validator is now superseded by a real binary. Both
+targets were re-verified against it, and both behave identically to the paper
+version — which is the cheapest possible confirmation that the paper version
+encoded the right rules.
+
+| Built | Verified against |
+|---|---|
+| `circle init\|doctor\|preflight\|project validate` | both targets |
+| `circle gate check --hook` (PreToolUse deny/allow) | both targets |
+| `circle quality run\|list` | bb-control |
+| `circle task create\|validate\|ready\|claim\|close\|list\|show` | bb-control |
+| `circle timeline open\|sync\|show\|drift` | bb-control, incl. an amend |
+| `circle status`, `circle score explain` | bb-control |
+| `circle serve` — SSE app | bb-control, live |
+| `circle` plugin | `claude plugin validate` ✔ |
+
+## F-9 · The task contract holds under test
+
+The full loop was exercised end to end on bb-control:
+
+1. `task create` with no goal → **exit 2**, task not created.
+2. `task create` naming an undeclared gate → **exit 2**, and the error lists the
+   gates that *are* declared.
+3. `verify-kind manual` without justification or reviewer → **exit 2**.
+4. `task close` before any gate run → **exit 5**, naming the gate and the
+   command to run.
+5. `quality run test:unit` → event recorded.
+6. `task close` → succeeds, and records `evidence: test:unit@2026-08-30T04:29:19Z`.
+
+Step 4 is the one that matters. Task closure is now a measurement rather than an
+assertion, which was the last of the four status components resting on the
+agent's word.
+
+## F-10 · Auto-detection settles F-4
+
+F-4 recorded that enumerating surebets' 18 application containers by hand was
+error-prone busywork, and that this was the argument for `circle init`.
+
+`circle init --detect-only` now classifies all 19 services correctly in one
+command — 18 `build:` app candidates, `redis` as infrastructure — matching the
+hand-built list exactly. The D-10 heuristic did not misclassify anything on
+either target.
+
+## F-11 · A bug a unit test could not have caught
+
+`git()` applied `TrimSpace` to the whole of `git status --porcelain`. That output
+is column-oriented: an unstaged modification is ` M path`, with a leading space.
+Trimming shifted the line left by one, so **every unstaged path lost its first
+character** — `.circle/x` rendered as `circle/x`, which reads as a plausible path
+rather than an error.
+
+The parser was correct and its tests passed. The corruption happened upstream of
+the parser, in the helper that fetched the bytes. Fixed with a `gitRaw` variant,
+and the table-driven test now uses dotfiles precisely because the truncation is
+invisible on an ordinary path.
+
+Worth generalising: **the boundary where output is normalised is as much a
+parsing surface as the parser.**
+
+## F-12 · What is not built
+
+Honest ledger, so the phase table is not read as more than it is.
+
+- **Phase 3 — Compose isolation.** No `WorktreeCreate`/`WorktreeRemove` hooks
+  yet. bb-control's fixed ports (4000, 4080) still collide across checkouts.
+- **Phase 5 — Brief and the human approval gate.** The `PreToolUse` gate
+  currently enforces *preflight*, not approval. The blast-radius check is
+  written and wired but inert until an `approved-radius` file exists.
+- **Phase 7 — the trial.** Still the largest gap. Everything above proves the
+  mechanism works; nothing proves a human stranger succeeds.
+- The `Stop` hook is specified in the CLI doc but not yet registered.
