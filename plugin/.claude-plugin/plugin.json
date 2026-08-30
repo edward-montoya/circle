@@ -1,0 +1,8 @@
+{
+  "name": "circle",
+  "description": "Encode a project's execution, quality and knowledge contracts into the repo, then enforce them with hooks.",
+  "version": "0.1.0",
+  "author": { "name": "Circle AI" },
+  "homepage": "https://github.com/edwardmontoya/circle",
+  "license": "Apache-2.0"
+}

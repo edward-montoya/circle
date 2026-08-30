@@ -18,8 +18,15 @@ import (
 	"github.com/edwardmontoya/circle/internal/domain"
 )
 
-// git runs a command in dir and returns trimmed stdout.
-func git(dir string, args ...string) (string, error) {
+// gitRaw runs a command in dir and returns stdout untouched.
+//
+// Untouched matters: `git status --porcelain` is column-oriented, and an
+// unstaged modification is reported as " M path" with a leading space. Trimming
+// the output shifts that line left by one, so every path loses its first
+// character — which renders as a plausible-looking path rather than an error.
+// A parser test cannot catch this, because the corruption happens before the
+// parser ever sees the bytes.
+func gitRaw(dir string, args ...string) (string, error) {
 	cmd := exec.Command("git", args...)
 	cmd.Dir = dir
 	out, err := cmd.Output()
@@ -30,7 +37,14 @@ func git(dir string, args ...string) (string, error) {
 		}
 		return "", err
 	}
-	return strings.TrimSpace(string(out)), nil
+	return string(out), nil
+}
+
+// git is gitRaw with the trailing newline removed, for the many commands whose
+// output is a single value.
+func git(dir string, args ...string) (string, error) {
+	out, err := gitRaw(dir, args...)
+	return strings.TrimSpace(out), err
 }
 
 // HeadSHA is the baseline recorded when a session or worktree opens.
@@ -113,28 +127,45 @@ func FilesOf(dir, sha string) ([]domain.FileChange, error) {
 // Most sessions end here. A timeline that omits it lies by omission at exactly
 // the moment someone is resuming cold.
 func Uncommitted(dir string) ([]domain.FileChange, error) {
-	out, err := git(dir, "status", "--porcelain")
+	out, err := gitRaw(dir, "status", "--porcelain") // raw: columns are significant
 	if err != nil {
 		return nil, err
 	}
+	return ParsePorcelain(out), nil
+}
+
+// ParsePorcelain turns `git status --porcelain` output into file changes.
+//
+// Exported for testing: the format is fixed-width (two status columns, a space,
+// then the path) and getting the offset wrong silently truncates the first
+// character of every path, which looks like a rendering glitch rather than a
+// parse bug.
+func ParsePorcelain(out string) []domain.FileChange {
 	var files []domain.FileChange
 	for _, line := range strings.Split(out, "\n") {
 		if len(line) < 4 {
 			continue
 		}
-		code, path := strings.TrimSpace(line[:2]), strings.TrimSpace(line[3:])
+		code := line[:2]
+		path := strings.TrimSpace(line[3:])
+		// A rename reads `R  old -> new`; the new path is what was touched.
+		if idx := strings.Index(path, " -> "); idx >= 0 {
+			path = path[idx+4:]
+		}
+		path = strings.Trim(path, `"`)
+
 		status := domain.Modified
 		switch {
-		case strings.HasPrefix(code, "A"), code == "??":
+		case code == "??", strings.ContainsRune(code, 'A'):
 			status = domain.Added
-		case strings.HasPrefix(code, "D"):
+		case strings.ContainsRune(code, 'D'):
 			status = domain.Deleted
-		case strings.HasPrefix(code, "R"):
+		case strings.ContainsRune(code, 'R'):
 			status = domain.Renamed
 		}
 		files = append(files, domain.FileChange{Status: status, Path: path})
 	}
-	return files, nil
+	return files
 }
 
 // PatchID is the content identity of a commit, stable across amend and rebase.
