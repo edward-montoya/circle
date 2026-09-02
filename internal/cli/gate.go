@@ -95,7 +95,11 @@ func runGateCheck(e Env, args []string) int {
 	}
 
 	res := contract.Validate(repo)
-	if res.Blocked() {
+	// A project on day zero has nothing to run and nothing to prove, so there is
+	// nothing to enforce. Blocking here would mean a new repository cannot write
+	// its first file, and the only escape would be --force from minute one —
+	// which teaches the user the gate is noise before it has ever been useful.
+	if res.Blocked() && !res.Incubating {
 		reason := "circle: preflight is failing, so writes are blocked. Run `circle preflight --explain` and fix the contract."
 		if *skill != "" {
 			reason = fmt.Sprintf("circle: %s cannot run — the contracts are invalid. Run `circle preflight --explain`.", *skill)

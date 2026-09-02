@@ -342,3 +342,73 @@ Both are narrow carve-outs with a stated reason, not general escape hatches.
 - **Phase 7** — the trial. Unchanged, and now the only thing between here and a
   v0.1 verdict. Every mechanism the PRD promised is built and demonstrated;
   none of it proves a human stranger succeeds.
+
+---
+
+# Iteration 5 — greenfield
+
+Prompted by a question rather than a plan: what does a project with no compose
+file and no tests actually experience? The answer was bad enough to be worth
+recording.
+
+## F-19 · Day zero was a dead end
+
+Running the real sequence on an empty repository with only a `REQUIREMENTS.md`:
+
+| Step | Before |
+|---|---|
+| `circle init` | **exit 0**, a green tick, and `✓ quality 0 gate(s) detected` |
+| Contract written | `compose = ""` and `up = "docker compose up --build -d"` |
+| `circle preflight` | exit 2, three blocking failures |
+| Writing `main.go` | **denied** |
+| `REQUIREMENTS.md` | ignored entirely |
+
+A new user installs Circle, sees a checkmark, and then cannot write a single
+file. Their only escape is `--force` from the first minute, which teaches them
+the gate is noise before it has ever been useful.
+
+Four defects, none of which needed the scope question answering:
+
+1. **`init` invented tooling.** It wrote `docker compose up` into a repository
+   with no compose file — the exact thing the contract's own header promises not
+   to do.
+2. **A tick on zero.** `✓ quality 0 gate(s) detected` reported the total absence
+   of gates as a success.
+3. **The fix hints assumed brownfield.** "list the containers that hold your
+   code" means nothing when there is no code.
+4. **The one artifact present was ignored.** `REQUIREMENTS.md` is precisely what
+   the definitions registry exists for.
+
+## F-20 · Incubating: a third state between valid and broken
+
+A new project and a broken contract look identical to a naive check and deserve
+opposite treatment. **Incubating** is now explicit: nothing declared, and nothing
+on disk to declare.
+
+In that state the gaps are still listed, but preflight exits 0 and the gate stays
+open. The state is deliberately narrow, and three things end it:
+
+- a compose file appears on disk → declare it, or block with the exact line to paste
+- a gate is declared → no longer incubating
+- **the contract names a file that does not exist → never incubating.** A
+  contract claiming an execution model it cannot honour is a lie, not a young
+  project, and laundering that through incubation would make the gate decorative
+
+One thing still blocks once a project runs: having something to run and no way to
+prove it works. Without a declared gate no task can name a verification, so no
+task can be created, so the approval gate never engages — the framework would be
+installed and inert. The message now says that rather than "add a gate".
+
+## F-21 · The scope boundary held
+
+The question that prompted this was whether the CLI should propose a
+`docker-compose.yml` from a requirements sheet. Decided: **no.** Circle reads
+what exists and writes it down; it does not choose a stack.
+
+Every spec-driven framework already generates scaffolding, and the review found
+their common weakness is brownfield. Moving into greenfield generation would put
+Circle in a crowded field where it has no advantage and give up the one it has.
+
+What it does instead is cheap and in scope: register `REQUIREMENTS.md`, `PRD.md`,
+`SPEC.md` and the usual `docs/` subdirectories as definitions, so the only
+artifact a new project has is not wasted.

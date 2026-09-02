@@ -25,6 +25,7 @@ type detected struct {
 	Gates       map[string]string
 	Bootstrap   string
 	Docs        []string
+	Definitions []string
 	Validations []string
 	RunSkill    string
 }
@@ -122,6 +123,17 @@ func detect(root string) detected {
 			d.Docs = append(d.Docs, p)
 		}
 	}
+	// A new project usually has exactly one artifact: the thing someone wrote
+	// down before any code existed. It is the definition of what should be
+	// built, and leaving it unregistered wastes the only context available.
+	for _, p := range []string{
+		"REQUIREMENTS.md", "PRD.md", "SPEC.md", "DESIGN.md",
+		"docs/prd/", "docs/adr/", "docs/architecture/", "docs/specs/",
+	} {
+		if _, err := os.Stat(filepath.Join(root, strings.TrimSuffix(p, "/"))); err == nil {
+			d.Definitions = append(d.Definitions, p)
+		}
+	}
 	for _, p := range []string{"tests/", "test/", "e2e/", ".github/workflows/"} {
 		if _, err := os.Stat(filepath.Join(root, strings.TrimSuffix(p, "/"))); err == nil {
 			d.Validations = append(d.Validations, p)
@@ -181,7 +193,11 @@ func runInit(e Env, args []string) int {
 		names = append(names, n)
 	}
 	sort.Strings(names)
-	fmt.Fprintf(e.Stdout, "  %s✓%s quality      %d gate(s) detected\n", p.G, p.N, len(names))
+	if len(names) == 0 {
+		fmt.Fprintf(e.Stdout, "  %s⚠%s quality      no gates found — nothing to prove yet\n", p.Y, p.N)
+	} else {
+		fmt.Fprintf(e.Stdout, "  %s✓%s quality      %d gate(s) detected\n", p.G, p.N, len(names))
+	}
 	for _, n := range names {
 		fmt.Fprintf(e.Stdout, "      %s%-12s %s%s\n", p.D, n, d.Gates[n], p.N)
 	}
@@ -221,14 +237,26 @@ func renderContract(root string, d detected) string {
 
 	b.WriteString("[knowledge]\n")
 	fmt.Fprintf(&b, "docs        = [%s]\n", q(d.Docs))
-	b.WriteString("definitions = []   # what SHOULD be built: ADRs, PRDs, specs\n")
+	if len(d.Definitions) > 0 {
+		fmt.Fprintf(&b, "definitions = [%s]\n", q(d.Definitions))
+	} else {
+		b.WriteString("definitions = []   # what SHOULD be built: ADRs, PRDs, specs\n")
+	}
 	fmt.Fprintf(&b, "validations = [%s]\n\n", q(d.Validations))
 
-	b.WriteString("[execution]\n")
-	fmt.Fprintf(&b, "compose      = %q\n", d.Compose)
-	fmt.Fprintf(&b, "app_services = [%s]\n", q(d.AppServices))
-	b.WriteString("up           = \"docker compose up --build -d\"\n")
-	b.WriteString("down         = \"docker compose down\"\n\n")
+	// Writing `up = docker compose ...` for a repo with no compose file would be
+	// exactly the invention this contract's own header promises not to make.
+	if d.Compose == "" {
+		b.WriteString("# [execution] — nothing to run yet. Declare compose, up and down\n")
+		b.WriteString("# once the project has something that starts, then re-run\n")
+		b.WriteString("# `circle init --force` to re-detect.\n\n")
+	} else {
+		b.WriteString("[execution]\n")
+		fmt.Fprintf(&b, "compose      = %q\n", d.Compose)
+		fmt.Fprintf(&b, "app_services = [%s]\n", q(d.AppServices))
+		b.WriteString("up           = \"docker compose up --build -d\"\n")
+		b.WriteString("down         = \"docker compose down\"\n\n")
+	}
 
 	b.WriteString("[quality]\n")
 	if d.Bootstrap != "" {

@@ -315,6 +315,63 @@ no orphan volumes are left behind.
 
 ---
 
+## Starting from nothing
+
+Circle assumes a project that already runs. If yours does not yet — no compose
+file, no tests, maybe only a requirements document — it does not block you. It
+says so and gets out of the way.
+
+```
+INCUBATING  nothing to run and nothing to prove yet
+
+This is expected in a new project, and writes are not blocked.
+Come back when the project has:
+  · something that starts   → set execution.compose and up/down
+  · a first test            → set a gate under [quality]
+```
+
+**Incubating means nothing is declared and nothing is on disk to declare.** In
+that state `circle init` will not write execution commands it cannot honour, the
+gate stays open, and preflight exits 0 while still listing the gaps.
+
+It is deliberately narrow. Three things end it:
+
+| Change | What happens |
+|---|---|
+| A compose file appears | Incubation ends. Declare it, or preflight blocks with the exact line to paste |
+| A gate is declared | Incubation ends |
+| The contract names a file that does not exist | **Never incubating.** A contract that claims an execution model it cannot honour is a lie, not a young project |
+
+One thing does still block once your project runs: **having something to run and
+no way to prove it works.** That is not bureaucracy. Without a declared gate, no
+task can name a verification, so no task can be created, so the approval gate
+never engages — Circle would be installed and inert. One line is enough to
+start:
+
+```toml
+[quality.test]
+unit = "your test command"
+```
+
+**What Circle will not do is choose your stack.** It reads what you have and
+writes it down; it does not propose a framework, a directory layout or a compose
+file from a requirements document. That is a deliberate boundary — every
+spec-driven tool already generates scaffolding, and none of them solves the
+problem Circle exists for.
+
+What it *does* do on day zero is register your requirements document as
+`definitions`, so the one artifact a new project has is not wasted:
+
+```
+✓ definitions   REQUIREMENTS.md → 1
+```
+
+`init` looks for `REQUIREMENTS.md`, `PRD.md`, `SPEC.md`, `DESIGN.md` and the
+usual `docs/` subdirectories. Re-run `circle init --force` whenever the project
+grows something new to detect.
+
+---
+
 ## Troubleshooting
 
 **`circle: no .circle/project.toml`** — you are outside the repo, or have not run

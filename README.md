@@ -194,6 +194,16 @@ circle task close feat-1          # refuses unless that gate passed since your l
 circle status                     # one score, every point traced to a command
 ```
 
+### Starting from nothing?
+
+Circle assumes a project that already runs. If yours does not yet, it reports
+`INCUBATING`, leaves the gate open, and tells you what to come back for — rather
+than blocking a new repository from writing its first file. It also registers
+your `REQUIREMENTS.md` as `definitions`.
+
+It will not choose your stack. See
+[Starting from nothing](docs/GETTING-STARTED.md#starting-from-nothing).
+
 ---
 
 ## Use it with Claude Code

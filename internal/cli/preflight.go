@@ -55,7 +55,7 @@ func runPreflight(e Env, args []string) int {
 	res := contract.Validate(repo)
 
 	ev := domain.NewEvent(domain.EvPreflight)
-	if res.Blocked() {
+	if res.Blocked() && !res.Incubating {
 		ev.ExitCode = ExitGate
 	}
 	_ = events.Append(repo, ev)
@@ -70,7 +70,7 @@ func runPreflight(e Env, args []string) int {
 		RenderExplain(e.Stdout, repo.Root, res, NewPalette(e.Stdout))
 	}
 
-	if res.Blocked() {
+	if res.Blocked() && !res.Incubating {
 		return ExitGate
 	}
 	return ExitOK

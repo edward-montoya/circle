@@ -56,6 +56,19 @@ func RenderExplain(w io.Writer, root string, res contract.Result, p Palette) {
 	}
 	fails, warns := res.Count(contract.Fail), res.Count(contract.Warn)
 	fmt.Fprintln(w)
+	if res.Incubating {
+		// Distinct from a pass on purpose. Reporting "PASSED" on an empty
+		// repository would claim a stranger could run and test it, which is the
+		// one thing preflight exists to be honest about.
+		fmt.Fprintf(w, "%sINCUBATING%s  %snothing to run and nothing to prove yet%s\n\n",
+			p.Y, p.N, p.D, p.N)
+		fmt.Fprintf(w, "%sThis is expected in a new project, and writes are not blocked.%s\n", p.D, p.N)
+		fmt.Fprintf(w, "%sCome back when the project has:%s\n", p.D, p.N)
+		fmt.Fprintf(w, "%s  · something that starts   → set execution.compose and up/down%s\n", p.D, p.N)
+		fmt.Fprintf(w, "%s  · a first test            → set a gate under [quality]%s\n", p.D, p.N)
+		fmt.Fprintf(w, "%sThen `circle init --force` re-detects both.%s\n\n", p.D, p.N)
+		return
+	}
 	if fails == 0 {
 		fmt.Fprintf(w, "%sPREFLIGHT PASSED%s  %s%d advisory%s\n\n", p.G, p.N, p.D, warns, p.N)
 		return
@@ -79,7 +92,10 @@ func RenderContext(w io.Writer, name string, res contract.Result, p Palette) {
 		}
 		fmt.Fprintf(w, "  %s %-9s %-12s %s\n", p.mark(c.Severity), c.Section, c.Label, c.Detail)
 	}
-	if res.Blocked() {
+	switch {
+	case res.Incubating:
+		fmt.Fprintf(w, "\nINCUBATING — nothing to run or prove yet; writes are not blocked\n")
+	case res.Blocked():
 		fmt.Fprintf(w, "\nPREFLIGHT FAILED — run circle preflight --explain\n")
 	}
 }

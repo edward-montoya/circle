@@ -37,6 +37,17 @@ type Check struct {
 type Result struct {
 	Checks []Check
 	Forced bool
+
+	// Incubating means the repository has nothing to run and nothing to prove
+	// *yet* — a project on day zero rather than one with a broken contract.
+	//
+	// The distinction matters because the two look identical to a naive check
+	// and deserve opposite treatment. A half-declared contract is a lie and must
+	// block; an undeclared one on an empty repository is just the truth, and
+	// blocking it would mean a new project cannot write its first file. That
+	// dead end is worse than no gate at all, because the user's only way out is
+	// --force from minute one, which teaches them the gate is noise.
+	Incubating bool
 }
 
 // add records a check. fix is variadic so the common "nothing to fix" case
@@ -108,10 +119,30 @@ func binaryOf(cmd string) string {
 	return ""
 }
 
+// composeOnDisk reports whether the repository has a compose file at all.
+//
+// This is what separates "you forgot to declare it" from "there is nothing to
+// declare". The first is an error; the second is a new project.
+func composeOnDisk(r *Repo) string {
+	for _, name := range []string{"docker-compose.yml", "docker-compose.yaml", "compose.yml", "compose.yaml"} {
+		if _, err := os.Stat(r.Path(name)); err == nil {
+			return name
+		}
+	}
+	return ""
+}
+
 // Validate runs every contract check against the repository.
 func Validate(r *Repo) Result {
 	var res Result
 	c := r.Contract
+
+	// Nothing declared, and nothing on disk to declare: a project that has not
+	// started rather than one that is broken.
+	res.Incubating = c.Execution.Compose == "" &&
+		composeOnDisk(r) == "" &&
+		len(c.Quality.Gates()) == 0
+
 	validateExecution(r, c, &res)
 	validateQuality(c, &res)
 	validateKnowledge(r, c, &res)
@@ -125,6 +156,18 @@ func validateExecution(r *Repo, c domain.Contract, res *Result) {
 
 	switch {
 	case ex.Compose == "":
+		if found := composeOnDisk(r); found != "" {
+			// The repo has one and the contract does not mention it. That is a
+			// forgotten declaration, and it blocks.
+			res.add(Fail, "execution", "compose", found+" exists but is not declared",
+				fmt.Sprintf("set execution.compose = %q", found))
+			break
+		}
+		if res.Incubating {
+			res.add(Warn, "execution", "compose", "nothing to run yet",
+				"declare it when the project has something that starts")
+			break
+		}
 		res.add(Fail, "execution", "compose", "no compose file declared",
 			"add execution.compose")
 	default:
@@ -143,6 +186,9 @@ func validateExecution(r *Repo, c domain.Contract, res *Result) {
 
 	switch {
 	case len(ex.AppServices) == 0:
+		if res.Incubating {
+			break // no services because there is no code yet
+		}
 		res.add(Fail, "execution", "app_services", "none declared",
 			"list the containers that hold your code")
 	case len(services) > 0:
@@ -166,10 +212,13 @@ func validateExecution(r *Repo, c domain.Contract, res *Result) {
 	}
 
 	for _, kv := range []struct{ k, v string }{{"up", ex.Up}, {"down", ex.Down}} {
-		if strings.TrimSpace(kv.v) == "" {
-			res.add(Fail, "execution", kv.k, "not declared", "add execution."+kv.k)
-		} else {
+		switch {
+		case strings.TrimSpace(kv.v) != "":
 			res.add(OK, "execution", kv.k, kv.v)
+		case res.Incubating:
+			// Nothing to start, so nothing to declare.
+		default:
+			res.add(Fail, "execution", kv.k, "not declared", "add execution."+kv.k)
 		}
 	}
 }
@@ -178,8 +227,20 @@ func validateQuality(c domain.Contract, res *Result) {
 	q := c.Quality
 	gates := q.Gates()
 	if len(gates) == 0 {
-		res.add(Fail, "quality", "gates", "no gates declared",
-			"add at least one runnable gate")
+		if res.Incubating {
+			res.add(Warn, "quality", "gates", "nothing to prove yet",
+				"declare a gate as soon as there is a first test")
+			return
+		}
+		// This blocks even on a young project, and the message has to earn that.
+		// Without a declared gate no task can name a verification, so no task can
+		// be created, so the brief gate never engages — the framework would be
+		// installed and inert. Saying "add a gate" without saying why reads as
+		// bureaucracy.
+		res.add(Fail, "quality", "gates",
+			"nothing can prove this project works",
+			"tasks cannot declare a verification without a gate. Add one under "+
+				"[quality] — even `test:unit = \"<your test command>\"` is enough to start")
 		return
 	}
 
@@ -211,7 +272,7 @@ func validateQuality(c domain.Contract, res *Result) {
 
 	if q.Coverage.Min > 0 {
 		res.add(OK, "quality", "coverage", fmt.Sprintf("floor %d%%", q.Coverage.Min))
-	} else {
+	} else if !res.Incubating {
 		res.add(Warn, "quality", "coverage", "no floor configured",
 			"the status score cannot use what is not measured")
 	}
