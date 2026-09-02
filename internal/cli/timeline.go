@@ -28,7 +28,7 @@ func itemFlag(f interface {
 func runTimelineOpen(e Env, args []string) int {
 	f := fs("timeline open", e)
 	item := itemFlag(f)
-	if err := f.Parse(args); err != nil {
+	if err := parse(f, args); err != nil {
 		return ExitError
 	}
 	repo, code := openRepo(e)
@@ -48,7 +48,7 @@ func runTimelineSync(e Env, args []string) int {
 	f := fs("timeline sync", e)
 	item := itemFlag(f)
 	noResolve := f.Bool("no-resolve-rewrites", false, "skip patch-id/reflog resolution")
-	if err := f.Parse(args); err != nil {
+	if err := parse(f, args); err != nil {
 		return ExitError
 	}
 	repo, code := openRepo(e)
@@ -72,7 +72,7 @@ func runTimelineShow(e Env, args []string) int {
 	format := f.String("format", "human", "human|json|md")
 	noFiles := f.Bool("no-files", false, "commits only")
 	state := f.String("state", "", "filter: live|rewritten|phantom|uncommitted")
-	if err := f.Parse(args); err != nil {
+	if err := parse(f, args); err != nil {
 		return ExitError
 	}
 	repo, code := openRepo(e)
@@ -196,7 +196,7 @@ func runTimelineDrift(e Env, args []string) int {
 	f := fs("timeline drift", e)
 	item := itemFlag(f)
 	failOn := f.Bool("fail-on-drift", false, "exit 7 when anything drifted")
-	if err := f.Parse(args); err != nil {
+	if err := parse(f, args); err != nil {
 		return ExitError
 	}
 	repo, code := openRepo(e)

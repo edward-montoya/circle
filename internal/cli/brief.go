@@ -30,7 +30,7 @@ func briefPath(r *contract.Repo, item string) string {
 func runBriefGenerate(e Env, args []string) int {
 	f := fs("brief generate", e)
 	item := f.String("item", "default", "work item id")
-	if err := f.Parse(args); err != nil {
+	if err := parse(f, args); err != nil {
 		return ExitError
 	}
 	if f.NArg() > 0 {
@@ -92,7 +92,7 @@ func runBriefGenerate(e Env, args []string) int {
 func runBriefShow(e Env, args []string) int {
 	f := fs("brief show", e)
 	item := f.String("item", "default", "work item id")
-	if err := f.Parse(args); err != nil {
+	if err := parse(f, args); err != nil {
 		return ExitError
 	}
 	if f.NArg() > 0 {
@@ -146,7 +146,7 @@ func runBriefApprove(e Env, args []string) int {
 	approver := f.String("approver", "", "defaults to git config user.email")
 	note := f.String("note", "", "recorded with the approval")
 	allowSelf := f.Bool("allow-self", false, "approve a plan you wrote yourself")
-	if err := f.Parse(args); err != nil {
+	if err := parse(f, args); err != nil {
 		return ExitError
 	}
 	if f.NArg() > 0 {
@@ -195,7 +195,7 @@ func runBriefReject(e Env, args []string) int {
 	f := fs("brief reject", e)
 	item := f.String("item", "default", "work item id")
 	reason := f.String("reason", "", "required")
-	if err := f.Parse(args); err != nil {
+	if err := parse(f, args); err != nil {
 		return ExitError
 	}
 	if f.NArg() > 0 {
@@ -230,7 +230,7 @@ func runBriefVerify(e Env, args []string) int {
 	f := fs("brief verify", e)
 	item := f.String("item", "default", "work item id")
 	failOn := f.Bool("fail-on-drift", false, "exit 7 when anything drifted")
-	if err := f.Parse(args); err != nil {
+	if err := parse(f, args); err != nil {
 		return ExitError
 	}
 	if f.NArg() > 0 {

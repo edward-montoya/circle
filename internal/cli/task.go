@@ -44,7 +44,7 @@ func runTaskCreate(e Env, args []string) int {
 	reviewer := f.String("reviewer", "", "manual only: who judges it")
 	deps := f.String("depends-on", "", "comma-separated task ids")
 	paths := f.String("paths", "", "comma-separated globs this task may write to — its blast radius")
-	if err := f.Parse(args); err != nil {
+	if err := parse(f, args); err != nil {
 		return ExitError
 	}
 	repo, code := openRepo(e)
@@ -200,7 +200,7 @@ func runTaskClaim(e Env, args []string) int {
 func runTaskClose(e Env, args []string) int {
 	f := fs("task close", e)
 	verifyOnly := f.Bool("verify-only", false, "check without closing. TaskCompleted hook target")
-	if err := f.Parse(args); err != nil {
+	if err := parse(f, args); err != nil {
 		return ExitError
 	}
 	repo, code := openRepo(e)
@@ -258,7 +258,7 @@ func runTaskClose(e Env, args []string) int {
 func runTaskList(e Env, args []string) int {
 	f := fs("task list", e)
 	unverified := f.Bool("unverified", false, "tasks closed with no passing gate — should be empty")
-	if err := f.Parse(args); err != nil {
+	if err := parse(f, args); err != nil {
 		return ExitError
 	}
 	repo, code := openRepo(e)

@@ -59,7 +59,7 @@ func runGateCheck(e Env, args []string) int {
 	hook := f.Bool("hook", false, "read a PreToolUse payload from stdin and emit a decision")
 	tool := f.String("tool", "", "tool name, when not reading a payload")
 	path := f.String("path", "", "target path, when not reading a payload")
-	if err := f.Parse(args); err != nil {
+	if err := parse(f, args); err != nil {
 		return ExitError
 	}
 

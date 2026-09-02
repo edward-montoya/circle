@@ -42,7 +42,7 @@ func runQualityRun(e Env, args []string) int {
 	all := f.Bool("all", false, "run every gate")
 	noRecord := f.Bool("no-record", false, "do not emit result events")
 	failFast := f.Bool("fail-fast", false, "stop at the first failure")
-	if err := f.Parse(args); err != nil {
+	if err := parse(f, args); err != nil {
 		return ExitError
 	}
 

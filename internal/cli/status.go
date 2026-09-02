@@ -171,7 +171,7 @@ func runEventRecord(e Env, args []string) int {
 	item := f.String("item", "", "item id")
 	taskID := f.String("task", "", "task id")
 	reason := f.String("reason", "", "free-form context")
-	if err := f.Parse(args); err != nil {
+	if err := parse(f, args); err != nil {
 		return ExitOK
 	}
 	ev := domain.NewEvent(domain.EventType(*typ))

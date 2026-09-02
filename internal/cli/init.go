@@ -142,7 +142,7 @@ func runInit(e Env, args []string) int {
 	f := fs("init", e)
 	force := f.Bool("force", false, "overwrite an existing contract")
 	detectOnly := f.Bool("detect-only", false, "print what would be written")
-	if err := f.Parse(args); err != nil {
+	if err := parse(f, args); err != nil {
 		return ExitError
 	}
 

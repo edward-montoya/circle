@@ -23,7 +23,7 @@ func runPreflight(e Env, args []string) int {
 	quiet := f.Bool("quiet", false, "exit code only")
 	force := f.Bool("force", false, "bypass; requires --reason, recorded, caps the score")
 	reason := f.String("reason", "", "why the bypass is justified")
-	if err := f.Parse(args); err != nil {
+	if err := parse(f, args); err != nil {
 		return ExitError
 	}
 

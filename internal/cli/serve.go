@@ -13,7 +13,7 @@ func init() {
 func runServe(e Env, args []string) int {
 	f := fs("serve", e)
 	addr := f.String("addr", "localhost:7777", "listen address")
-	if err := f.Parse(args); err != nil {
+	if err := parse(f, args); err != nil {
 		return ExitError
 	}
 	repo, code := openRepo(e)

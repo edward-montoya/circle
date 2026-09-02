@@ -33,9 +33,9 @@ type Project struct {
 // correctness is proven. Coverage of definitions against a work item is what
 // drives the Unknown score in v0.2.
 type Knowledge struct {
-	Docs        []string `toml:"docs"`
-	Definitions []string `toml:"definitions"`
-	Validations []string `toml:"validations"`
+	Docs        []string `toml:"docs,omitempty"`
+	Definitions []string `toml:"definitions,omitempty"`
+	Validations []string `toml:"validations,omitempty"`
 }
 
 // Classes returns the three registries in a stable order, so reports and
@@ -57,13 +57,13 @@ func (k Knowledge) Classes() []struct {
 // Execution answers: how do I run this, in isolation?
 type Execution struct {
 	Compose     string   `toml:"compose"`
-	AppServices []string `toml:"app_services"`
-	Bootstrap   string   `toml:"bootstrap"`
+	AppServices []string `toml:"app_services,omitempty"`
+	Bootstrap   string   `toml:"bootstrap,omitempty"`
 	Up          string   `toml:"up"`
-	UpFull      string   `toml:"up_full"`
+	UpFull      string   `toml:"up_full,omitempty"`
 	Down        string   `toml:"down"`
-	URL         string   `toml:"url"`
-	PortsFixed  bool     `toml:"ports_fixed"`
+	URL         string   `toml:"url,omitempty"`
+	PortsFixed  bool     `toml:"ports_fixed,omitempty"`
 	Worktree    Worktree `toml:"worktree"`
 }
 
@@ -71,8 +71,8 @@ type Execution struct {
 // Claude Code creates the worktree; Circle only adds the Compose namespace and
 // the port allocation (D-23).
 type Worktree struct {
-	Isolation string `toml:"isolation"` // "compose-project" or "" for none
-	PortRange [2]int `toml:"port_range"`
+	Isolation string `toml:"isolation,omitempty"` // "compose-project" or "" for none
+	PortRange [2]int `toml:"port_range,omitempty"`
 }
 
 // Quality answers: how do I prove it is correct?
@@ -81,26 +81,26 @@ type Worktree struct {
 // clone — a Phase 0 finding: without it, preflight reports a green contract a
 // stranger cannot actually run.
 type Quality struct {
-	Bootstrap string            `toml:"bootstrap"`
-	Format    string            `toml:"format"`
-	Lint      string            `toml:"lint"`
-	Typecheck string            `toml:"typecheck"`
+	Bootstrap string            `toml:"bootstrap,omitempty"`
+	Format    string            `toml:"format,omitempty"`
+	Lint      string            `toml:"lint,omitempty"`
+	Typecheck string            `toml:"typecheck,omitempty"`
 	Test      map[string]string `toml:"test"`
 	Coverage  Coverage          `toml:"coverage"`
 	Extra     map[string]string `toml:"extra"`
 }
 
 type Coverage struct {
-	Min int `toml:"min"`
+	Min int `toml:"min,omitempty"`
 }
 
 // Gate carries enforcement policy.
 type Gate struct {
 	// RequireSecondApprover forbids the plan's author from approving it (D-29).
-	RequireSecondApprover bool `toml:"require_second_approver"`
+	RequireSecondApprover bool `toml:"require_second_approver,omitempty"`
 	// StrictDrift turns a file touched outside the approved blast radius from a
 	// warning into a denial.
-	StrictDrift bool `toml:"strict_drift"`
+	StrictDrift bool `toml:"strict_drift,omitempty"`
 }
 
 // GateSpec is one named quality gate: a name and the command that proves it.

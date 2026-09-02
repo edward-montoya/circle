@@ -49,7 +49,7 @@ func runWorktreeProvision(e Env, args []string) int {
 	dir := f.String("dir", "", "worktree directory; defaults to the hook payload or cwd")
 	hook := f.Bool("hook", false, "read a WorktreeCreate payload from stdin")
 	dry := f.Bool("dry-run", false, "print the plan, write nothing")
-	if err := f.Parse(args); err != nil {
+	if err := parse(f, args); err != nil {
 		return ExitError
 	}
 
@@ -146,7 +146,7 @@ func runWorktreeRelease(e Env, args []string) int {
 	dir := f.String("dir", "", "worktree directory")
 	hook := f.Bool("hook", false, "read a WorktreeRemove payload from stdin")
 	keepVolumes := f.Bool("keep-volumes", false, "skip compose down -v")
-	if err := f.Parse(args); err != nil {
+	if err := parse(f, args); err != nil {
 		return ExitError
 	}
 
@@ -226,7 +226,7 @@ func runWorktreeList(e Env, args []string) int {
 func runRun(e Env, args []string) int {
 	f := fs("run", e)
 	printOnly := f.Bool("print", true, "emit the commands rather than running them")
-	if err := f.Parse(args); err != nil {
+	if err := parse(f, args); err != nil {
 		return ExitError
 	}
 	repo, code := openRepo(e)

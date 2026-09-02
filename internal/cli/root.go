@@ -88,3 +88,45 @@ func fs(name string, e Env) *flag.FlagSet {
 	f.SetOutput(e.Stderr)
 	return f
 }
+
+// parse accepts flags in any position.
+//
+// Go's flag package stops parsing at the first non-flag argument, so
+// `knowledge add docs/ --as definitions` would silently ignore --as — and that
+// is the order the tool's own hints and documentation use. Rather than bend the
+// documented syntax to the parser, hoist the flags and parse the rest.
+//
+// A flag that takes a value consumes the token after it, which is why this
+// inspects the FlagSet rather than guessing from the string alone.
+func parse(f *flag.FlagSet, args []string) error {
+	takesValue := map[string]bool{}
+	f.VisitAll(func(fl *flag.Flag) {
+		// A bool flag is the only kind that may appear without a value.
+		if bf, ok := fl.Value.(interface{ IsBoolFlag() bool }); !ok || !bf.IsBoolFlag() {
+			takesValue[fl.Name] = true
+		}
+	})
+
+	var flags, positional []string
+	for i := 0; i < len(args); i++ {
+		a := args[i]
+		if a == "--" {
+			positional = append(positional, args[i+1:]...)
+			break
+		}
+		if !strings.HasPrefix(a, "-") || a == "-" {
+			positional = append(positional, a)
+			continue
+		}
+		flags = append(flags, a)
+		name := strings.TrimLeft(a, "-")
+		if strings.Contains(name, "=") {
+			continue // --flag=value carries its own value
+		}
+		if takesValue[name] && i+1 < len(args) {
+			i++
+			flags = append(flags, args[i])
+		}
+	}
+	return f.Parse(append(flags, positional...))
+}
