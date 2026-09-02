@@ -56,6 +56,14 @@ type Task struct {
 	Goal      Goal         `toml:"goal"      json:"goal"`
 	Verify    Verification `toml:"verification" json:"verification"`
 
+	// Paths is this task's blast radius: the glob patterns it may touch.
+	//
+	// Per-task rather than per-item on purpose. A four-task item cannot express
+	// that task 1 touches src/mw/ and task 4 touches Makefile if the radius is
+	// declared once for the whole brief — and the write-block would then have to
+	// approve the union, which is looser than anything a human agreed to.
+	Paths []string `toml:"paths" json:"paths,omitempty"`
+
 	ClaimedBy string `toml:"claimed_by" json:"claimed_by,omitempty"`
 	ClosedAt  string `toml:"closed_at"  json:"closed_at,omitempty"`
 	// ClosedBy names the gate run that justified closure. Empty on an open task;

@@ -43,6 +43,7 @@ func runTaskCreate(e Env, args []string) int {
 	justification := f.String("justification", "", "manual only: why no command can prove this")
 	reviewer := f.String("reviewer", "", "manual only: who judges it")
 	deps := f.String("depends-on", "", "comma-separated task ids")
+	paths := f.String("paths", "", "comma-separated globs this task may write to — its blast radius")
 	if err := f.Parse(args); err != nil {
 		return ExitError
 	}
@@ -59,11 +60,17 @@ func runTaskCreate(e Env, args []string) int {
 			Justification: *justification, Reviewer: *reviewer,
 		},
 	}
-	if *deps != "" {
-		for _, d := range strings.Split(*deps, ",") {
-			if d = strings.TrimSpace(d); d != "" {
-				t.DependsOn = append(t.DependsOn, d)
-			}
+	for _, d := range strings.Split(*deps, ",") {
+		if d = strings.TrimSpace(d); d != "" {
+			t.DependsOn = append(t.DependsOn, d)
+		}
+	}
+	// Per-task rather than per-item: a four-task item cannot otherwise express
+	// that one task touches src/mw/ and another touches Makefile, and the
+	// write-block would have to approve the union of everything.
+	for _, p := range strings.Split(*paths, ",") {
+		if p = strings.TrimSpace(p); p != "" {
+			t.Paths = append(t.Paths, p)
 		}
 	}
 

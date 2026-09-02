@@ -281,3 +281,64 @@ than an honest refusal.
 - **Phase 5** — the brief and the human approval gate. The `PreToolUse` gate
   still enforces preflight, not approval.
 - **Phase 7** — the trial. Unchanged and still the largest gap.
+
+---
+
+# Iteration 4 — Phase 5, the human gate
+
+The headline claim is now true. Until this phase the `PreToolUse` hook enforced
+*preflight*; it now enforces *approval*, checked on every single write rather
+than trusted once at session start.
+
+Verified end to end on bb-control:
+
+| Step | Result |
+|---|---|
+| Write with no brief | **deny** — "no approved brief" |
+| Write after generating, before approving | **deny** — generating is not approving |
+| Self-approve without `--allow-self` | **refused**, and the error names the flag |
+| Self-approve with `--allow-self` | approved, recorded as `self_approved` |
+| Write inside the radius | allow |
+| Write to `infra/terraform/main.tf` | **deny**, and the reason lists the approved patterns |
+| Add a task, then write again | **deny** — "the plan changed since approval" |
+
+## F-16 · The blast radius belongs to the task, not the brief
+
+A-3 left this open. It is now decided: `--paths` is a field on the task.
+
+A four-task item cannot otherwise express that task 1 touches `src/mw/` and
+task 4 touches `Makefile`. With a single radius per brief the write-block would
+have to approve the union of everything, which is looser than anything a human
+actually agreed to — and drift could not be attributed to the task that caused
+it.
+
+## F-17 · Approval is bound to a plan hash, and the hash had to be chosen carefully
+
+The hash covers every task's id, title, goal, verification kind, gate, command,
+paths and dependencies. It deliberately **excludes** state, claim and closure.
+
+That distinction is the whole design. If the hash covered task state, then
+*implementing* an approved plan would revoke its own approval on the first
+closure — the gate would fight the work it just authorised. If it excluded
+paths, a task could quietly widen its own write permissions after approval.
+
+A table test pins both halves: seven mutations that must invalidate, and two
+that must not.
+
+## F-18 · Two gates that had to stay open
+
+Enforcement that blocks its own prerequisites is unusable, so:
+
+- **`.circle/` is always writable.** Recording an event or closing a task must
+  never be denied by the gate those actions serve.
+- **A repo with no tasks is not gated.** Otherwise adopting Circle would block
+  the very edits needed to configure it — the first thing a new user does is
+  the thing they could not do.
+
+Both are narrow carve-outs with a stated reason, not general escape hatches.
+
+## Still not built
+
+- **Phase 7** — the trial. Unchanged, and now the only thing between here and a
+  v0.1 verdict. Every mechanism the PRD promised is built and demonstrated;
+  none of it proves a human stranger succeeds.

@@ -2,12 +2,13 @@ package cli
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
-	"os"
 	"path/filepath"
 	"strings"
 
+	"github.com/edwardmontoya/circle/internal/brief"
 	"github.com/edwardmontoya/circle/internal/contract"
 	"github.com/edwardmontoya/circle/internal/domain"
 	"github.com/edwardmontoya/circle/internal/events"
@@ -110,49 +111,69 @@ func runGateCheck(e Env, args []string) int {
 		return ExitGate // aborts an injected !`...` and the whole skill with it
 	}
 
-	// Contracts are valid. Now the second question: is this path inside the
-	// approved blast radius? A brief approved for src/mw/** does not silently
-	// authorise edits to infra/.
-	if target != "" {
-		if reason, blocked := outsideRadius(repo, target); blocked {
-			ev := domain.NewEvent(domain.EvGateDeny)
-			ev.Reason, ev.Path = reason, target
-			_ = events.Append(repo, ev)
-			if *hook {
-				return deny(e.Stdout, reason)
-			}
-			fmt.Fprintln(e.Stderr, reason)
-			return ExitGate
+	// Contracts are valid. Now the approval gate: no file is written that a
+	// human has not signed off on. This is the constraint the whole framework
+	// exists for, so it is checked on every single write rather than trusted
+	// once at session start.
+	if reason, blocked := approvalGate(repo, target); blocked {
+		ev := domain.NewEvent(domain.EvGateDeny)
+		ev.Reason, ev.Path = reason, target
+		_ = events.Append(repo, ev)
+		if *hook {
+			return deny(e.Stdout, reason)
 		}
+		fmt.Fprintln(e.Stderr, reason)
+		return ExitGate
 	}
 
 	_ = toolName
 	return ExitOK
 }
 
-// outsideRadius enforces an approved brief's declared paths, when one exists.
+// approvalGate decides whether this write may proceed.
 //
-// Absent an approval file the gate stays open: v0.1 gates on preflight, and the
-// brief gate arrives with Phase 5. This is written now so the enforcement point
-// is single, not so it is active everywhere.
-func outsideRadius(repo *contract.Repo, target string) (string, bool) {
-	b, err := os.ReadFile(repo.StateDir("approved-radius"))
-	if err != nil {
+// Three questions, in order: is there an approval at all, is it still bound to
+// the current plan, and does the path fall inside what was approved.
+//
+// A repository with no tasks has nothing to approve, so the gate stays open —
+// otherwise adopting Circle would block the very edits needed to configure it.
+func approvalGate(repo *contract.Repo, target string) (string, bool) {
+	b, err := brief.Build(repo, "default")
+	if err != nil || len(b.Tasks) == 0 {
 		return "", false
 	}
-	rel, err := filepath.Rel(repo.Root, target)
-	if err != nil {
+
+	a, err := brief.LoadApproval(repo, "default", b.PlanHash)
+	switch {
+	case errors.Is(err, brief.ErrNoApproval):
+		return "circle: no approved brief. Implementation is blocked until a human reads it — " +
+			"`circle brief generate` then `circle brief approve`.", true
+	case err != nil:
+		return "circle: the approval record could not be read: " + err.Error(), true
+	case !a.Valid:
+		// Stale approvals are the quiet failure this guards against: the plan
+		// moved, and the signature no longer covers what is about to be written.
+		return "circle: the approved brief is stale — " + a.Reason +
+			". Regenerate it and have it re-approved.", true
+	}
+
+	if target == "" || len(a.Radius) == 0 {
+		return "", false
+	}
+	rel, relErr := filepath.Rel(repo.Root, target)
+	if relErr != nil || strings.HasPrefix(rel, "..") {
 		rel = target
 	}
-	for _, pat := range strings.Fields(string(b)) {
-		if ok, _ := filepath.Match(pat, rel); ok {
-			return "", false
-		}
-		// A trailing /** means the whole subtree.
-		if strings.HasSuffix(pat, "/**") &&
-			strings.HasPrefix(rel, strings.TrimSuffix(pat, "/**")+"/") {
-			return "", false
-		}
+	// Circle's own state is always writable: recording an event or closing a
+	// task must never be blocked by the gate those actions serve.
+	if strings.HasPrefix(rel, contract.Dir+string(filepath.Separator)) {
+		return "", false
 	}
-	return fmt.Sprintf("circle: %s is outside the approved blast radius. Record an addendum or regenerate the brief.", rel), true
+	if domain.InRadius(rel, a.Radius) {
+		return "", false
+	}
+	return fmt.Sprintf(
+		"circle: %s is outside the approved blast radius (%s). "+
+			"Record an addendum, or widen the plan and have it re-approved.",
+		rel, strings.Join(a.Radius, " ")), true
 }
