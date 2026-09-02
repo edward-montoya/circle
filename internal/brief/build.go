@@ -7,8 +7,10 @@
 package brief
 
 import (
+	"fmt"
 	"os/exec"
 	"path/filepath"
+	"sort"
 	"strings"
 	"time"
 
@@ -41,20 +43,46 @@ func Build(r *contract.Repo, item string) (domain.Brief, error) {
 
 	radius := domain.ComputeRadius(scoped)
 	b := domain.Brief{
-		Item:        item,
-		Title:       titleFor(r, item, scoped),
-		Generated:   time.Now().UTC(),
-		Author:      gitIdentity(r.Root),
-		Tasks:       scoped,
-		Radius:      radius,
-		Definitions: r.Contract.Knowledge.Definitions,
-		Services:    servicesTouched(r, radius),
+		Item:         item,
+		Title:        titleFor(r, item, scoped),
+		Generated:    time.Now().UTC(),
+		Author:       gitIdentity(r.Root),
+		Tasks:        scoped,
+		Radius:       radius,
+		Definitions:  r.Contract.Knowledge.Definitions,
+		Services:     servicesTouched(r, radius),
+		Contradicted: Contradictions(r),
 		Risks: domain.DeriveRisks(scoped, radius,
 			r.Contract.Knowledge, r.Contract.Quality.Coverage.Min),
 		PlanHash: domain.ComputePlanHash(scoped, radius),
 	}
+	if len(b.Contradicted) > 0 {
+		docs := make([]string, 0, len(b.Contradicted))
+		for d := range b.Contradicted {
+			docs = append(docs, d)
+		}
+		sort.Strings(docs)
+		b.Risks = append([]domain.Risk{{
+			Severity: "high",
+			Text: fmt.Sprintf(
+				"%s %s registered as authoritative but contradicted by the code. "+
+					"Any part of this plan derived from them is aimed at a system that does not exist.",
+				strings.Join(docs, ", "), plural(len(docs), "is", "are")),
+		}}, b.Risks...)
+	}
 	return b, nil
 }
+
+func plural(n int, one, many string) string {
+	if n == 1 {
+		return one
+	}
+	return many
+}
+
+// Contradictions is a seam so the brief can report drift without importing the
+// knowledge package directly, which would close an import cycle.
+var Contradictions = func(*contract.Repo) map[string][]string { return nil }
 
 func titleFor(r *contract.Repo, item string, tasks []domain.Task) string {
 	for _, t := range tasks {

@@ -372,6 +372,76 @@ grows something new to detect.
 
 ---
 
+## When the documents disagree with the code
+
+Preflight checks that registered paths **exist**. It does not, on its own, check
+that they are **true**. A PRD describing a Go service with Postgres, registered
+in a repository that is Node and Mongo, resolves fine and gets a green tick.
+
+That is worse than having no definitions at all. An empty registry is honest; a
+stale one is a lie with a checkmark, and the agent will read it, believe it, and
+plan against a system that does not exist.
+
+```bash
+circle knowledge verify
+```
+
+```
+DEFINITIONS CONTRADICTED BY THE CODE
+These documents are registered as authoritative. They are not.
+
+docs/architecture.md
+  ✗ absent-stack    PostgreSQL
+      no trace of it in the repository
+      docs/architecture.md:3  The service is written in **Go** and stores data in **PostgreSQL**.
+  ✗ missing-path    internal/billing
+      no such path in the repository
+      docs/architecture.md:7  - `internal/billing/` — invoice generation
+```
+
+Three kinds of contradiction, all detected deterministically — no model
+involved, and every finding carries the line it came from so you can dismiss a
+false positive in a second:
+
+| Kind | Means |
+|---|---|
+| `absent-stack` | The document names a technology with no trace in the repo — no `go.mod`, no matching compose image |
+| `missing-path` | The document references a repository path that does not exist |
+| `unknown-service` | The document names a service the compose file does not define |
+
+**It never blocks.** Documents drift constantly, and a false positive that
+stopped work would teach you to ignore the whole report. Instead it appears
+twice, quietly in `circle preflight` and loudly where it matters:
+
+```
+## Definitions consulted
+
+- ~~`docs/architecture.md`~~ — **contradicted by the code**: Go, PostgreSQL, internal/billing
+```
+
+The brief strikes the document through and raises a HIGH risk. That is the
+moment a human is deciding whether to approve a plan, and listing a contradicted
+document as "consulted" without saying so would manufacture confidence at
+exactly the wrong time.
+
+Fix the document, or drop it:
+
+```bash
+circle knowledge remove docs/architecture.md
+```
+
+Only `definitions` are checked. Docs describe how the system works today and go
+stale harmlessly; definitions describe what should be built, and a wrong one
+actively misdirects the plan.
+
+To make it blocking in CI:
+
+```bash
+circle knowledge verify --fail-on-drift    # exit 2
+```
+
+---
+
 ## Troubleshooting
 
 **`circle: no .circle/project.toml`** — you are outside the repo, or have not run

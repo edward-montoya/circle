@@ -412,3 +412,66 @@ Circle in a crowded field where it has no advantage and give up the one it has.
 What it does instead is cheap and in scope: register `REQUIREMENTS.md`, `PRD.md`,
 `SPEC.md` and the usual `docs/` subdirectories as definitions, so the only
 artifact a new project has is not wasted.
+
+---
+
+# Iteration 6 — documents that contradict the code
+
+Prompted by a question about scaffolding whose stack does not match the PRD.
+Reproduced exactly: a `docs/architecture.md` describing Go, PostgreSQL and
+RabbitMQ, with modules `internal/billing/` and `internal/auth/`, registered as
+`definitions` in a repository that is Node, Mongo, one container, and has neither
+module.
+
+## F-22 · A stale definition was reported as a passing one
+
+```
+✓ definitions   docs/architecture.md → 1
+PREFLIGHT PASSED
+```
+
+Preflight validated that registered paths **exist**. It never asked whether they
+are **true**. And the brief listed the document under "Definitions consulted",
+which is the framework manufacturing confidence in an authoritative-looking
+document at the exact moment a human is trusting the summary.
+
+This is a sharper failure than a missing definition. An empty registry is
+honest and the brief already says so. A wrong one is a lie with a checkmark —
+and because Circle's whole premise is *the repo tells the agent the truth*,
+pointing the agent at a false authority makes the framework actively harmful
+rather than merely unhelpful.
+
+## F-23 · The contradictions were computable without a model
+
+All six in the test case fell out of deterministic checks, which is what made
+this affordable:
+
+| Kind | Signal |
+|---|---|
+| `absent-stack` | A technology named in prose with no `go.mod`, no manifest, no matching compose image |
+| `missing-path` | A backticked repository path that does not exist |
+| `unknown-service` | A service named in prose that compose does not define |
+
+Consistent with D-5: code detects and shows the evidence; a model may later
+classify an ambiguous hit but never asserts drift on its own.
+
+One detail worth keeping: **markdown emphasis hid a claim.** `written in **Go**`
+did not match a word-boundary pattern, and documents write technology names in
+bold constantly. Stripping emphasis before the stack scan took the detection
+from 5 findings to 6.
+
+## F-24 · It reports, it does not block
+
+Advisory by default, and deliberately so. Document drift is endemic, and a false
+positive that stopped work would teach people to ignore the entire report — the
+same dynamic that makes a too-strict preflight get bypassed.
+
+Instead it surfaces twice: quietly in `circle preflight`, and loudly in the
+brief, where the document is struck through and a HIGH risk is raised. `--fail-on-drift`
+makes it blocking for CI.
+
+The false-positive budget is treated as the real constraint: the vocabulary is
+small on purpose, path detection only accepts backticked paths containing a
+slash, and every finding carries its line and excerpt so a human can dismiss a
+bad one in a second. There is a test whose only job is to prove a document that
+agrees with its repository produces nothing at all.

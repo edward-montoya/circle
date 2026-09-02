@@ -146,6 +146,7 @@ func Validate(r *Repo) Result {
 	validateExecution(r, c, &res)
 	validateQuality(c, &res)
 	validateKnowledge(r, c, &res)
+	validateDefinitionDrift(r, &res)
 	validateForce(r, &res)
 	return res
 }
@@ -310,6 +311,29 @@ func validateKnowledge(r *Repo, c domain.Contract, res *Result) {
 		}
 		res.add(s, "knowledge", "paths", fmt.Sprintf("%d of %d resolve", hit, total))
 	}
+}
+
+// DriftChecker is injected so contract does not import knowledge, which imports
+// contract. It stays nil in tests that do not care about drift.
+var DriftChecker func(*Repo) (int, string)
+
+// validateDefinitionDrift reports definitions the code contradicts.
+//
+// Advisory, never blocking. Documents drift constantly and a false positive that
+// stopped work would teach people to ignore the whole report — but a green tick
+// on a definition that says Go over a Node repository is the framework actively
+// misdirecting the agent, so silence is not an option either.
+func validateDefinitionDrift(r *Repo, res *Result) {
+	if DriftChecker == nil {
+		return
+	}
+	n, summary := DriftChecker(r)
+	if n == 0 {
+		return
+	}
+	res.add(Warn, "knowledge", "definitions drift",
+		fmt.Sprintf("%d contradiction(s): %s", n, summary),
+		"circle knowledge verify — a stale definition misdirects the plan")
 }
 
 // validateForce surfaces a recorded bypass. A --force with no consequence is a

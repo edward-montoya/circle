@@ -97,7 +97,17 @@ func RenderMarkdown(b domain.Brief, approval *Approval) string {
 		s.WriteString("built, so this plan rests on inference rather than on a specification.\n\n")
 	} else {
 		for _, d := range b.Definitions {
+			if claims, bad := b.Contradicted[d]; bad {
+				fmt.Fprintf(&s, "- ~~`%s`~~ — **contradicted by the code**: %s\n",
+					d, strings.Join(claims, ", "))
+				continue
+			}
 			fmt.Fprintf(&s, "- `%s`\n", d)
+		}
+		if len(b.Contradicted) > 0 {
+			s.WriteString("\nA struck-through document is registered as authoritative and is not. " +
+				"Run `circle knowledge verify` for the evidence, then fix it or drop it — " +
+				"planning against a stale definition is worse than planning against none.\n")
 		}
 		s.WriteString("\n")
 	}

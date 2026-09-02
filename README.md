@@ -194,6 +194,18 @@ circle task close feat-1          # refuses unless that gate passed since your l
 circle status                     # one score, every point traced to a command
 ```
 
+### When the documents lie
+
+`circle preflight` checks that registered paths exist. `circle knowledge verify`
+checks whether they are **true** — a PRD describing a Go service with Postgres,
+registered in a Node and Mongo repository, resolves fine and gets a green tick.
+
+That is worse than having no definitions: an empty registry is honest, a stale
+one is a lie with a checkmark, and the agent will plan against a system that does
+not exist. Detection is deterministic and advisory; the brief strikes the
+document through and raises a HIGH risk. See
+[When the documents disagree with the code](docs/GETTING-STARTED.md#when-the-documents-disagree-with-the-code).
+
 ### Starting from nothing?
 
 Circle assumes a project that already runs. If yours does not yet, it reports

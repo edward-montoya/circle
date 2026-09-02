@@ -30,6 +30,13 @@ type Brief struct {
 	Definitions []string     `json:"definitions"`
 	Risks       []Risk       `json:"risks"`
 
+	// Contradicted names definitions the repository disagrees with, keyed by
+	// document. Listing a contradicted document under "Definitions consulted"
+	// without saying so would manufacture confidence at the exact moment a human
+	// is trusting the summary — the failure D-17 exists to prevent, arriving
+	// through the knowledge registry instead of through a diagram.
+	Contradicted map[string][]string `json:"contradicted,omitempty"`
+
 	// PlanHash covers everything a human would have to re-read. Approval is
 	// bound to it, so a changed plan silently invalidates the approval rather
 	// than carrying a stale one forward (D-15).
