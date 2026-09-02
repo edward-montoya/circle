@@ -1,7 +1,10 @@
 # Build output
 /bin/
 /dist/
-circle
+# Anchored to the repo root on purpose. An unanchored `circle` matches any path
+# segment with that name — including cmd/circle/, which silently excluded the
+# program entry point and left the repo unable to build from a clean clone.
+/circle
 
 # Go
 *.test
@@ -12,3 +15,7 @@ circle
 
 # Worktrees
 .claude/worktrees/
+
+# Session state, not project state
+.claude/scheduled_tasks.lock
+.claude/settings.local.json
