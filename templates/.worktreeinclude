@@ -1,0 +1,7 @@
+# Files Claude Code copies into every worktree it creates.
+#
+# Only gitignored files that match are copied, so tracked files are never
+# duplicated. Without this a fresh worktree has no .env and the stack will not
+# start — which reads as a broken contract rather than a missing file.
+.env
+.env.local

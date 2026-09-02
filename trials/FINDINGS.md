@@ -207,3 +207,77 @@ Honest ledger, so the phase table is not read as more than it is.
 - **Phase 7 — the trial.** Still the largest gap. Everything above proves the
   mechanism works; nothing proves a human stranger succeeds.
 - The `Stop` hook is specified in the CLI doc but not yet registered.
+
+---
+
+# Iteration 3 — Phase 3, Compose isolation
+
+## F-13 · The override file was appending, not replacing
+
+The first working version generated a `docker-compose.override.yml` remapping
+each published port, and it looked correct. `docker compose config` disagreed:
+
+```
+published: "8000"     <- the original, still there
+published: "42000"    <- the remap
+```
+
+**Compose's default merge strategy for a sequence is APPEND.** The original host
+port stayed published alongside the new one, so two worktrees would still have
+collided on 8000 — while every Circle command reported the stack as isolated.
+
+Fixed with the `!override` tag (Compose v2.24+):
+
+```yaml
+services:
+  api:
+    ports: !override
+      - "42000:8000"
+```
+
+This is the third bug in the same family — after the bash heredoc and the
+`TrimSpace` on porcelain output. All three produced **plausible-looking wrong
+output rather than an error**, and all three were found by running the thing
+against a real repository rather than by reasoning about it. The pattern is
+worth naming: *a wrong result that resembles a right one is the expensive kind,
+and the only reliable detector is executing against the real substrate.*
+
+## F-14 · The port ledger cannot live in `.circle/runtime/`
+
+Each worktree has its own `.circle/`, so a per-worktree ledger cannot see the
+other worktrees' allocations — which is precisely the collision it exists to
+prevent.
+
+The ledger now lives beside `git rev-parse --git-common-dir`, the one path every
+worktree of a repository agrees on. Allocation holds a real `flock`, because
+three agents provisioning at once is the designed case and a check-then-write
+lets two of them pass the free-port probe simultaneously.
+
+Both checks are needed and neither alone suffices: the ledger knows what Circle
+handed out, and `net.Listen` knows what anything else on the machine is holding.
+
+## F-15 · Phase 3 exit criterion met
+
+Three worktrees of bb-control, provisioned **in parallel**:
+
+| Worktree | Project | api | web |
+|---|---|---|---|
+| task-118 | `circle-task-118` | 42000 | 42001 |
+| task-119 | `circle-task-119` | 42002 | 42003 |
+| task-120 | `circle-task-120` | 42004 | 42005 |
+
+Six distinct ports, one shared ledger, zero collisions. `docker compose config`
+confirms each worktree publishes exactly two ports and carries its own project
+name, so networks and volumes namespace themselves. `release` runs
+`compose down -v` and frees the range; a killed session's lease is pruned on the
+next provision, so the range self-heals rather than leaking.
+
+Unparseable port entries — ranges, udp — are reported loudly rather than
+skipped. A stack advertised as isolated with one port still colliding is worse
+than an honest refusal.
+
+## Still not built
+
+- **Phase 5** — the brief and the human approval gate. The `PreToolUse` gate
+  still enforces preflight, not approval.
+- **Phase 7** — the trial. Unchanged and still the largest gap.

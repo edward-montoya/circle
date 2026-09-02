@@ -1,22 +1,89 @@
 {
   "hooks": {
     "SessionStart": [
-      { "hooks": [ { "type": "command", "command": "circle timeline open --item default", "timeout": 15, "async": true } ] }
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "circle timeline open --item default",
+            "timeout": 15,
+            "async": true
+          }
+        ]
+      }
     ],
     "PreToolUse": [
-      { "matcher": "Edit|Write|NotebookEdit",
-        "hooks": [ { "type": "command", "command": "circle gate check --hook", "timeout": 15, "statusMessage": "circle: checking contracts" } ] }
+      {
+        "matcher": "Edit|Write|NotebookEdit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "circle gate check --hook",
+            "timeout": 15,
+            "statusMessage": "circle: checking contracts"
+          }
+        ]
+      }
     ],
     "PostToolUse": [
-      { "matcher": "Bash",
-        "hooks": [ { "type": "command", "command": "circle event record --type tool.use", "timeout": 10, "async": true } ] }
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "circle event record --type tool.use",
+            "timeout": 10,
+            "async": true
+          }
+        ]
+      }
     ],
     "FileChanged": [
-      { "matcher": "package.json|Makefile|pyproject.toml|docker-compose.yml|go.mod",
-        "hooks": [ { "type": "command", "command": "circle project validate --quiet", "timeout": 20, "async": true } ] }
+      {
+        "matcher": "package.json|Makefile|pyproject.toml|docker-compose.yml|go.mod",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "circle project validate --quiet",
+            "timeout": 20,
+            "async": true
+          }
+        ]
+      }
     ],
     "TaskCompleted": [
-      { "hooks": [ { "type": "command", "command": "circle task close --verify-only", "timeout": 30 } ] }
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "circle task close --verify-only",
+            "timeout": 30
+          }
+        ]
+      }
+    ],
+    "WorktreeCreate": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "circle worktree provision --hook",
+            "timeout": 30,
+            "statusMessage": "circle: isolating the compose stack"
+          }
+        ]
+      }
+    ],
+    "WorktreeRemove": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "circle worktree release --hook",
+            "timeout": 120
+          }
+        ]
+      }
     ]
   }
 }
