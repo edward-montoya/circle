@@ -75,6 +75,40 @@ lint = "true"
 			t.Fatal("a repository with something to prove is no longer incubating")
 		}
 	})
+
+	// Incubation softens the execution and quality checks because there is
+	// genuinely nothing to run or prove yet. It must not reach sections that have
+	// nothing to do with running: a knowledge path that resolves to nothing is
+	// wrong on day zero for the same reason it is wrong on day ninety.
+	t.Run("a young project still blocks on a knowledge path that resolves to nothing", func(t *testing.T) {
+		r := repoWith(t, minimal+`
+[knowledge]
+docs = ["docs/does-not-exist.md"]
+`, nil)
+		res := Validate(r)
+		if !res.Incubating {
+			t.Fatal("no compose and no gates is still nothing to run or prove")
+		}
+		if !res.Blocked() {
+			t.Fatalf("a knowledge path resolving to nothing must block; got %+v", res.Checks)
+		}
+	})
+
+	t.Run("a young project with resolvable knowledge does not block", func(t *testing.T) {
+		// The other half. Declaring knowledge early must not be punished by the
+		// execution and quality gaps incubation is there to excuse.
+		r := repoWith(t, minimal+`
+[knowledge]
+docs = ["README.md"]
+`, map[string]string{"README.md": "# x\n"})
+		res := Validate(r)
+		if !res.Incubating {
+			t.Fatal("declaring knowledge is not something to run or prove")
+		}
+		if res.Blocked() {
+			t.Fatalf("a resolvable knowledge path must not block; got %+v", res.Checks)
+		}
+	})
 }
 
 // Once a project can run, it must be able to say how it is proven — otherwise no

@@ -99,7 +99,12 @@ func runGateCheck(e Env, args []string) int {
 	// nothing to enforce. Blocking here would mean a new repository cannot write
 	// its first file, and the only escape would be --force from minute one —
 	// which teaches the user the gate is noise before it has ever been useful.
-	if res.Blocked() && !res.Incubating {
+	//
+	// That allowance lives in Validate, which reports those gaps as warnings for
+	// an incubating repo. Re-checking Incubating here as well vetoed unrelated
+	// failures — a knowledge path resolving to nothing waved through because the
+	// project had no compose file.
+	if res.Blocked() {
 		reason := "circle: preflight is failing, so writes are blocked. Run `circle preflight --explain` and fix the contract."
 		if *skill != "" {
 			reason = fmt.Sprintf("circle: %s cannot run — the contracts are invalid. Run `circle preflight --explain`.", *skill)
@@ -132,6 +137,39 @@ func runGateCheck(e Env, args []string) int {
 
 	_ = toolName
 	return ExitOK
+}
+
+// writableState reports whether a repo-relative path is Circle bookkeeping that
+// the gate must never block.
+//
+// This used to be the whole of .circle/, justified as "recording an event or
+// closing a task must never be blocked by the gate those actions serve". Those
+// actions are performed by the circle binary through Bash, which this hook never
+// sees — so the blanket exemption bought nothing for its stated purpose, and
+// covered the files that DEFINE the gate: approval.json, approved-radius and
+// project.toml. An agent blocked by the gate could write its own approval, widen
+// its own radius, or rewrite the contract, and be permitted every time.
+//
+// Only runtime/ stays open. It is gitignored, regenerable and carries no
+// integrity claim, so nothing is lost by letting it be written freely. Everything
+// else under .circle/ is durable state that must sit inside the approved radius
+// like any other file.
+func writableState(rel string) bool {
+	sep := string(filepath.Separator)
+	runtime := contract.Dir + sep + "runtime" + sep
+	return strings.HasPrefix(rel, runtime)
+}
+
+// isCircleState reports whether a repo-relative path is Circle's own bookkeeping.
+//
+// Distinct from writableState and deliberately wider. The write gate asks "may
+// the agent's editing tools change this?" and the answer for approval.json is
+// no. This asks "did Circle write this?", and for reporting drift the answer for
+// every path under .circle/ is yes — the user did not touch them, the commands
+// they ran did.
+func isCircleState(rel string) bool {
+	rel = filepath.ToSlash(rel)
+	return rel == contract.Dir || strings.HasPrefix(rel, contract.Dir+"/")
 }
 
 // approvalGate decides whether this write may proceed.
@@ -168,9 +206,7 @@ func approvalGate(repo *contract.Repo, target string) (string, bool) {
 	if relErr != nil || strings.HasPrefix(rel, "..") {
 		rel = target
 	}
-	// Circle's own state is always writable: recording an event or closing a
-	// task must never be blocked by the gate those actions serve.
-	if strings.HasPrefix(rel, contract.Dir+string(filepath.Separator)) {
+	if writableState(rel) {
 		return "", false
 	}
 	if domain.InRadius(rel, a.Radius) {

@@ -216,8 +216,15 @@ func runInit(e Env, args []string) int {
 		return ExitError
 	}
 	fmt.Fprintf(e.Stdout, "\n  %s✓%s wrote        .circle/project.toml %s— commit this%s\n", p.G, p.N, p.D, p.N)
-	fmt.Fprintf(e.Stdout, "\n%sNext%s\n  %scircle preflight%s   validate the three contracts\n\n",
-		p.B, p.N, p.B, p.N)
+	// The timeline is named here because it is the one piece of required state a
+	// user cannot infer from the contract. Task closure is dated against it, and
+	// without it the first `task close` of a new project fails on a precondition
+	// nothing had mentioned. The plugin opens it from a SessionStart hook, so
+	// anyone driving the CLI directly — CI, a script — never gets one.
+	fmt.Fprintf(e.Stdout, "\n%sNext%s\n", p.B, p.N)
+	fmt.Fprintf(e.Stdout, "  %scircle preflight%s       validate the three contracts\n", p.B, p.N)
+	fmt.Fprintf(e.Stdout, "  %scircle timeline open%s   start the change record task closure is dated against\n\n",
+		p.B, p.N)
 	return ExitOK
 }
 

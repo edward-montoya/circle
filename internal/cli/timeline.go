@@ -267,12 +267,17 @@ func shortSHA(s string) string {
 	return s
 }
 
-// lastCommitTime backs the task-closure rule: a gate run must be newer than the
+// closureFloor backs the task-closure rule: a gate run must be newer than the
 // work it claims to verify, or a stale green would close anything.
-func lastCommitTime(r *contract.Repo, taskID string) time.Time {
-	t, err := timeline.Load(r, "default")
-	if err != nil {
-		return time.Time{}
-	}
-	return timeline.LastCommitAt(t)
+//
+// The item is "default" because that is the catch-all timeline every command
+// writes today; --item is plumbed through the timeline commands for the moment
+// there is more than one.
+//
+// An error is returned rather than swallowed. The previous version answered the
+// zero time whenever the timeline could not be read, and the zero time is beaten
+// by every gate run ever recorded — so the rule became "a gate passed at some
+// point" in exactly the situations where nobody was watching.
+func closureFloor(r *contract.Repo, taskID string) (time.Time, error) {
+	return timeline.Floor(r, "default", taskID)
 }

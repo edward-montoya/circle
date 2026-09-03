@@ -2,6 +2,7 @@ package timeline
 
 import (
 	"encoding/json"
+	"errors"
 	"os"
 	"path/filepath"
 	"time"
@@ -15,6 +16,10 @@ import (
 func path(r *contract.Repo, item string) string {
 	return r.StateDir("timelines", item+".json")
 }
+
+// ErrNoTimeline means no timeline has been opened for this item, so there is no
+// baseline to date anything against.
+var ErrNoTimeline = errors.New("no timeline recorded")
 
 func Load(r *contract.Repo, item string) (domain.Timeline, error) {
 	var t domain.Timeline
@@ -165,4 +170,62 @@ func LastCommitAt(t domain.Timeline) time.Time {
 		}
 	}
 	return newest
+}
+
+// TaskCommitAt is the timestamp of the newest live commit attributed to taskID,
+// or the zero time when none is.
+//
+// Attribution is best-effort and never authoritative (D-31), which is why this
+// reports "nothing attributed" rather than an error: the caller falls back to a
+// wider floor instead of refusing work git cannot tie to a task.
+func TaskCommitAt(t domain.Timeline, taskID string) time.Time {
+	var newest time.Time
+	if taskID == "" {
+		return newest
+	}
+	for _, e := range t.Entries {
+		if e.State == domain.EntryLive && e.Task == taskID && e.At.After(newest) {
+			newest = e.At
+		}
+	}
+	return newest
+}
+
+// Floor is the instant a passing gate run must beat for taskID to close.
+//
+// Narrowest first: commits attributed to this task, then any live commit on the
+// item, then the baseline the timeline opened at. Each fallback is no earlier
+// than the one before it, so widening never lets a task close against a floor
+// that predates its own work.
+//
+// A missing timeline is an error, not a zero time. Returning the zero time here
+// is satisfied by every gate run ever recorded, which silently downgrades "a
+// gate passed since your last commit" to "a gate passed at some point" — the
+// guarantee this function exists to make, quietly deleted. Refusing to guess is
+// the safe failure.
+func Floor(r *contract.Repo, item, taskID string) (time.Time, error) {
+	b, err := os.ReadFile(path(r, item))
+	if err != nil {
+		if os.IsNotExist(err) {
+			return time.Time{}, ErrNoTimeline
+		}
+		return time.Time{}, err
+	}
+	var t domain.Timeline
+	if err := json.Unmarshal(b, &t); err != nil {
+		return time.Time{}, err
+	}
+	if at := TaskCommitAt(t, taskID); !at.IsZero() {
+		return at, nil
+	}
+	if at := LastCommitAt(t); !at.IsZero() {
+		return at, nil
+	}
+	// No commits yet. The session baseline is still a real floor: it proves the
+	// gate ran after this stretch of work began, which is the most that can be
+	// claimed when nothing has been committed.
+	if t.OpenedAt.IsZero() {
+		return time.Time{}, ErrNoTimeline
+	}
+	return t.OpenedAt, nil
 }
