@@ -101,7 +101,7 @@ func seedApprovedTask(t *testing.T, root string, paths []string) {
 	tk := domain.Task{
 		ID: "task-1", Parent: "default", Title: "t", State: domain.StateReady,
 		Goal:   domain.Goal{Statement: "do the thing"},
-		Verify: domain.Verification{Kind: domain.VerifyKind("gate"), Gate: "lint"},
+		Verify: domain.Verification{Kind: domain.VerifyUnit, Gate: "lint"},
 		Paths:  paths,
 	}
 	if err := task.Save(repo, tk); err != nil {
@@ -182,7 +182,7 @@ func TestGateDeniesWithoutAnApprovedBrief(t *testing.T) {
 	tk := domain.Task{
 		ID: "task-1", Parent: "default", Title: "t", State: domain.StateReady,
 		Goal:   domain.Goal{Statement: "do the thing"},
-		Verify: domain.Verification{Kind: domain.VerifyKind("gate"), Gate: "lint"},
+		Verify: domain.Verification{Kind: domain.VerifyUnit, Gate: "lint"},
 	}
 	if err := task.Save(repo, tk); err != nil {
 		t.Fatal(err)

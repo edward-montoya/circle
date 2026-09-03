@@ -53,7 +53,7 @@ func seedTimeline(t *testing.T, r *contract.Repo, tl domain.Timeline) {
 // any pass in history; now it refuses.
 func TestTaskCloseRefusesWithoutATimeline(t *testing.T) {
 	root := newRepo(t, runnable, map[string]string{"docker-compose.yml": composeFile})
-	repo := seedTask(t, root, domain.VerifyKind("gate"))
+	repo := seedTask(t, root, domain.VerifyUnit)
 
 	// A passing run from long before any work, which is exactly what the old
 	// zero-time floor would have accepted.
@@ -75,7 +75,7 @@ func TestTaskCloseRefusesWithoutATimeline(t *testing.T) {
 
 func TestTaskCloseRejectsAGateThatPredatesTheWork(t *testing.T) {
 	root := newRepo(t, runnable, map[string]string{"docker-compose.yml": composeFile})
-	repo := seedTask(t, root, domain.VerifyKind("gate"))
+	repo := seedTask(t, root, domain.VerifyUnit)
 
 	base := time.Now().UTC().Add(-10 * time.Hour)
 	seedTimeline(t, repo, domain.Timeline{
@@ -99,7 +99,7 @@ func TestTaskCloseRejectsAGateThatPredatesTheWork(t *testing.T) {
 
 func TestTaskCloseAcceptsAGateAfterTheWork(t *testing.T) {
 	root := newRepo(t, runnable, map[string]string{"docker-compose.yml": composeFile})
-	repo := seedTask(t, root, domain.VerifyKind("gate"))
+	repo := seedTask(t, root, domain.VerifyUnit)
 
 	base := time.Now().UTC().Add(-10 * time.Hour)
 	seedTimeline(t, repo, domain.Timeline{
@@ -159,7 +159,7 @@ func TestTaskCloseNamesTheReviewerForManualVerification(t *testing.T) {
 
 func TestTaskCloseVerifyOnlyDoesNotClose(t *testing.T) {
 	root := newRepo(t, runnable, map[string]string{"docker-compose.yml": composeFile})
-	repo := seedTask(t, root, domain.VerifyKind("gate"))
+	repo := seedTask(t, root, domain.VerifyUnit)
 
 	base := time.Now().UTC().Add(-10 * time.Hour)
 	seedTimeline(t, repo, domain.Timeline{
