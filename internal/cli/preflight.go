@@ -22,6 +22,7 @@ func runPreflight(e Env, args []string) int {
 	ctx := f.Bool("context", false, "compact block for skill injection")
 	quiet := f.Bool("quiet", false, "exit code only")
 	force := f.Bool("force", false, "bypass; requires --reason, recorded, caps the score")
+	clearForce := f.Bool("clear-force", false, "lift a previous --force once the contract is fixed")
 	reason := f.String("reason", "", "why the bypass is justified")
 	if err := parse(f, args); err != nil {
 		return ExitError
@@ -35,9 +36,27 @@ func runPreflight(e Env, args []string) int {
 		return ExitPrecond
 	}
 
+	if *clearForce {
+		// Without this the only way out was `rm .circle/runtime/forced`, an
+		// undocumented file. A bypass nobody knows how to lift is a permanent
+		// warning, and a permanent warning is one people learn to read past.
+		if err := os.Remove(repo.RuntimeDir("forced")); err != nil {
+			if os.IsNotExist(err) {
+				fmt.Fprintln(e.Stdout, "no bypass in effect")
+				return ExitOK
+			}
+			fmt.Fprintf(e.Stderr, "circle: could not clear the bypass: %v\n", err)
+			return ExitError
+		}
+		_ = events.Append(repo, domain.NewEvent(domain.EvPreflightForceClear))
+		fmt.Fprintln(e.Stdout, "bypass lifted; the score cap is gone")
+		return ExitOK
+	}
+
 	if *force {
 		// A bypass with no consequence is paperwork. This one is recorded, caps
-		// the status score, and blocks PR creation until cleared.
+		// the status score, and is reported by every later preflight until it is
+		// explicitly lifted with --clear-force.
 		if strings.TrimSpace(*reason) == "" {
 			fmt.Fprintln(e.Stderr, "circle: --force requires --reason")
 			return ExitError
@@ -48,14 +67,14 @@ func runPreflight(e Env, args []string) int {
 		ev.Reason = *reason
 		_ = events.Append(repo, ev)
 		fmt.Fprintf(e.Stdout, "preflight bypassed and recorded: %s\n", *reason)
-		fmt.Fprintln(e.Stdout, "status is capped at 60 and PR creation is blocked.")
+		fmt.Fprintln(e.Stdout, "status is capped at 60 until `circle preflight --clear-force`.")
 		return ExitOK
 	}
 
 	res := contract.Validate(repo)
 
 	ev := domain.NewEvent(domain.EvPreflight)
-	if res.Blocked() && !res.Incubating {
+	if res.Blocked() {
 		ev.ExitCode = ExitGate
 	}
 	_ = events.Append(repo, ev)
@@ -70,7 +89,10 @@ func runPreflight(e Env, args []string) int {
 		RenderExplain(e.Stdout, repo.Root, res, NewPalette(e.Stdout))
 	}
 
-	if res.Blocked() && !res.Incubating {
+	// Incubation is already reflected in the severities Validate assigned, so a
+	// day-zero repository has nothing to fail on. Anything that did fail is a
+	// real failure and must not be laundered by the project's youth.
+	if res.Blocked() {
 		return ExitGate
 	}
 	return ExitOK

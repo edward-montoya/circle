@@ -479,6 +479,11 @@ circle preflight --force --reason "why this is justified"
 ```
 
 The reason is mandatory, the bypass is recorded, and it **caps the status score
-at 60** and blocks PR creation. It is an escape hatch with a cost, not a free
-pass — and if you find yourself using it often, that is a finding about the
-framework worth reporting.
+at 60**. Every later preflight reports it until you lift it:
+
+```bash
+circle preflight --clear-force
+```
+
+It is an escape hatch with a cost, not a free pass — and if you find yourself
+using it often, that is a finding about the framework worth reporting.

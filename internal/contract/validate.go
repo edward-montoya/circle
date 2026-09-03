@@ -71,6 +71,13 @@ func (r Result) Count(s Severity) int {
 }
 
 // Blocked reports whether any check failed. This is what maps to exit 2.
+//
+// Incubation is deliberately not consulted here. It already expresses itself by
+// downgrading the execution and quality checks to warnings, so a day-zero
+// repository has no failures to begin with. Consulting it a second time as a
+// veto — which the callers used to do — let an incubating repository fail a
+// knowledge check and still report success, because "nothing to run yet"
+// silenced a section that has nothing to do with running.
 func (r Result) Blocked() bool { return r.Count(Fail) > 0 }
 
 var serviceKey = regexp.MustCompile(`^  ([A-Za-z0-9._-]+):\s*$`)
@@ -139,6 +146,10 @@ func Validate(r *Repo) Result {
 
 	// Nothing declared, and nothing on disk to declare: a project that has not
 	// started rather than one that is broken.
+	//
+	// This flag softens the severity of the execution and quality checks below;
+	// it is NOT a veto over the result. An incubating repository reports those
+	// gaps as warnings and therefore does not block on its own — see Blocked.
 	res.Incubating = c.Execution.Compose == "" &&
 		composeOnDisk(r) == "" &&
 		len(c.Quality.Gates()) == 0
@@ -346,7 +357,7 @@ func validateForce(r *Repo, res *Result) {
 	}
 	res.Forced = true
 	res.add(Warn, "preflight", "forced", strings.TrimSpace(string(b)),
-		"the status score is capped and PR creation is blocked until this is cleared")
+		"the status score is capped until `circle preflight --clear-force`")
 }
 
 func summarise(xs []string) string {

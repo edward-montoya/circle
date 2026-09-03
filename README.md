@@ -11,10 +11,18 @@ Circle puts it in the repo as three contracts, then **enforces them with hooks**
 A skill can be ignored; a hook cannot.
 
 ```
-No file is written while the contracts are invalid.
-No file is written without a brief a human approved.
+No file is edited while the contracts are invalid.
+No file is edited without a brief a human approved.
 No task closes without a passing gate dated after its last commit.
 ```
+
+"Edited" means the agent's file-editing tools — `Edit`, `Write`, `NotebookEdit`
+— which is where a coding agent does essentially all of its writing. It does not
+cover a file written by a shell command (`cat > f`, `sed -i`), because the
+PreToolUse hook that enforces this is registered against those three tools and
+not against `Bash`. Closing that gap means deciding which shell commands count
+as writes, and a partial answer presented as a total one is worse than a stated
+limit — so the limit is stated. See [#1](#known-gaps).
 
 ---
 
@@ -25,6 +33,21 @@ repositories. The cold-start trial that would confirm the central premise has no
 been run — see [`docs/TRIAL.md`](docs/TRIAL.md) if you are a participant.
 
 Everything below works today. Nothing below is stable API.
+
+### Known gaps
+
+A framework whose whole claim is enforcement has to be exact about where the
+enforcement stops.
+
+1. **Shell writes are not gated.** The PreToolUse hook matches `Edit`, `Write`
+   and `NotebookEdit`. A file written by `Bash` — `cat > f`, `sed -i`, a script
+   — bypasses both the contract check and the approval check. Deciding which
+   commands count as writes is the open design question; until it is answered,
+   the guarantee above says "edited" rather than "written".
+2. **The approval record is a plain file.** `.circle/items/<item>/approval.json`
+   is JSON on disk with no signature. The gate refuses to let the agent's own
+   editing tools write it, but anything else on the machine can. It records who
+   approved what; it does not prove it.
 
 ---
 

@@ -220,12 +220,22 @@ func runTaskClose(e Env, args []string) int {
 	if t.Verify.Kind == domain.VerifyManual {
 		fmt.Fprintf(e.Stdout, "%s is manual verification — %s must judge it.\n", t.ID, t.Verify.Reviewer)
 		fmt.Fprintf(e.Stdout, "justification: %s\n", t.Verify.Justification)
-		if verifyOnly != nil && *verifyOnly {
+		if *verifyOnly {
 			return ExitOK
 		}
+		// There is no machine evidence to cite, so say whose judgement closed it
+		// rather than printing an empty "evidence:" and implying there was some.
+		t.ClosedBy = "manual:" + t.Verify.Reviewer
 	} else {
 		evs, _ := events.All(repo)
-		since := lastCommitTime(repo, t.ID)
+		since, err := closureFloor(repo, t.ID)
+		if err != nil {
+			p := NewPalette(e.Stderr)
+			fmt.Fprintf(e.Stderr, "%scircle: %s cannot close%s\n", p.R, t.ID, p.N)
+			fmt.Fprintf(e.Stderr, "  no timeline for this item, so there is nothing to date the gate against\n")
+			fmt.Fprintf(e.Stderr, "\n  %srun: circle timeline open%s\n", p.D, p.N)
+			return ExitPrecond
+		}
 		ev, passed := events.GatePassedSince(evs, t.Verify.Gate, since)
 		if !passed {
 			p := NewPalette(e.Stderr)

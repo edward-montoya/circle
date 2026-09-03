@@ -11,17 +11,21 @@ const (
 	EvGateDeny       EventType = "gate.deny"       // a write was denied
 	EvPreflight      EventType = "preflight"       // preflight ran
 	EvPreflightForce EventType = "preflight.force" // preflight was bypassed
-	EvTaskCreate     EventType = "task.create"
-	EvTaskClaim      EventType = "task.claim"
-	EvTaskClose      EventType = "task.close"
-	EvBriefGenerate  EventType = "brief.generate"
-	EvBriefApprove   EventType = "brief.approve"
-	EvBriefReject    EventType = "brief.reject"
-	EvSessionOpen    EventType = "session.open"
-	EvSessionClose   EventType = "session.close"
-	EvToolUse        EventType = "tool.use"
-	EvWorktreeUp     EventType = "worktree.provision"
-	EvWorktreeDown   EventType = "worktree.release"
+	// EvPreflightForceClear is recorded rather than the force event being
+	// deleted: the bypass happened, and the history says so even after it is
+	// lifted.
+	EvPreflightForceClear EventType = "preflight.force.clear" // a bypass was lifted
+	EvTaskCreate          EventType = "task.create"
+	EvTaskClaim           EventType = "task.claim"
+	EvTaskClose           EventType = "task.close"
+	EvBriefGenerate       EventType = "brief.generate"
+	EvBriefApprove        EventType = "brief.approve"
+	EvBriefReject         EventType = "brief.reject"
+	EvSessionOpen         EventType = "session.open"
+	EvSessionClose        EventType = "session.close"
+	EvToolUse             EventType = "tool.use"
+	EvWorktreeUp          EventType = "worktree.provision"
+	EvWorktreeDown        EventType = "worktree.release"
 )
 
 // SchemaVersion is bumped when the event shape changes incompatibly.
