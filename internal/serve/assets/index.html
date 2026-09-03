@@ -173,9 +173,15 @@ function render(d) {
       <td><span class="st ${cls}">${esc(e.state)}</span></td></tr>`;
   }).join("") : `<tr><td colspan="4">no commits since baseline</td></tr>`;
 
+  // "everything green" is a claim about the score, so only say it when the
+  // score agrees. Nothing to suggest at 73/100 means this panel has run out of
+  // advice, which is not the same thing and must not read like it.
+  const perfect = (d.components || []).every(c => c.achieved >= c.weight);
   $("suggest").innerHTML = (d.suggest || []).length
     ? (d.suggest || []).map(s => `<code>${esc(s)}</code>`).join("")
-    : `<p class="noexec">Nothing to suggest — everything green.</p>`;
+    : perfect
+      ? `<p class="noexec">Nothing to suggest — everything green.</p>`
+      : `<p class="noexec">Nothing to suggest. The score is not full — open Contracts and Tasks to see what is outstanding.</p>`;
 
   $("contracts").innerHTML = (d.contracts || []).map(c =>
     `<tr><td class="m" style="width:1%"><span class="st ${sev(c.severity)}">${esc(c.severity)}</span></td>

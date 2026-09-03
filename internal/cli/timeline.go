@@ -219,6 +219,12 @@ func runTimelineDrift(e Env, args []string) int {
 	p := NewPalette(e.Stdout)
 	var drifted []string
 	for _, path := range t.TouchedFiles() {
+		// Circle's own state is not drift — see isCircleState. `brief verify`
+		// already skips it; this command performs the same comparison and was
+		// missed, so the two disagreed about the same repository.
+		if isCircleState(path) {
+			continue
+		}
 		if !insideRadius(path, radius) {
 			drifted = append(drifted, path)
 		}

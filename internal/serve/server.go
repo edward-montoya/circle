@@ -11,16 +11,21 @@ package serve
 import (
 	"embed"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"net/http"
 	"time"
 
+	"github.com/edwardmontoya/circle/internal/brief"
 	"github.com/edwardmontoya/circle/internal/contract"
 	"github.com/edwardmontoya/circle/internal/domain"
 	"github.com/edwardmontoya/circle/internal/events"
 	"github.com/edwardmontoya/circle/internal/task"
 	"github.com/edwardmontoya/circle/internal/timeline"
 )
+
+// defaultItem is the catch-all work item every command reads today.
+const defaultItem = "default"
 
 //go:embed assets/*
 var assets embed.FS
@@ -96,16 +101,56 @@ func build(repo *contract.Repo) Snapshot {
 
 	// Suggestions are copyable text, never buttons that act. A second execution
 	// path is a second thing that goes stale (D-6).
-	for _, t := range task.Ready(ts) {
-		snap.Suggest = append(snap.Suggest, "circle task claim "+t.ID)
-	}
-	if pass < total {
-		snap.Suggest = append(snap.Suggest, "circle quality run")
-	}
 	if res.Blocked() {
 		snap.Suggest = append(snap.Suggest, "circle preflight --explain")
 	}
+	// The approval gate first, because it blocks every write. This panel is
+	// titled "What needs a human" and could not see the one state that
+	// literally requires one: with a stale approval it reported "everything
+	// green" while the gate was denying every edit in the repository.
+	snap.Suggest = append(snap.Suggest, approvalSuggestions(repo)...)
+	if pass < total {
+		snap.Suggest = append(snap.Suggest, "circle quality run")
+	}
+	for _, t := range task.Ready(ts) {
+		snap.Suggest = append(snap.Suggest, "circle task claim "+t.ID)
+	}
+	// A claimed task is work someone started and has not finished. It is not
+	// "ready", so the loop above skips it, and it was invisible here.
+	for _, t := range ts {
+		if t.State == domain.StateClaimed {
+			snap.Suggest = append(snap.Suggest, "circle task close "+t.ID)
+		}
+	}
 	return snap
+}
+
+// approvalSuggestions reports what a human must do about the brief, if anything.
+//
+// Mirrors the gate's own three questions — is there an approval, is it still
+// bound to the current plan, and is there anything to approve at all — so the
+// dashboard and the thing denying the writes cannot disagree.
+func approvalSuggestions(repo *contract.Repo) []string {
+	b, err := brief.Build(repo, defaultItem)
+	if err != nil || len(b.Tasks) == 0 {
+		return nil // nothing planned, so nothing to approve
+	}
+	regenerate := []string{
+		"circle brief generate",
+		"circle brief approve " + defaultItem,
+	}
+	a, err := brief.LoadApproval(repo, defaultItem, b.PlanHash)
+	switch {
+	case errors.Is(err, brief.ErrNoApproval):
+		return regenerate
+	case err != nil:
+		return regenerate
+	case !a.Valid:
+		// The plan moved after approval. Writes are blocked until it is read
+		// again, which is exactly the "needs a human" this page is named for.
+		return regenerate
+	}
+	return nil
 }
 
 // Serve runs the app until the process ends.
