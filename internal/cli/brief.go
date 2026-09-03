@@ -253,12 +253,20 @@ func runBriefVerify(e Env, args []string) int {
 
 	p := NewPalette(e.Stdout)
 	var drifted []string
+	touched := 0
 	for _, path := range tl.TouchedFiles() {
+		// Circle's own state is not drift. tasks.jsonl, the timelines and the
+		// event log are written by the commands the user just ran, and reporting
+		// them as unapproved changes trains people to skim past this warning —
+		// the one place it must be read.
+		if isCircleState(path) {
+			continue
+		}
+		touched++
 		if !domain.InRadius(path, b.Radius) {
 			drifted = append(drifted, path)
 		}
 	}
-	touched := len(tl.TouchedFiles())
 	fmt.Fprintf(e.Stdout, "\n%sBRIEF VERIFY%s  %s\n", p.B, p.N, b.Item)
 	fmt.Fprintf(e.Stdout, "  %d file(s) touched · %d pattern(s) approved\n", touched, len(b.Radius))
 	if len(drifted) == 0 {

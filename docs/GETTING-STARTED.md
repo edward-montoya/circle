@@ -273,6 +273,29 @@ circle timeline show     # commits and changed files, from git
 commit the agent reported that git does not have is shown as **phantom** rather
 than trusted.
 
+### Open the timeline before you close anything
+
+Task closure is dated against the item's timeline, so it needs one to exist:
+
+```bash
+circle timeline open
+```
+
+The Claude Code plugin does this from a `SessionStart` hook, so inside a session
+it has already happened. Driving the CLI directly — from CI, a script, or your
+own shell — it has not, and the first `task close` stops on it:
+
+```
+circle: feat-1 cannot close
+  no timeline for this item, so there is nothing to date the gate against
+  run: circle timeline open
+```
+
+It refuses rather than guessing. With no timeline there is no instant to compare
+a gate run against, and the only alternative — treating "no baseline" as "any
+time" — would quietly turn *a gate passed since your last commit* into *a gate
+passed at some point*.
+
 ---
 
 ## Step 8 — With Claude Code
@@ -315,6 +338,41 @@ no orphan volumes are left behind.
 
 ---
 
+## Adopting Circle on a project you are building
+
+The steps above are written for someone joining a repository that already has a
+contract. Putting one on your own project runs in a different order, and two of
+the steps are not obvious from the others:
+
+```bash
+circle init                       # detect and scaffold .circle/project.toml
+$EDITOR .circle/project.toml      # add gates, a coverage floor, anything missed
+circle knowledge add docs/ARCHITECTURE.md --as definitions
+circle preflight                  # until it passes
+
+circle timeline open              # ← needed before any task can close
+
+circle task create --id task-1 --goal ... --verify-kind unit --verify-gate test:unit --paths ...
+circle brief generate
+circle brief approve default      # writes are blocked until this
+
+# ... implement ...
+
+circle quality run --all
+circle task close task-1
+```
+
+Two things worth knowing before you hit them:
+
+- **`circle timeline open` is required.** Closure is dated against the timeline,
+  and without one `task close` refuses. Inside Claude Code a `SessionStart` hook
+  does it for you; from a shell or CI, nothing does.
+- **The approval is bound to the plan.** Change, add or remove a task and the
+  approval goes stale by design — regenerate the brief and approve it again.
+  That is the point of binding it, not a bug.
+
+---
+
 ## Starting from nothing
 
 Circle assumes a project that already runs. If yours does not yet — no compose
@@ -334,13 +392,30 @@ Come back when the project has:
 that state `circle init` will not write execution commands it cannot honour, the
 gate stays open, and preflight exits 0 while still listing the gaps.
 
-It is deliberately narrow. Three things end it:
+It is deliberately narrow. Two things end it, and one thing it never excuses:
 
 | Change | What happens |
 |---|---|
 | A compose file appears | Incubation ends. Declare it, or preflight blocks with the exact line to paste |
 | A gate is declared | Incubation ends |
-| The contract names a file that does not exist | **Never incubating.** A contract that claims an execution model it cannot honour is a lie, not a young project |
+| The contract names a file that does not exist | **Blocks either way.** Incubation excuses gaps in what you have not built yet; it never excuses a contract naming something that is not there |
+
+That last row is the important one. Incubation is not a mute button on the
+result — it only softens the *execution* and *quality* checks, because a project
+with nothing to run genuinely has nothing to report there. A knowledge path
+pointing at a missing file is wrong on day zero for exactly the reason it is
+wrong on day ninety, and it blocks on both.
+
+A registered directory that exists but is *empty* is a different case, and only
+warns:
+
+```
+⚠ docs          docs/ → 0 files
+   └ add a document, or drop the registration
+```
+
+An empty registry is honest. It is a full-looking one that is not that this
+framework refuses to print.
 
 One thing does still block once your project runs: **having something to run and
 no way to prove it works.** That is not bureaucracy. Without a declared gate, no

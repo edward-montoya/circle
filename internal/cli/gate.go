@@ -160,6 +160,18 @@ func writableState(rel string) bool {
 	return strings.HasPrefix(rel, runtime)
 }
 
+// isCircleState reports whether a repo-relative path is Circle's own bookkeeping.
+//
+// Distinct from writableState and deliberately wider. The write gate asks "may
+// the agent's editing tools change this?" and the answer for approval.json is
+// no. This asks "did Circle write this?", and for reporting drift the answer for
+// every path under .circle/ is yes — the user did not touch them, the commands
+// they ran did.
+func isCircleState(rel string) bool {
+	rel = filepath.ToSlash(rel)
+	return rel == contract.Dir || strings.HasPrefix(rel, contract.Dir+"/")
+}
+
 // approvalGate decides whether this write may proceed.
 //
 // Three questions, in order: is there an approval at all, is it still bound to
