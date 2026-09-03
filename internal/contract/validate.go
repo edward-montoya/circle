@@ -2,6 +2,7 @@ package contract
 
 import (
 	"fmt"
+	"io/fs"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -282,12 +283,62 @@ func validateQuality(c domain.Contract, res *Result) {
 			"add quality.bootstrap with the install command")
 	}
 
-	if q.Coverage.Min > 0 {
-		res.add(OK, "quality", "coverage", fmt.Sprintf("floor %d%%", q.Coverage.Min))
-	} else if !res.Incubating {
-		res.add(Warn, "quality", "coverage", "no floor configured",
-			"the status score cannot use what is not measured")
+	// A floor with nothing measuring it is the report this framework exists to
+	// refuse. It used to tick green on `min` alone, so a project could declare
+	// 95% and sit at zero forever.
+	// Labelled "coverage floor", not "coverage": a declared command is itself a
+	// gate, and the loop above already prints a "coverage" line for it. Two
+	// checks sharing a label read as the same thing reported twice.
+	switch {
+	case q.Coverage.Min > 0 && q.Coverage.Measured():
+		res.add(OK, "quality", "coverage floor",
+			fmt.Sprintf("%d%% · proven by the coverage gate", q.Coverage.Min))
+	case q.Coverage.Min > 0:
+		res.add(Warn, "quality", "coverage floor",
+			fmt.Sprintf("%d%% declared, but nothing measures it", q.Coverage.Min),
+			"add command to [quality.coverage] — one that exits non-zero below the floor")
+	case q.Coverage.Measured():
+		res.add(Warn, "quality", "coverage floor", "measured, but no floor to compare against",
+			"add min to [quality.coverage]")
+	case !res.Incubating:
+		res.add(Warn, "quality", "coverage floor", "no floor configured",
+			"add [quality.coverage] with min = <percent> and command = <how to prove it>")
 	}
+}
+
+// resolveKnowledge counts the documents a registered path actually resolves to,
+// and reports whether anything of that name exists at all.
+//
+// The count is of files, never of directories. `filepath.Glob("docs/")` returns
+// the directory itself, so the previous implementation reported an empty docs
+// folder as "→ 1" — a registry with nothing in it wearing a checkmark, which is
+// the exact failure the drift checker exists to prevent one level up.
+func resolveKnowledge(r *Repo, pattern string) (files int, exists bool) {
+	matches, _ := filepath.Glob(r.Path(pattern))
+	if len(matches) == 0 {
+		if _, err := os.Stat(r.Path(pattern)); err != nil {
+			return 0, false
+		}
+		matches = []string{r.Path(pattern)}
+	}
+	for _, m := range matches {
+		st, err := os.Stat(m)
+		if err != nil {
+			continue
+		}
+		if !st.IsDir() {
+			files++
+			continue
+		}
+		// A registered directory means the documents beneath it, at any depth.
+		_ = filepath.WalkDir(m, func(_ string, d fs.DirEntry, err error) error {
+			if err == nil && !d.IsDir() {
+				files++
+			}
+			return nil
+		})
+	}
+	return files, true
 }
 
 func validateKnowledge(r *Repo, c domain.Contract, res *Result) {
@@ -300,18 +351,25 @@ func validateKnowledge(r *Repo, c domain.Contract, res *Result) {
 		}
 		for _, p := range cls.Paths {
 			total++
-			matches, _ := filepath.Glob(r.Path(p))
-			if len(matches) == 0 {
-				if _, err := os.Stat(r.Path(p)); err == nil {
-					matches = []string{p}
-				}
-			}
-			if len(matches) > 0 {
-				hit++
-				res.add(OK, "knowledge", cls.Name, fmt.Sprintf("%s → %d", p, len(matches)))
-			} else {
+			n, exists := resolveKnowledge(r, p)
+			switch {
+			case !exists:
+				// Nothing of that name. The registration is a lie and blocks.
 				res.add(Fail, "knowledge", cls.Name, p+" → 0 matches",
 					"repoint it or remove it")
+			case n == 0:
+				// The path is there and holds nothing. An empty registry is
+				// honest — it is the checkmark on one that made this worth
+				// fixing, because `init` writes docs = ["docs/"] before any
+				// document exists, and a bare Stat on the directory reported it
+				// satisfied. Advisory, not blocking: a young project should not
+				// be unable to write its first file over an empty docs folder.
+				hit++
+				res.add(Warn, "knowledge", cls.Name, p+" → 0 files",
+					"add a document, or drop the registration")
+			default:
+				hit++
+				res.add(OK, "knowledge", cls.Name, fmt.Sprintf("%s → %d", p, n))
 			}
 		}
 	}

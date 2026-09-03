@@ -92,7 +92,17 @@ type Quality struct {
 
 type Coverage struct {
 	Min int `toml:"min,omitempty"`
+
+	// Command is what proves the floor. Without it Min is a number nobody
+	// checks: it was reported as a passing check while nothing measured
+	// coverage at all, which is the inference this framework refuses to make
+	// about anything else. Declared, it becomes the `coverage` gate and is run
+	// and recorded like every other gate.
+	Command string `toml:"command,omitempty"`
 }
+
+// Measured reports whether the floor has something behind it.
+func (c Coverage) Measured() bool { return strings.TrimSpace(c.Command) != "" }
 
 // Gate carries enforcement policy.
 type Gate struct {
@@ -122,6 +132,10 @@ func (q Quality) Gates() []GateSpec {
 	add("format", q.Format)
 	add("lint", q.Lint)
 	add("typecheck", q.Typecheck)
+	// A declared coverage command is a gate like any other, so `quality run`
+	// executes it and its result is recorded as an event. That is what lets the
+	// floor be evidence rather than an assertion.
+	add("coverage", q.Coverage.Command)
 
 	names := make([]string, 0, len(q.Test))
 	for n := range q.Test {

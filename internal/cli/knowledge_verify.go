@@ -68,5 +68,10 @@ func runKnowledgeVerify(e Env, args []string) int {
 	if *failOn {
 		return ExitGate
 	}
+	// Advisory by default, because a false positive that stopped work would
+	// teach people to ignore the whole report. But the exit code is the API, and
+	// somebody wiring this into CI without knowing about the flag would wire up
+	// a check that cannot fail — so the flag is named at the moment it matters.
+	fmt.Fprintf(e.Stdout, "%sAdvisory: this exits 0. Use --fail-on-drift to block CI on it.%s\n\n", p.D, p.N)
 	return ExitOK
 }
