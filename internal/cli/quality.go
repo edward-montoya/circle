@@ -15,6 +15,7 @@ import (
 func init() {
 	register(Command{"quality list", "List the declared gates", runQualityList})
 	register(Command{"quality run", "Execute gates and record the results", runQualityRun})
+	register(Command{"quality add", "Declare a gate in the quality contract", runQualityAdd})
 }
 
 func runQualityList(e Env, args []string) int {
@@ -42,10 +43,16 @@ func runQualityRun(e Env, args []string) int {
 	all := f.Bool("all", false, "run every gate")
 	noRecord := f.Bool("no-record", false, "do not emit result events")
 	failFast := f.Bool("fail-fast", false, "stop at the first failure")
+	taskID := f.String("task", "", "attribute the run to a task, for its red → green history")
+	expect := f.String("expect", "", "red or green: exit 0 only when every gate matches. For test-first work")
 	if err := parse(f, args); err != nil {
 		return ExitError
 	}
 
+	if *expect != "" && *expect != "red" && *expect != "green" {
+		fmt.Fprintln(e.Stderr, "circle: --expect is red or green")
+		return ExitError
+	}
 	repo, err := contract.Open(e.Cwd)
 	if err != nil {
 		fmt.Fprintf(e.Stderr, "circle: %v\n", err)
@@ -98,6 +105,10 @@ func runQualityRun(e Env, args []string) int {
 			ev := domain.NewEvent(domain.EvGateRun)
 			ev.Gate, ev.Command = g.Name, g.Command
 			ev.ExitCode, ev.DurMS = code, dur.Milliseconds()
+			ev.Task = *taskID
+			if *expect != "" {
+				ev.Reason = "expect=" + *expect
+			}
 			_ = events.Append(repo, ev)
 		}
 
@@ -113,6 +124,16 @@ func runQualityRun(e Env, args []string) int {
 		}
 	}
 
+	// Test-first: a new test must fail before the code exists. A red that came
+	// out green means the test is not testing the new behaviour.
+	if *expect == "red" {
+		if failed == len(gates) {
+			fmt.Fprintf(e.Stdout, "\n%sred, as expected — now write the code that turns it green%s\n", p.Y, p.N)
+			return ExitOK
+		}
+		fmt.Fprintf(e.Stdout, "\n%sexpected red, got green — the test does not exercise the new behaviour yet%s\n", p.R, p.N)
+		return ExitQuality
+	}
 	if failed > 0 {
 		fmt.Fprintf(e.Stdout, "\n%s%d of %d gates failed%s\n", p.R, failed, len(gates), p.N)
 		return ExitQuality
@@ -127,4 +148,49 @@ func bootstrapHint(q domain.Quality) string {
 		return "declare quality.bootstrap"
 	}
 	return "run: " + strings.TrimSpace(q.Bootstrap)
+}
+
+// runQualityAdd declares a gate. It is how a retro turns a mistake a tool could
+// have caught into a check that catches it next time.
+//
+// The name decides where it goes: format, lint and typecheck are their own
+// keys; test:<kind> goes under [quality.test]; anything else under
+// [quality.extra].
+func runQualityAdd(e Env, args []string) int {
+	f := fs("quality add", e)
+	if err := parse(f, args); err != nil {
+		return ExitError
+	}
+	if f.NArg() != 2 {
+		fmt.Fprintln(e.Stderr, `usage: circle quality add <name> "<command>"   e.g. test:integration, lint, check-imports`)
+		return ExitError
+	}
+	repo, code := openRepo(e)
+	if repo == nil {
+		return code
+	}
+	name, command := f.Arg(0), f.Arg(1)
+	section, key := "quality", name
+	switch {
+	case name == "format" || name == "lint" || name == "typecheck":
+	case strings.HasPrefix(name, "test:"):
+		section, key = "quality.test", strings.TrimPrefix(name, "test:")
+	default:
+		section = "quality.extra"
+	}
+	if key == "" || strings.TrimSpace(command) == "" {
+		fmt.Fprintln(e.Stderr, "circle: a gate needs a name and a command")
+		return ExitError
+	}
+	if err := setTOMLKey(repo.StateDir("project.toml"), section, key, fmt.Sprintf("%q", command)); err != nil {
+		fmt.Fprintf(e.Stderr, "circle: %v\n", err)
+		return ExitError
+	}
+	if _, err := contract.Load(repo.Root); err != nil {
+		fmt.Fprintf(e.Stderr, "circle: the contract no longer parses after the edit: %v\n", err)
+		return ExitError
+	}
+	fmt.Fprintf(e.Stdout, "declared gate %s → %s  (under [%s])\n", name, command, section)
+	fmt.Fprintf(e.Stdout, "  run it: circle quality run %s\n", name)
+	return ExitOK
 }

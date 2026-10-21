@@ -11,21 +11,21 @@ import (
 )
 
 func init() {
-	register(Command{"knowledge add", "Register a path under docs, definitions or validations", runKnowledgeAdd})
+	register(Command{"knowledge add", "Register a path under docs, definitions, validations or standards", runKnowledgeAdd})
 	register(Command{"knowledge list", "The registry, and what each path resolves to", runKnowledgeList})
 	register(Command{"knowledge remove", "Drop a registered path", runKnowledgeRemove})
 }
 
-var knowledgeClasses = []string{"docs", "definitions", "validations"}
+var knowledgeClasses = []string{"docs", "definitions", "validations", "standards"}
 
 func runKnowledgeAdd(e Env, args []string) int {
 	f := fs("knowledge add", e)
-	class := f.String("as", "", "docs | definitions | validations")
+	class := f.String("as", "", "docs | definitions | validations | standards")
 	if err := parse(f, args); err != nil {
 		return ExitError
 	}
 	if f.NArg() == 0 || *class == "" {
-		fmt.Fprintln(e.Stderr, "usage: circle knowledge add <path> --as docs|definitions|validations")
+		fmt.Fprintln(e.Stderr, "usage: circle knowledge add <path> --as docs|definitions|validations|standards")
 		return ExitError
 	}
 	valid := false
@@ -63,6 +63,8 @@ func runKnowledgeAdd(e Env, args []string) int {
 		target = &c.Knowledge.Definitions
 	case "validations":
 		target = &c.Knowledge.Validations
+	case "standards":
+		target = &c.Knowledge.Standards
 	}
 	for _, existing := range *target {
 		if existing == path {
@@ -131,12 +133,21 @@ func runKnowledgeList(e Env, args []string) int {
 	}
 	f := fs("knowledge list", e)
 	unresolved := f.Bool("unresolved", false, "only paths that match nothing")
+	var only multiFlag
+	f.Var(&only, "as", "only this class; repeatable")
+	content := f.Bool("content", false, "print each file's contents. For skill injection")
 	if err := parse(f, args); err != nil {
 		return ExitError
+	}
+	if *content {
+		return printKnowledge(e, repo, only)
 	}
 	p := NewPalette(e.Stdout)
 	empty := true
 	for _, cls := range repo.Contract.Knowledge.Classes() {
+		if len(only) > 0 && !contains(only, cls.Name) {
+			continue
+		}
 		for _, path := range cls.Paths {
 			matches, _ := filepath.Glob(repo.Path(path))
 			if len(matches) == 0 {
@@ -186,6 +197,7 @@ func writeContract(r *contract.Repo, c domain.Contract) error {
 		"docs":        c.Knowledge.Docs,
 		"definitions": c.Knowledge.Definitions,
 		"validations": c.Knowledge.Validations,
+		"standards":   c.Knowledge.Standards,
 	}
 	seen := map[string]bool{}
 	inKnowledge := false
@@ -245,4 +257,63 @@ func tomlArray(vals []string) string {
 		quoted[i] = fmt.Sprintf("%q", v)
 	}
 	return "[" + strings.Join(quoted, ", ") + "]"
+}
+
+// printKnowledge prints the registered files themselves, so a skill can inject
+// the standards a reviewer applies rather than a list of where they are.
+func printKnowledge(e Env, repo *contract.Repo, only []string) int {
+	printed := 0
+	for _, cls := range repo.Contract.Knowledge.Classes() {
+		if len(only) > 0 && !contains(only, cls.Name) {
+			continue
+		}
+		for _, pat := range cls.Paths {
+			for _, m := range expand(repo, pat) {
+				b, err := os.ReadFile(m)
+				if err != nil {
+					continue
+				}
+				rel, _ := filepath.Rel(repo.Root, m)
+				fmt.Fprintf(e.Stdout, "===== %s (%s) =====\n%s\n", rel, cls.Name, strings.TrimRight(string(b), "\n"))
+				printed++
+			}
+		}
+	}
+	if printed == 0 {
+		fmt.Fprintf(e.Stdout, "(nothing registered under %s)\n", strings.Join(only, ", "))
+	}
+	return ExitOK
+}
+
+// expand resolves a registered path to files: a glob, a file, or every
+// markdown file under a directory.
+func expand(repo *contract.Repo, pat string) []string {
+	matches, _ := filepath.Glob(repo.Path(pat))
+	var out []string
+	for _, m := range matches {
+		st, err := os.Stat(m)
+		if err != nil {
+			continue
+		}
+		if !st.IsDir() {
+			out = append(out, m)
+			continue
+		}
+		_ = filepath.WalkDir(m, func(p string, d os.DirEntry, err error) error {
+			if err == nil && !d.IsDir() && strings.HasSuffix(p, ".md") {
+				out = append(out, p)
+			}
+			return nil
+		})
+	}
+	return out
+}
+
+func contains(xs []string, s string) bool {
+	for _, x := range xs {
+		if x == s {
+			return true
+		}
+	}
+	return false
 }

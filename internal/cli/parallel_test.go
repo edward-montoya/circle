@@ -277,3 +277,60 @@ func TestSessionBindingDrivesTheWriteHook(t *testing.T) {
 		t.Fatalf("bound to beta, a write into alpha's radius was allowed:\n%s", out)
 	}
 }
+
+func TestQualityExpectRedAndGreen(t *testing.T) {
+	root := newGitRepo(t)
+	mustRun(t, root, "quality", "add", "test:failing", "false")
+	if code, out := run(t, root, "quality", "run", "test:failing", "--expect", "red", "--task", "x"); code != ExitOK {
+		t.Fatalf("a failing gate is the red expected:\n%s", out)
+	}
+	if code, _ := run(t, root, "quality", "run", "test:unit", "--expect", "red"); code != ExitQuality {
+		t.Fatal("a green run when red was expected must fail")
+	}
+	if code, _ := run(t, root, "quality", "run", "test:unit", "--expect", "green"); code != ExitOK {
+		t.Fatal("green as expected")
+	}
+}
+
+// quality add edits project.toml in place: comments survive, sections are
+// created when missing, and an existing key is rewritten rather than duplicated.
+func TestQualityAddKeepsTheContractReadable(t *testing.T) {
+	root := newGitRepo(t)
+	toml := filepath.Join(root, ".circle", "project.toml")
+	b, _ := os.ReadFile(toml)
+	_ = os.WriteFile(toml, append([]byte("# my comment\n"), b...), 0o644)
+	mustRun(t, root, "quality", "add", "lint", "golangci-lint run")
+	mustRun(t, root, "quality", "add", "test:unit", "go test ./...")
+	mustRun(t, root, "quality", "add", "check-imports", "./scripts/imports.sh")
+	got, _ := os.ReadFile(toml)
+	s := string(got)
+	for _, want := range []string{"# my comment", `lint = "golangci-lint run"`, `unit = "go test ./..."`, "[quality.extra]", `check-imports = "./scripts/imports.sh"`} {
+		if !strings.Contains(s, want) {
+			t.Errorf("missing %q in:\n%s", want, s)
+		}
+	}
+	if strings.Count(s, "unit =") != 1 {
+		t.Errorf("test:unit duplicated:\n%s", s)
+	}
+	if out := mustRun(t, root, "quality", "list"); !strings.Contains(out, "check-imports") {
+		t.Errorf("new gate not listed:\n%s", out)
+	}
+}
+
+func TestSpecCheckCommand(t *testing.T) {
+	root := newGitRepo(t)
+	mustRun(t, root, "item", "new", "zeta", "--title", "zeta")
+	spec := "# z\n\n## Problem\np\n\n## Solution\ns\n\n## Behaviours\n1. As a user, I want x, so that y.\n\n" +
+		"## Seams\n| Seam | Behaviours | Gate | Misses |\n|---|---|---|---|\n| api | 1 | test:nope | ui |\n\n" +
+		"## Decisions\n- d\n\n## Out of scope\n- o\n\n## Risks\n- r\n"
+	path := filepath.Join(root, ".circle", "items", "zeta", "spec.md")
+	_ = os.WriteFile(path, []byte(spec), 0o644)
+	if code, out := run(t, root, "spec", "check", "--item", "zeta"); code != ExitGate || !strings.Contains(out, "test:nope") {
+		t.Fatalf("undeclared gate should fail spec check: %d\n%s", code, out)
+	}
+	_ = os.WriteFile(path, []byte(strings.Replace(spec, "test:nope", "test:unit", 1)), 0o644)
+	mustRun(t, root, "spec", "check", "--item", "zeta")
+	if out := mustRun(t, root, "item", "show", "zeta", "--with", "spec"); !strings.Contains(out, "===== spec.md =====") || !strings.Contains(out, "specified") {
+		t.Fatalf("item show --with spec:\n%s", out)
+	}
+}

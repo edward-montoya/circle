@@ -55,9 +55,12 @@ type Knowledge struct {
 	Docs        []string `toml:"docs,omitempty"`
 	Definitions []string `toml:"definitions,omitempty"`
 	Validations []string `toml:"validations,omitempty"`
+	// Standards are the judgement-call rules a reviewer applies — the ones no
+	// gate can check. Optional: a repository with good gates may need none.
+	Standards []string `toml:"standards,omitempty"`
 }
 
-// Classes returns the three registries in a stable order, so reports and
+// Classes returns the registries in a stable order, so reports and
 // hashes do not depend on map iteration.
 func (k Knowledge) Classes() []struct {
 	Name  string
@@ -70,6 +73,7 @@ func (k Knowledge) Classes() []struct {
 		{"docs", k.Docs},
 		{"definitions", k.Definitions},
 		{"validations", k.Validations},
+		{"standards", k.Standards},
 	}
 }
 

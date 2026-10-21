@@ -284,6 +284,9 @@ func validateKnowledge(r *Repo, c domain.Contract, res *Result) {
 	total, hit := 0, 0
 	for _, cls := range c.Knowledge.Classes() {
 		if len(cls.Paths) == 0 {
+			if cls.Name == "standards" {
+				continue // optional: good gates may leave nothing to judge by hand
+			}
 			res.add(Warn, "knowledge", cls.Name, "empty — nothing registered",
 				fmt.Sprintf("circle knowledge add <path> --as %s", cls.Name))
 			continue

@@ -4,6 +4,8 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"os"
+	"path/filepath"
 	"strings"
 
 	"github.com/edwardmontoya/circle/internal/contract"
@@ -132,6 +134,8 @@ func runItemShow(e Env, args []string) int {
 	f := fs("item show", e)
 	flag := f.String("item", "", "item id; defaults to this session's")
 	asJSON := f.Bool("json", false, "machine-readable")
+	var with multiFlag
+	f.Var(&with, "with", "inline an artifact: shape, spec, brief, review, handoff, repro; repeatable")
 	if err := parse(f, args); err != nil {
 		return ExitError
 	}
@@ -143,6 +147,19 @@ func runItemShow(e Env, args []string) int {
 		*flag = f.Arg(0)
 	}
 	id, src := currentItem(repo, *flag)
+	defer func() {
+		if *asJSON {
+			return // inlined markdown would corrupt the JSON
+		}
+		for _, w := range with {
+			b, err := os.ReadFile(filepath.Join(item.Dir(repo, id), w+".md"))
+			if err != nil {
+				fmt.Fprintf(e.Stdout, "\n===== %s.md — not written yet =====\n", w)
+				continue
+			}
+			fmt.Fprintf(e.Stdout, "\n===== %s.md =====\n%s\n", w, strings.TrimRight(string(b), "\n"))
+		}
+	}()
 	it, err := item.Load(repo, id)
 	if err != nil {
 		fmt.Fprintf(e.Stderr, "circle: %v\n", err)
@@ -229,5 +246,47 @@ func writeJSON(e Env, v any) int {
 		return ExitError
 	}
 	fmt.Fprintln(e.Stdout, string(b))
+	return ExitOK
+}
+
+func init() {
+	register(Command{"spec check", "Validate the item's spec.md: sections, and every seam on a declared gate", runSpecCheck})
+}
+
+func runSpecCheck(e Env, args []string) int {
+	f := fs("spec check", e)
+	flag := f.String("item", "", "item id; defaults to this session's")
+	if err := parse(f, args); err != nil {
+		return ExitError
+	}
+	repo, code := openRepo(e)
+	if repo == nil {
+		return code
+	}
+	if f.NArg() > 0 {
+		*flag = f.Arg(0)
+	}
+	id, _ := currentItem(repo, *flag)
+	path := filepath.Join(item.Dir(repo, id), "spec.md")
+	b, err := os.ReadFile(path)
+	if err != nil {
+		fmt.Fprintf(e.Stderr, "circle: no spec for item %s — write .circle/items/%s/spec.md\n", id, id)
+		return ExitPrecond
+	}
+	gates := map[string]bool{}
+	for _, g := range repo.Contract.Quality.Gates() {
+		gates[g.Name] = true
+	}
+	seams, problems := item.CheckSpec(string(b), gates)
+	p := NewPalette(e.Stdout)
+	if len(problems) > 0 {
+		fmt.Fprintf(e.Stderr, "%scircle: the spec for %s cannot advance%s\n", p.R, id, p.N)
+		for _, pr := range problems {
+			fmt.Fprintf(e.Stderr, "  %s✗%s spec.md:%d  %s\n", p.R, p.N, pr.Line, pr.Reason)
+		}
+		fmt.Fprintf(e.Stderr, "\n%sdeclared gates: %s (or \"manual\" with a reason)%s\n", p.D, repo.Contract.Quality.GateNames(), p.N)
+		return ExitGate
+	}
+	fmt.Fprintf(e.Stdout, "%s✓%s spec for %s is complete · %d seam(s), each on a declared gate\n", p.G, p.N, id, len(seams))
 	return ExitOK
 }
