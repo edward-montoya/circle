@@ -510,3 +510,78 @@ func heldBy(repo *contract.Repo, me claims.Claim) string {
 	}
 	return ""
 }
+
+func init() {
+	register(Command{"task update", "Change an open task's paths, gate, goal or dependencies. Voids the approval", runTaskUpdate})
+}
+
+// runTaskUpdate changes an open task. The plan hash covers goals, gates, paths
+// and dependencies, so any change here makes the approval stale and the human
+// approves the changed plan — a task cannot quietly widen its own radius.
+func runTaskUpdate(e Env, args []string) int {
+	f := fs("task update", e)
+	title := f.String("title", "", "new title")
+	goal := f.String("goal", "", "new goal")
+	kind := f.String("verify-kind", "", "new verification kind")
+	gate := f.String("verify-gate", "", "new gate")
+	paths := f.String("paths", "", "replace the paths (comma-separated globs)")
+	addPaths := f.String("add-paths", "", "add paths (comma-separated globs)")
+	deps := f.String("depends-on", "", "replace the dependencies (comma-separated ids)")
+	if err := parse(f, args); err != nil {
+		return ExitError
+	}
+	if f.NArg() == 0 {
+		fmt.Fprintln(e.Stderr, "usage: circle task update <id> [--goal] [--verify-kind] [--verify-gate] [--paths|--add-paths] [--depends-on] [--title]")
+		return ExitError
+	}
+	repo, code := openRepo(e)
+	if repo == nil {
+		return code
+	}
+	t, err := task.Get(repo, f.Arg(0))
+	if err != nil {
+		fmt.Fprintf(e.Stderr, "circle: %v\n", err)
+		return ExitError
+	}
+	if t.State == domain.StateClosed {
+		fmt.Fprintf(e.Stderr, "circle: %s is closed; a change to closed work is a new task\n", t.ID)
+		return ExitGate
+	}
+	if *title != "" {
+		t.Title = *title
+	}
+	if *goal != "" {
+		t.Goal.Statement = *goal
+	}
+	if *kind != "" {
+		t.Verify.Kind = domain.VerifyKind(*kind)
+	}
+	if *gate != "" {
+		t.Verify.Gate = *gate
+	}
+	if *paths != "" {
+		t.Paths = splitList(*paths)
+	}
+	for _, p := range splitList(*addPaths) {
+		if !contains(t.Paths, p) {
+			t.Paths = append(t.Paths, p)
+		}
+	}
+	if *deps != "" {
+		t.DependsOn = splitList(*deps)
+	}
+	if errs := t.Validate(repo.Contract.Quality); len(errs) > 0 {
+		reportTaskErrors(e, t.ID, errs)
+		return ExitGate
+	}
+	if err := task.Save(repo, t); err != nil {
+		fmt.Fprintf(e.Stderr, "circle: %v\n", err)
+		return ExitError
+	}
+	ev := domain.NewEvent(domain.EvTaskCreate)
+	ev.Task, ev.Item, ev.Reason = t.ID, task.ItemOf(t), "updated"
+	_ = events.Append(repo, ev)
+	fmt.Fprintf(e.Stdout, "updated %s — the plan changed, so item %s needs its brief re-approved\n", t.ID, task.ItemOf(t))
+	fmt.Fprintf(e.Stdout, "  paths   %s\n  verify  %s via %s\n", strings.Join(t.Paths, " "), t.Verify.Kind, t.Verify.Gate)
+	return ExitOK
+}

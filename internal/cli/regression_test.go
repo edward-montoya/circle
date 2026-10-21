@@ -218,3 +218,16 @@ func TestHeldTaskNarrowsTheRadius(t *testing.T) {
 		t.Fatalf("the short gate name should resolve:\n%s", out)
 	}
 }
+
+func TestTaskUpdateVoidsTheApproval(t *testing.T) {
+	root := newGitRepo(t)
+	planItem(t, root, "alpha", "src/a/**")
+	approve(t, root, "alpha")
+	mustRun(t, root, "task", "update", "alpha-1", "--add-paths", "scripts/**")
+	if out := mustRun(t, root, "item", "show", "alpha"); !strings.Contains(out, "stale") {
+		t.Fatalf("a changed task must make the approval stale:\n%s", out)
+	}
+	if code, _ := run(t, root, "task", "update", "alpha-1", "--verify-gate", "test:nope"); code != ExitGate {
+		t.Fatal("an update must satisfy the task contract")
+	}
+}
