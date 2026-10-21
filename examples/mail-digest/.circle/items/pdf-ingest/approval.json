@@ -1,0 +1,25 @@
+{
+  "item": "pdf-ingest",
+  "approver": "dev@example.com",
+  "author": "dev@example.com",
+  "plan_hash": "885f6b9d7069425b",
+  "radius": [
+    "DOMAIN.md",
+    "Dockerfile",
+    "app/**",
+    "app/DOMAIN.md",
+    "docker-compose.yml",
+    "docs/**",
+    "requirements*.txt",
+    "requirements-test.txt",
+    "requirements.txt",
+    "samples/**",
+    "scripts/**",
+    "tests/integration/**",
+    "tests/support/**",
+    "tests/unit/**"
+  ],
+  "at": "2026-10-21T18:23:20.91265904Z",
+  "note": "separate test-only deps (blocking review finding)",
+  "self_approved": true
+}

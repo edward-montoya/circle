@@ -1,0 +1,24 @@
+{
+  "at": "2026-10-21T18:25:24.021201552Z",
+  "axes": {
+    "spec": {
+      "axis": "spec",
+      "blocking": 0,
+      "findings": 8,
+      "at": "2026-10-21T18:24:57.524188854Z",
+      "head": "c0190a2e7675d93d1b84dfca00f6eeb694659707"
+    },
+    "standards": {
+      "axis": "standards",
+      "blocking": 0,
+      "findings": 9,
+      "at": "2026-10-21T18:24:57.54144918Z",
+      "head": "c0190a2e7675d93d1b84dfca00f6eeb694659707"
+    }
+  },
+  "base": "1d5676bf205659214b98e6525c6bb402c7fff0f9",
+  "by": "dev@example.com",
+  "commits": 16,
+  "item": "pdf-ingest",
+  "untraced": 1
+}

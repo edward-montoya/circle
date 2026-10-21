@@ -1,0 +1,8 @@
+- [minor] Spec 2 "wrapped header values joined": only indented continuation lines fold (`_split_header_block`); an unindented wrapped line ends the Header Block and spills into the body.
+- [minor] Spec 5: `load_mailbox` matches `.pdf`/`.eml` suffix case-sensitively, so `MAIL.PDF` is ignored and not counted as a Skipped File.
+- [minor] Spec 12 "nothing machine-specific in committed files": `docs/DEV-ENVIRONMENT.md` commits `/home/user/.mail-digest-build` (documentation only).
+- [minor] Spec 12: `scripts/build_check.sh` loops over `web` and `test` but never uses `$svc`; the "without proxy" case only runs `docker compose config`.
+- [minor] Decisions: spec says reportlab and pypdf are "both installed in the one image serving web and test"; Dockerfile installs reportlab only in the test stage (matches brief.md, differs from spec text and Risks).
+- [nit] Not asked for: `scripts/smoke.sh`, `smoke` gate, `.dockerignore`, `load_messages()` wrapper.
+- [nit] Spec 8 "small badge": appears only in Thread lists; `.badge` has no CSS.
+- [nit] A repeated header (two `From:` lines) silently overwrites the first.

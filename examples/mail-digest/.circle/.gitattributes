@@ -1,0 +1,4 @@
+# Append-only logs: keep both sides' lines on merge.
+*.jsonl merge=union
+# Generated; regenerated after every merge by the next session or write.
+DOMAIN-INDEX.md merge=union

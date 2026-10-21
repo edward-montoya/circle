@@ -1,0 +1,22 @@
+{
+  "at": "2026-10-21T18:03:38.070931331Z",
+  "axes": {
+    "spec": {
+      "axis": "spec",
+      "blocking": 0,
+      "findings": 13,
+      "at": "2026-10-21T18:03:12.306224375Z"
+    },
+    "standards": {
+      "axis": "standards",
+      "blocking": 0,
+      "findings": 11,
+      "at": "2026-10-21T18:03:12.321861324Z"
+    }
+  },
+  "base": "e1cf56d01206a86d471c14b52618c894c492ee18",
+  "by": "dev@example.com",
+  "commits": 11,
+  "item": "daily-digest",
+  "untraced": 0
+}

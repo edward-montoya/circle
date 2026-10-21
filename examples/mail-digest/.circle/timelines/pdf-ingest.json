@@ -1,0 +1,729 @@
+{
+  "item": "pdf-ingest",
+  "baseline": "1d5676bf205659214b98e6525c6bb402c7fff0f9",
+  "branch": "main",
+  "repo": "/home/user/mail-digest",
+  "opened_at": "2026-10-21T17:50:51.298582087Z",
+  "entries": [
+    {
+      "seq": 0,
+      "sha": "1d5676bf205659214b98e6525c6bb402c7fff0f9",
+      "short": "1d5676b",
+      "subject": "baseline · session opened",
+      "at": "2026-10-21T17:50:51.29858222Z",
+      "state": "baseline"
+    },
+    {
+      "seq": 1,
+      "sha": "9c5d4f185ceb3795d05bd3d6584f4b323b3987ba",
+      "short": "9c5d4f1",
+      "subject": "daily-digest-1: Docker stack serving /health",
+      "author": "Mail Digest Dev",
+      "at": "2026-10-21T17:48:27Z",
+      "state": "live",
+      "files": [
+        {
+          "status": "A",
+          "path": ".dockerignore"
+        },
+        {
+          "status": "A",
+          "path": "Dockerfile"
+        },
+        {
+          "status": "A",
+          "path": "app/__init__.py"
+        },
+        {
+          "status": "A",
+          "path": "app/server.py"
+        },
+        {
+          "status": "A",
+          "path": "docker-compose.yml"
+        },
+        {
+          "status": "A",
+          "path": "tests/__init__.py"
+        },
+        {
+          "status": "A",
+          "path": "tests/integration/__init__.py"
+        },
+        {
+          "status": "A",
+          "path": "tests/integration/test_health.py"
+        }
+      ]
+    },
+    {
+      "seq": 2,
+      "sha": "d65fe0d51928ade9e2b3b7c51ab242c57875884b",
+      "short": "d65fe0d",
+      "subject": "daily-digest-2: parse .eml samples into Messages",
+      "author": "Mail Digest Dev",
+      "at": "2026-10-21T17:49:50Z",
+      "state": "live",
+      "files": [
+        {
+          "status": "A",
+          "path": "app/mailbox.py"
+        },
+        {
+          "status": "M",
+          "path": "docker-compose.yml"
+        },
+        {
+          "status": "A",
+          "path": "samples/mail/01.eml"
+        },
+        {
+          "status": "A",
+          "path": "samples/mail/02.eml"
+        },
+        {
+          "status": "A",
+          "path": "samples/mail/03.eml"
+        },
+        {
+          "status": "A",
+          "path": "samples/mail/04.eml"
+        },
+        {
+          "status": "A",
+          "path": "samples/mail/05.eml"
+        },
+        {
+          "status": "A",
+          "path": "samples/mail/06.eml"
+        },
+        {
+          "status": "A",
+          "path": "samples/mail/07.eml"
+        },
+        {
+          "status": "A",
+          "path": "samples/mail/08.eml"
+        },
+        {
+          "status": "A",
+          "path": "samples/mail/09.eml"
+        },
+        {
+          "status": "A",
+          "path": "samples/mail/10.eml"
+        },
+        {
+          "status": "A",
+          "path": "tests/unit/__init__.py"
+        },
+        {
+          "status": "A",
+          "path": "tests/unit/test_mailbox.py"
+        }
+      ]
+    },
+    {
+      "seq": 3,
+      "sha": "fc8039610c03330ed2045b05fee0fe475fded910",
+      "short": "fc80396",
+      "subject": "daily-digest-3: Digest for one Digest Day",
+      "author": "Mail Digest Dev",
+      "at": "2026-10-21T17:52:58Z",
+      "state": "live",
+      "files": [
+        {
+          "status": "A",
+          "path": "app/digest.py"
+        },
+        {
+          "status": "A",
+          "path": "tests/unit/test_digest.py"
+        }
+      ]
+    },
+    {
+      "seq": 4,
+      "sha": "d4c7e5bfb766be36037e1e75909a58462e77e3cd",
+      "short": "d4c7e5b",
+      "subject": "daily-digest-4: Serve the Digest as JSON and HTML",
+      "author": "Mail Digest Dev",
+      "at": "2026-10-21T17:53:58Z",
+      "state": "live",
+      "files": [
+        {
+          "status": "M",
+          "path": "app/server.py"
+        },
+        {
+          "status": "A",
+          "path": "tests/integration/test_digest_http.py"
+        }
+      ]
+    },
+    {
+      "seq": 5,
+      "sha": "6edd6be2cbad16544ce6490f0f723c44e63fb010",
+      "short": "6edd6be",
+      "subject": "pdf-ingest: shaped, specified, planned, approved (in parallel with daily-digest)",
+      "author": "Mail Digest Dev",
+      "at": "2026-10-21T17:54:01Z",
+      "state": "live",
+      "files": [
+        {
+          "status": "M",
+          "path": ".circle/DOMAIN-INDEX.md"
+        },
+        {
+          "status": "M",
+          "path": ".circle/approved-radius"
+        },
+        {
+          "status": "A",
+          "path": ".circle/items/pdf-ingest/approval.json"
+        },
+        {
+          "status": "A",
+          "path": ".circle/items/pdf-ingest/approved-radius"
+        },
+        {
+          "status": "A",
+          "path": ".circle/items/pdf-ingest/brief.md"
+        },
+        {
+          "status": "A",
+          "path": ".circle/items/pdf-ingest/item.toml"
+        },
+        {
+          "status": "A",
+          "path": ".circle/items/pdf-ingest/shape.md"
+        },
+        {
+          "status": "A",
+          "path": ".circle/items/pdf-ingest/spec.md"
+        },
+        {
+          "status": "A",
+          "path": ".circle/items/pdf-ingest/tasks.jsonl"
+        },
+        {
+          "status": "M",
+          "path": ".circle/project.toml"
+        },
+        {
+          "status": "A",
+          "path": ".circle/timelines/pdf-ingest.json"
+        },
+        {
+          "status": "M",
+          "path": "app/DOMAIN.md"
+        }
+      ]
+    },
+    {
+      "seq": 6,
+      "sha": "89edbdd608ba05a9604dc41a3b2357f5c5a56a6a",
+      "short": "89edbdd",
+      "subject": "daily-digest: review fixes planned as tasks 5-7, re-approved",
+      "author": "Mail Digest Dev",
+      "at": "2026-10-21T17:57:25Z",
+      "state": "live",
+      "files": [
+        {
+          "status": "M",
+          "path": ".circle/approved-radius"
+        },
+        {
+          "status": "M",
+          "path": ".circle/items/daily-digest/approval.json"
+        },
+        {
+          "status": "M",
+          "path": ".circle/items/daily-digest/approved-radius"
+        },
+        {
+          "status": "M",
+          "path": ".circle/items/daily-digest/brief.md"
+        },
+        {
+          "status": "A",
+          "path": ".circle/items/daily-digest/review/review.json"
+        },
+        {
+          "status": "A",
+          "path": ".circle/items/daily-digest/review/spec.md"
+        },
+        {
+          "status": "A",
+          "path": ".circle/items/daily-digest/review/standards.md"
+        },
+        {
+          "status": "M",
+          "path": ".circle/items/daily-digest/tasks.jsonl"
+        },
+        {
+          "status": "M",
+          "path": ".circle/project.toml"
+        },
+        {
+          "status": "M",
+          "path": ".circle/timelines/daily-digest.json"
+        }
+      ]
+    },
+    {
+      "seq": 7,
+      "sha": "6b914d18347e31f52fed86b5f55b3b6a44749226",
+      "short": "6b914d1",
+      "subject": "daily-digest-5: Read the Owner from OWNER_EMAIL",
+      "author": "Mail Digest Dev",
+      "at": "2026-10-21T17:58:12Z",
+      "state": "live",
+      "files": [
+        {
+          "status": "M",
+          "path": "app/server.py"
+        },
+        {
+          "status": "M",
+          "path": "tests/integration/test_digest_http.py"
+        }
+      ]
+    },
+    {
+      "seq": 8,
+      "sha": "7fa771df86b2a07f7ec942f2e02bbe81f5438401",
+      "short": "7fa771d",
+      "subject": "daily-digest-6: web serves the sample Mailbox by default",
+      "author": "Mail Digest Dev",
+      "at": "2026-10-21T17:59:26Z",
+      "state": "live",
+      "files": [
+        {
+          "status": "M",
+          "path": ".circle/items/daily-digest/tasks.jsonl"
+        },
+        {
+          "status": "M",
+          "path": "Dockerfile"
+        },
+        {
+          "status": "A",
+          "path": "scripts/smoke.sh"
+        }
+      ]
+    },
+    {
+      "seq": 9,
+      "sha": "3f3cc930df10a71a6543158781d7691020cc9ab9",
+      "short": "3f3cc93",
+      "subject": "daily-digest-7: re-planned with test:build, re-approved",
+      "author": "Mail Digest Dev",
+      "at": "2026-10-21T18:01:09Z",
+      "state": "live",
+      "files": [
+        {
+          "status": "M",
+          "path": ".circle/items/daily-digest/approval.json"
+        },
+        {
+          "status": "M",
+          "path": ".circle/items/daily-digest/brief.md"
+        },
+        {
+          "status": "M",
+          "path": ".circle/items/daily-digest/tasks.jsonl"
+        },
+        {
+          "status": "M",
+          "path": ".circle/project.toml"
+        }
+      ]
+    },
+    {
+      "seq": 10,
+      "sha": "7df0ff4b0ee8ec0834fd79ed1f05f2ab7883f37e",
+      "short": "7df0ff4",
+      "subject": "daily-digest-7: wire HTTPS_PROXY and CA bundle into image builds",
+      "author": "Mail Digest Dev",
+      "at": "2026-10-21T18:01:39Z",
+      "state": "live",
+      "files": [
+        {
+          "status": "M",
+          "path": "Dockerfile"
+        },
+        {
+          "status": "M",
+          "path": "docker-compose.yml"
+        },
+        {
+          "status": "A",
+          "path": "scripts/build_check.sh"
+        },
+        {
+          "status": "A",
+          "path": "scripts/no-ca/.gitkeep"
+        }
+      ]
+    },
+    {
+      "seq": 11,
+      "sha": "bd8c8c65106e5f71a714f9838319c8688c646e41",
+      "short": "bd8c8c6",
+      "subject": "daily-digest: reviewed and done",
+      "author": "Mail Digest Dev",
+      "at": "2026-10-21T18:04:33Z",
+      "state": "live",
+      "files": [
+        {
+          "status": "A",
+          "path": ".circle/items/daily-digest/done.json"
+        },
+        {
+          "status": "M",
+          "path": ".circle/items/daily-digest/review/review.json"
+        },
+        {
+          "status": "M",
+          "path": ".circle/items/daily-digest/review/spec.md"
+        },
+        {
+          "status": "M",
+          "path": ".circle/items/daily-digest/review/standards.md"
+        },
+        {
+          "status": "M",
+          "path": ".circle/items/daily-digest/tasks.jsonl"
+        },
+        {
+          "status": "M",
+          "path": ".circle/timelines/daily-digest.json"
+        }
+      ]
+    },
+    {
+      "seq": 12,
+      "sha": "3bf6471398f9557c83962cbd6cd8c0f2bcb208df",
+      "short": "3bf6471",
+      "subject": "pdf-ingest-a54c5832: image installs pinned pypdf and reportlab, portable behind the proxy",
+      "author": "Mail Digest Dev",
+      "at": "2026-10-21T18:08:50Z",
+      "state": "live",
+      "files": [
+        {
+          "status": "M",
+          "path": "Dockerfile"
+        },
+        {
+          "status": "A",
+          "path": "requirements.txt"
+        }
+      ]
+    },
+    {
+      "seq": 13,
+      "sha": "ed1a9b92e818b6826fe1ed0b99b0baa6adea626b",
+      "short": "ed1a9b9",
+      "subject": "pdf-ingest-d7ab5833: a PDF Email in the Mailbox becomes a Message with a Source",
+      "author": "Mail Digest Dev",
+      "at": "2026-10-21T18:10:21Z",
+      "state": "live",
+      "files": [
+        {
+          "status": "M",
+          "path": "app/mailbox.py"
+        },
+        {
+          "status": "A",
+          "path": "tests/support/__init__.py"
+        },
+        {
+          "status": "A",
+          "path": "tests/support/pdf.py"
+        },
+        {
+          "status": "A",
+          "path": "tests/unit/test_mailbox_pdf.py"
+        }
+      ]
+    },
+    {
+      "seq": 14,
+      "sha": "6f6ee846e889059e7bf889eaf9e9b7d53e1b45ef",
+      "short": "6f6ee84",
+      "subject": "docs: how image builds work behind this machine's proxy",
+      "author": "Mail Digest Dev",
+      "at": "2026-10-21T18:12:08Z",
+      "state": "live",
+      "files": [
+        {
+          "status": "M",
+          "path": ".circle/items/pdf-ingest/tasks.jsonl"
+        },
+        {
+          "status": "M",
+          "path": "docs/DEV-ENVIRONMENT.md"
+        }
+      ]
+    },
+    {
+      "seq": 15,
+      "sha": "8d807a7cfd4acf23c06a118a7464cb8ffc869c08",
+      "short": "8d807a7",
+      "subject": "pdf-ingest-b489369a: Source and Skipped Files in /api/digest and on the page",
+      "author": "Mail Digest Dev",
+      "at": "2026-10-21T18:12:57Z",
+      "state": "live",
+      "files": [
+        {
+          "status": "M",
+          "path": "app/digest.py"
+        },
+        {
+          "status": "M",
+          "path": "app/server.py"
+        },
+        {
+          "status": "M",
+          "path": "tests/integration/test_digest_http.py"
+        }
+      ]
+    },
+    {
+      "seq": 16,
+      "sha": "20d8c194331c0d2a9260d73c4450ee59828c9543",
+      "short": "20d8c19",
+      "subject": "pdf-ingest-30aecdfb: reproducible sample PDF Emails on the three sample days",
+      "author": "Mail Digest Dev",
+      "at": "2026-10-21T18:13:06Z",
+      "state": "live",
+      "files": [
+        {
+          "status": "A",
+          "path": "samples/mail/11.pdf"
+        },
+        {
+          "status": "A",
+          "path": "samples/mail/12.pdf"
+        },
+        {
+          "status": "A",
+          "path": "samples/mail/13.pdf"
+        },
+        {
+          "status": "A",
+          "path": "scripts/make_sample_pdfs.py"
+        },
+        {
+          "status": "A",
+          "path": "tests/support/sample_pdfs.py"
+        },
+        {
+          "status": "M",
+          "path": "tests/unit/test_mailbox.py"
+        },
+        {
+          "status": "A",
+          "path": "tests/unit/test_sample_pdfs.py"
+        }
+      ]
+    },
+    {
+      "seq": 17,
+      "sha": "1136641a6334c16fd4edaccf300f10bce3cc1de3",
+      "short": "1136641",
+      "subject": "pdf-ingest-30aecdfb: closed",
+      "author": "Mail Digest Dev",
+      "at": "2026-10-21T18:13:12Z",
+      "state": "live",
+      "files": [
+        {
+          "status": "M",
+          "path": ".circle/items/pdf-ingest/tasks.jsonl"
+        }
+      ]
+    },
+    {
+      "seq": 18,
+      "sha": "f4611129af6e251e65dd533c1a2370de1a5570e0",
+      "short": "f461112",
+      "subject": "pdf-ingest-b489369a: closure",
+      "author": "Mail Digest Dev",
+      "at": "2026-10-21T18:13:30Z",
+      "state": "live",
+      "files": [
+        {
+          "status": "M",
+          "path": ".circle/items/pdf-ingest/tasks.jsonl"
+        }
+      ]
+    },
+    {
+      "seq": 19,
+      "sha": "d65e633ce095918af8341a6a19ab9350f9138585",
+      "short": "d65e633",
+      "subject": "pdf-ingest: merge regressions planned, re-approved",
+      "author": "Mail Digest Dev",
+      "at": "2026-10-21T18:16:53Z",
+      "state": "live",
+      "files": [
+        {
+          "status": "M",
+          "path": ".circle/items/pdf-ingest/approval.json"
+        },
+        {
+          "status": "M",
+          "path": ".circle/items/pdf-ingest/brief.md"
+        },
+        {
+          "status": "M",
+          "path": ".circle/items/pdf-ingest/tasks.jsonl"
+        }
+      ]
+    },
+    {
+      "seq": 20,
+      "sha": "b0bf92baa5b6d914a82ed800d516cb9915d03466",
+      "short": "b0bf92b",
+      "subject": "pdf-ingest-152b7cf4: build check builds with the machine's own CA_BUNDLE_DIR, names no machine path",
+      "author": "Mail Digest Dev",
+      "at": "2026-10-21T18:17:44Z",
+      "state": "live",
+      "files": [
+        {
+          "status": "M",
+          "path": "scripts/build_check.sh"
+        }
+      ]
+    },
+    {
+      "seq": 21,
+      "sha": "a171e985e97a568e18e7389b2164292fedf0f230",
+      "short": "a171e98",
+      "subject": "pdf-ingest-931f30a5: integration test counts the sample PDFs in the 2025-03-10 total",
+      "author": "Mail Digest Dev",
+      "at": "2026-10-21T18:18:28Z",
+      "state": "live",
+      "files": [
+        {
+          "status": "M",
+          "path": "tests/integration/test_digest_http.py"
+        }
+      ]
+    },
+    {
+      "seq": 22,
+      "sha": "f1d3a3504f97ddd2ee24d2d628dc6fbe8842918c",
+      "short": "f1d3a35",
+      "subject": "pdf-ingest: repair closures",
+      "author": "Mail Digest Dev",
+      "at": "2026-10-21T18:19:28Z",
+      "state": "live",
+      "files": [
+        {
+          "status": "M",
+          "path": ".circle/items/pdf-ingest/tasks.jsonl"
+        }
+      ]
+    },
+    {
+      "seq": 23,
+      "sha": "f5ff18565bf1a5bb1b6f0af36de2b70297db18e6",
+      "short": "f5ff185",
+      "subject": "pdf-ingest: blocking finding planned, re-approved",
+      "author": "Mail Digest Dev",
+      "at": "2026-10-21T18:23:20Z",
+      "state": "live",
+      "files": [
+        {
+          "status": "M",
+          "path": ".circle/items/pdf-ingest/approval.json"
+        },
+        {
+          "status": "M",
+          "path": ".circle/items/pdf-ingest/approved-radius"
+        },
+        {
+          "status": "M",
+          "path": ".circle/items/pdf-ingest/brief.md"
+        },
+        {
+          "status": "A",
+          "path": ".circle/items/pdf-ingest/review/review.json"
+        },
+        {
+          "status": "A",
+          "path": ".circle/items/pdf-ingest/review/spec.md"
+        },
+        {
+          "status": "A",
+          "path": ".circle/items/pdf-ingest/review/standards.md"
+        },
+        {
+          "status": "M",
+          "path": ".circle/items/pdf-ingest/tasks.jsonl"
+        },
+        {
+          "status": "M",
+          "path": ".circle/timelines/pdf-ingest.json"
+        }
+      ]
+    },
+    {
+      "seq": 24,
+      "sha": "c0190a2e7675d93d1b84dfca00f6eeb694659707",
+      "short": "c0190a2",
+      "subject": "pdf-ingest-5212dcc7: split test-only reportlab into requirements-test.txt and a test image stage",
+      "author": "Mail Digest Dev",
+      "at": "2026-10-21T18:24:02Z",
+      "state": "live",
+      "files": [
+        {
+          "status": "M",
+          "path": "Dockerfile"
+        },
+        {
+          "status": "M",
+          "path": "docker-compose.yml"
+        },
+        {
+          "status": "A",
+          "path": "requirements-test.txt"
+        },
+        {
+          "status": "M",
+          "path": "requirements.txt"
+        }
+      ]
+    },
+    {
+      "seq": 25,
+      "subject": "uncommitted at handoff",
+      "at": "2026-10-21T18:25:23.97161014Z",
+      "state": "uncommitted",
+      "files": [
+        {
+          "status": "M",
+          "path": ".circle/items/pdf-ingest/review/review.json"
+        },
+        {
+          "status": "M",
+          "path": ".circle/items/pdf-ingest/review/spec.md"
+        },
+        {
+          "status": "M",
+          "path": ".circle/items/pdf-ingest/review/standards.md"
+        },
+        {
+          "status": "M",
+          "path": ".circle/items/pdf-ingest/tasks.jsonl"
+        },
+        {
+          "status": "M",
+          "path": ".circle/timelines/pdf-ingest.json"
+        }
+      ]
+    }
+  ]
+}

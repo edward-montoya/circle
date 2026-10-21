@@ -1,0 +1,13 @@
+- [major] Behaviour 6 (`OWNER_EMAIL`): `docker-compose.yml` never forwards `OWNER_EMAIL` to `web` or `test`, so the Owner cannot be set in the container; it always falls back to `DEFAULT_OWNER = "owner@example.com"`, which the spec does not mention.
+- [major] Behaviour 11, "run in the same container image": `test` bind-mounts `./app`, `./tests` and `./samples` over the image contents, so the gates exercise host files, weakening "the gates prove the container".
+- [minor] Behaviour 13, "pleasant to read": bare HTML, no CSS or viewport meta; quiet day shows empty headings. Manual, unchecked.
+- [minor] Behaviour 10, "invalid date rejected with 400": empty `?date=` serves today instead of 400; `strptime` accepts unpadded dates such as `2025-3-1`.
+- [minor] Behaviour 9, "previous and next day links": `0001-01-01` and `9999-12-31` overflow and return 500 on `/`.
+- [minor] Behaviour 1: a malformed or undecodable `.eml` raises and gives 500 for every request; HTML-only messages get an empty body.
+- [minor] Behaviour 3, "ranked by message count, ties broken alphabetically": sender addresses are not case-normalised (`A@x.com` vs `a@x.com`).
+- [minor] Behaviour 4: internal whitespace not collapsed; regex also strips `Fw:`.
+- [minor] Behaviour 4 / Digest Day: Threads are built only from the day's Messages, so a reply to an earlier day's Thread shows as Needs Reply without the Owner's earlier answer.
+- [minor] Behaviour 5: sentence splitter breaks on every `.` ("3.5", "e.g.").
+- [minor] Decisions, "proxy variables and CA passed from compose": only `HTTPS_PROXY`; no `HTTP_PROXY`/`NO_PROXY`; CA copied but never used.
+- [nit] Behaviour 12 satisfied: 10 messages over 3 days, a reply Thread, requests; `03.eml` covers a +0100 offset.
+- [nit] `scripts/build_check.sh` loop `for svc in web test` never uses `$svc`; `tests/` is baked into the `web` image; unknown paths return an HTML 404.

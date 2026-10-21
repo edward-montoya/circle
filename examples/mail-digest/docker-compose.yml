@@ -1,0 +1,26 @@
+services:
+  web:
+    build:
+      context: .
+      target: web
+      additional_contexts:
+        ca: ${CA_BUNDLE_DIR:-./scripts/no-ca}
+      args:
+        HTTPS_PROXY: ${HTTPS_PROXY:-}
+    image: mail-digest
+    ports:
+      - "8080:8080"
+  test:
+    image: mail-digest-test
+    build:
+      context: .
+      target: test
+      additional_contexts:
+        ca: ${CA_BUNDLE_DIR:-./scripts/no-ca}
+      args:
+        HTTPS_PROXY: ${HTTPS_PROXY:-}
+    command: python -m unittest discover -s tests -t .
+    volumes:
+      - ./app:/srv/app:ro
+      - ./tests:/srv/tests:ro
+      - ./samples:/srv/samples:ro

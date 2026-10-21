@@ -1,0 +1,14 @@
+DOMAIN.md
+Dockerfile
+app/**
+app/DOMAIN.md
+docker-compose.yml
+docs/**
+requirements*.txt
+requirements-test.txt
+requirements.txt
+samples/**
+scripts/**
+tests/integration/**
+tests/support/**
+tests/unit/**

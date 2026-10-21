@@ -1,0 +1,30 @@
+e1cf56d  Mail Digest: idea and Circle contract
+4a713ad  daily-digest: shaped, specified, planned, approved
+1d5676b  brief regenerated
+9c5d4f1  daily-digest-1: Docker stack serving /health
+d65fe0d  daily-digest-2: parse .eml samples into Messages
+fc80396  daily-digest-3: Digest for one Digest Day
+d4c7e5b  daily-digest-4: Serve the Digest as JSON and HTML
+6edd6be  pdf-ingest: shaped, specified, planned, approved (in parallel with daily-digest)
+89edbdd  daily-digest: review fixes planned as tasks 5-7, re-approved
+6b914d1  daily-digest-5: Read the Owner from OWNER_EMAIL
+7fa771d  daily-digest-6: web serves the sample Mailbox by default
+3f3cc93  daily-digest-7: re-planned with test:build, re-approved
+7df0ff4  daily-digest-7: wire HTTPS_PROXY and CA bundle into image builds
+bd8c8c6  daily-digest: reviewed and done
+b11eb50  merge daily-digest: contract keeps every item's gates
+3bf6471  pdf-ingest-a54c5832: image installs pinned pypdf and reportlab, portable behind the proxy
+ed1a9b9  pdf-ingest-d7ab5833: a PDF Email in the Mailbox becomes a Message with a Source
+6f6ee84  docs: how image builds work behind this machine's proxy
+8d807a7  pdf-ingest-b489369a: Source and Skipped Files in /api/digest and on the page
+20d8c19  pdf-ingest-30aecdfb: reproducible sample PDF Emails on the three sample days
+1136641  pdf-ingest-30aecdfb: closed
+f461112  pdf-ingest-b489369a: closure
+01407a9  Merge branch 'pdf-ingest-30aecdfb' into pdf-ingest
+d65e633  pdf-ingest: merge regressions planned, re-approved
+b0bf92b  pdf-ingest-152b7cf4: build check builds with the machine's own CA_BUNDLE_DIR, names no machine path
+a171e98  pdf-ingest-931f30a5: integration test counts the sample PDFs in the 2025-03-10 total
+f1d3a35  pdf-ingest: repair closures
+f5ff185  pdf-ingest: blocking finding planned, re-approved
+c0190a2  pdf-ingest-5212dcc7: split test-only reportlab into requirements-test.txt and a test image stage
+e84f5dc  pdf-ingest: reviewed and done

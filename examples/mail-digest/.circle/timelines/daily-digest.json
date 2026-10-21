@@ -1,0 +1,418 @@
+{
+  "item": "daily-digest",
+  "baseline": "e1cf56d01206a86d471c14b52618c894c492ee18",
+  "branch": "main",
+  "repo": "/home/user/mail-digest",
+  "opened_at": "2026-10-21T17:44:31.039736498Z",
+  "entries": [
+    {
+      "seq": 0,
+      "sha": "e1cf56d01206a86d471c14b52618c894c492ee18",
+      "short": "e1cf56d",
+      "subject": "baseline · session opened",
+      "at": "2026-10-21T17:44:31.039736652Z",
+      "state": "baseline"
+    },
+    {
+      "seq": 1,
+      "sha": "4a713add36553ca523bd609fbc2bde6fbb0d2575",
+      "short": "4a713ad",
+      "subject": "daily-digest: shaped, specified, planned, approved",
+      "author": "Mail Digest Dev",
+      "at": "2026-10-21T17:46:33Z",
+      "state": "live",
+      "files": [
+        {
+          "status": "M",
+          "path": ".circle/DOMAIN-INDEX.md"
+        },
+        {
+          "status": "A",
+          "path": ".circle/approved-radius"
+        },
+        {
+          "status": "A",
+          "path": ".circle/items/daily-digest/approval.json"
+        },
+        {
+          "status": "A",
+          "path": ".circle/items/daily-digest/approved-radius"
+        },
+        {
+          "status": "A",
+          "path": ".circle/items/daily-digest/brief.md"
+        },
+        {
+          "status": "A",
+          "path": ".circle/items/daily-digest/item.toml"
+        },
+        {
+          "status": "A",
+          "path": ".circle/items/daily-digest/shape.md"
+        },
+        {
+          "status": "A",
+          "path": ".circle/items/daily-digest/spec.md"
+        },
+        {
+          "status": "A",
+          "path": ".circle/items/daily-digest/tasks.jsonl"
+        },
+        {
+          "status": "M",
+          "path": ".circle/project.toml"
+        },
+        {
+          "status": "A",
+          "path": ".circle/timelines/daily-digest.json"
+        },
+        {
+          "status": "A",
+          "path": ".circle/timelines/default.json"
+        },
+        {
+          "status": "A",
+          "path": "app/DOMAIN.md"
+        }
+      ]
+    },
+    {
+      "seq": 2,
+      "sha": "1d5676bf205659214b98e6525c6bb402c7fff0f9",
+      "short": "1d5676b",
+      "subject": "brief regenerated",
+      "author": "Mail Digest Dev",
+      "at": "2026-10-21T17:47:30Z",
+      "state": "live",
+      "files": [
+        {
+          "status": "M",
+          "path": ".circle/items/daily-digest/brief.md"
+        }
+      ]
+    },
+    {
+      "seq": 3,
+      "sha": "9c5d4f185ceb3795d05bd3d6584f4b323b3987ba",
+      "short": "9c5d4f1",
+      "subject": "daily-digest-1: Docker stack serving /health",
+      "author": "Mail Digest Dev",
+      "at": "2026-10-21T17:48:27Z",
+      "state": "live",
+      "files": [
+        {
+          "status": "A",
+          "path": ".dockerignore"
+        },
+        {
+          "status": "A",
+          "path": "Dockerfile"
+        },
+        {
+          "status": "A",
+          "path": "app/__init__.py"
+        },
+        {
+          "status": "A",
+          "path": "app/server.py"
+        },
+        {
+          "status": "A",
+          "path": "docker-compose.yml"
+        },
+        {
+          "status": "A",
+          "path": "tests/__init__.py"
+        },
+        {
+          "status": "A",
+          "path": "tests/integration/__init__.py"
+        },
+        {
+          "status": "A",
+          "path": "tests/integration/test_health.py"
+        }
+      ]
+    },
+    {
+      "seq": 4,
+      "sha": "d65fe0d51928ade9e2b3b7c51ab242c57875884b",
+      "short": "d65fe0d",
+      "subject": "daily-digest-2: parse .eml samples into Messages",
+      "author": "Mail Digest Dev",
+      "at": "2026-10-21T17:49:50Z",
+      "state": "live",
+      "files": [
+        {
+          "status": "A",
+          "path": "app/mailbox.py"
+        },
+        {
+          "status": "M",
+          "path": "docker-compose.yml"
+        },
+        {
+          "status": "A",
+          "path": "samples/mail/01.eml"
+        },
+        {
+          "status": "A",
+          "path": "samples/mail/02.eml"
+        },
+        {
+          "status": "A",
+          "path": "samples/mail/03.eml"
+        },
+        {
+          "status": "A",
+          "path": "samples/mail/04.eml"
+        },
+        {
+          "status": "A",
+          "path": "samples/mail/05.eml"
+        },
+        {
+          "status": "A",
+          "path": "samples/mail/06.eml"
+        },
+        {
+          "status": "A",
+          "path": "samples/mail/07.eml"
+        },
+        {
+          "status": "A",
+          "path": "samples/mail/08.eml"
+        },
+        {
+          "status": "A",
+          "path": "samples/mail/09.eml"
+        },
+        {
+          "status": "A",
+          "path": "samples/mail/10.eml"
+        },
+        {
+          "status": "A",
+          "path": "tests/unit/__init__.py"
+        },
+        {
+          "status": "A",
+          "path": "tests/unit/test_mailbox.py"
+        }
+      ]
+    },
+    {
+      "seq": 5,
+      "sha": "fc8039610c03330ed2045b05fee0fe475fded910",
+      "short": "fc80396",
+      "subject": "daily-digest-3: Digest for one Digest Day",
+      "author": "Mail Digest Dev",
+      "at": "2026-10-21T17:52:58Z",
+      "state": "live",
+      "files": [
+        {
+          "status": "A",
+          "path": "app/digest.py"
+        },
+        {
+          "status": "A",
+          "path": "tests/unit/test_digest.py"
+        }
+      ]
+    },
+    {
+      "seq": 6,
+      "sha": "d4c7e5bfb766be36037e1e75909a58462e77e3cd",
+      "short": "d4c7e5b",
+      "subject": "daily-digest-4: Serve the Digest as JSON and HTML",
+      "author": "Mail Digest Dev",
+      "at": "2026-10-21T17:53:58Z",
+      "state": "live",
+      "files": [
+        {
+          "status": "M",
+          "path": "app/server.py"
+        },
+        {
+          "status": "A",
+          "path": "tests/integration/test_digest_http.py"
+        }
+      ]
+    },
+    {
+      "seq": 7,
+      "sha": "89edbdd608ba05a9604dc41a3b2357f5c5a56a6a",
+      "short": "89edbdd",
+      "subject": "daily-digest: review fixes planned as tasks 5-7, re-approved",
+      "author": "Mail Digest Dev",
+      "at": "2026-10-21T17:57:25Z",
+      "state": "live",
+      "files": [
+        {
+          "status": "M",
+          "path": ".circle/approved-radius"
+        },
+        {
+          "status": "M",
+          "path": ".circle/items/daily-digest/approval.json"
+        },
+        {
+          "status": "M",
+          "path": ".circle/items/daily-digest/approved-radius"
+        },
+        {
+          "status": "M",
+          "path": ".circle/items/daily-digest/brief.md"
+        },
+        {
+          "status": "A",
+          "path": ".circle/items/daily-digest/review/review.json"
+        },
+        {
+          "status": "A",
+          "path": ".circle/items/daily-digest/review/spec.md"
+        },
+        {
+          "status": "A",
+          "path": ".circle/items/daily-digest/review/standards.md"
+        },
+        {
+          "status": "M",
+          "path": ".circle/items/daily-digest/tasks.jsonl"
+        },
+        {
+          "status": "M",
+          "path": ".circle/project.toml"
+        },
+        {
+          "status": "M",
+          "path": ".circle/timelines/daily-digest.json"
+        }
+      ]
+    },
+    {
+      "seq": 8,
+      "sha": "6b914d18347e31f52fed86b5f55b3b6a44749226",
+      "short": "6b914d1",
+      "subject": "daily-digest-5: Read the Owner from OWNER_EMAIL",
+      "author": "Mail Digest Dev",
+      "at": "2026-10-21T17:58:12Z",
+      "state": "live",
+      "files": [
+        {
+          "status": "M",
+          "path": "app/server.py"
+        },
+        {
+          "status": "M",
+          "path": "tests/integration/test_digest_http.py"
+        }
+      ]
+    },
+    {
+      "seq": 9,
+      "sha": "7fa771df86b2a07f7ec942f2e02bbe81f5438401",
+      "short": "7fa771d",
+      "subject": "daily-digest-6: web serves the sample Mailbox by default",
+      "author": "Mail Digest Dev",
+      "at": "2026-10-21T17:59:26Z",
+      "state": "live",
+      "files": [
+        {
+          "status": "M",
+          "path": ".circle/items/daily-digest/tasks.jsonl"
+        },
+        {
+          "status": "M",
+          "path": "Dockerfile"
+        },
+        {
+          "status": "A",
+          "path": "scripts/smoke.sh"
+        }
+      ]
+    },
+    {
+      "seq": 10,
+      "sha": "3f3cc930df10a71a6543158781d7691020cc9ab9",
+      "short": "3f3cc93",
+      "subject": "daily-digest-7: re-planned with test:build, re-approved",
+      "author": "Mail Digest Dev",
+      "at": "2026-10-21T18:01:09Z",
+      "state": "live",
+      "files": [
+        {
+          "status": "M",
+          "path": ".circle/items/daily-digest/approval.json"
+        },
+        {
+          "status": "M",
+          "path": ".circle/items/daily-digest/brief.md"
+        },
+        {
+          "status": "M",
+          "path": ".circle/items/daily-digest/tasks.jsonl"
+        },
+        {
+          "status": "M",
+          "path": ".circle/project.toml"
+        }
+      ]
+    },
+    {
+      "seq": 11,
+      "sha": "7df0ff4b0ee8ec0834fd79ed1f05f2ab7883f37e",
+      "short": "7df0ff4",
+      "subject": "daily-digest-7: wire HTTPS_PROXY and CA bundle into image builds",
+      "author": "Mail Digest Dev",
+      "at": "2026-10-21T18:01:39Z",
+      "state": "live",
+      "files": [
+        {
+          "status": "M",
+          "path": "Dockerfile"
+        },
+        {
+          "status": "M",
+          "path": "docker-compose.yml"
+        },
+        {
+          "status": "A",
+          "path": "scripts/build_check.sh"
+        },
+        {
+          "status": "A",
+          "path": "scripts/no-ca/.gitkeep"
+        }
+      ]
+    },
+    {
+      "seq": 12,
+      "subject": "uncommitted at handoff",
+      "at": "2026-10-21T18:03:38.035859916Z",
+      "state": "uncommitted",
+      "files": [
+        {
+          "status": "M",
+          "path": ".circle/items/daily-digest/review/review.json"
+        },
+        {
+          "status": "M",
+          "path": ".circle/items/daily-digest/review/spec.md"
+        },
+        {
+          "status": "M",
+          "path": ".circle/items/daily-digest/review/standards.md"
+        },
+        {
+          "status": "M",
+          "path": ".circle/items/daily-digest/tasks.jsonl"
+        },
+        {
+          "status": "M",
+          "path": ".circle/timelines/daily-digest.json"
+        }
+      ]
+    }
+  ]
+}

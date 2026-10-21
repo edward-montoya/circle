@@ -1,0 +1,30 @@
+# Circle AI — the replicable contract for mail-digest.
+# Detected by `circle init`. Every value is editable; preflight reports gaps
+# rather than inventing tooling this repo does not have.
+
+[project]
+name = "mail-digest"
+contract_version = 1
+
+[knowledge]
+docs        = ["README.md", "docs/", "docs/DEV-ENVIRONMENT.md"]
+definitions = []
+validations = []
+
+[execution]
+compose      = "docker-compose.yml"
+app_services = ["web"]
+up           = "docker compose up --build -d web"
+down         = "docker compose down"
+url          = "http://localhost:8080"
+ports_fixed  = true
+
+[quality]
+bootstrap = "docker compose build"
+
+[quality.test]
+unit        = "docker compose run --rm test python -m unittest discover -s tests/unit -t ."
+integration = "docker compose run --rm test python -m unittest discover -s tests/integration -t ."
+image = "docker compose build && docker compose run --rm test python -c 'import pypdf, reportlab'"
+smoke = "sh scripts/smoke.sh"
+build = "sh scripts/build_check.sh"

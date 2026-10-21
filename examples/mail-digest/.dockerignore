@@ -1,0 +1,4 @@
+.git
+.circle
+__pycache__
+*.pyc

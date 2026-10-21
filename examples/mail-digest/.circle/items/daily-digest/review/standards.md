@@ -1,0 +1,11 @@
+- [major] `app/digest.py`, `app/server.py`: the digest key `"date"` and `?date=` carry the Digest Day, which `app/DOMAIN.md` "Flagged ambiguities" resolved never to call "date"; rename to `day`.
+- [minor] `Dockerfile`, `docker-compose.yml`: depart from `docs/DEV-ENVIRONMENT.md` (host networking, `HTTPS_PROXY`, CA as `PIP_CERT`); `ARG HTTPS_PROXY` never becomes `ENV`. Dormant while nothing downloads.
+- [minor] `scripts/build_check.sh`: `for svc in web test` never uses `$svc` (Duplicated Code / Mysterious Name).
+- [minor] `app/digest.py`: Digest, Thread, Action Item, Sender are untyped dicts while Message is a dataclass (Primitive Obsession); `render_html` reads keys directly (Feature Envy).
+- [minor] `app/digest.py` `build_digest`: the Normalised Subject is recomputed after grouping (Duplicated Code).
+- [minor] `app/digest.py`: Sender counted case-sensitively while Owner comparison is case-insensitive; normalise once in `mailbox.py`.
+- [minor] `app/server.py` `_digest`: reads env and mail_dir per request, mixes parsing, config and loading, returns `None` as a bad-date sentinel.
+- [nit] `app/server.py`: alias `e = escape`, `todays`, and `format` shadowing a builtin in `log_message`.
+- [nit] `app/server.py` `log_message` drops all request logging, hiding errors in the running service.
+- [nit] `Dockerfile`/`docker-compose.yml`: redundant `COPY` for `test`; `test` default `discover -s tests` differs from `project.toml` unit/integration commands.
+- [nit] `.circle/` review and timeline artefacts are committed; confirm intended.

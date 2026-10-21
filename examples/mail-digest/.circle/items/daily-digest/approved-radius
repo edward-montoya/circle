@@ -1,0 +1,9 @@
+.dockerignore
+Dockerfile
+app/**
+docker-compose.yml
+samples/**
+scripts/**
+tests/**
+tests/integration/**
+tests/unit/**

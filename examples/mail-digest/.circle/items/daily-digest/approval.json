@@ -1,0 +1,20 @@
+{
+  "item": "daily-digest",
+  "approver": "dev@example.com",
+  "author": "dev@example.com",
+  "plan_hash": "b799dd11f5cf2f5b",
+  "radius": [
+    ".dockerignore",
+    "Dockerfile",
+    "app/**",
+    "docker-compose.yml",
+    "samples/**",
+    "scripts/**",
+    "tests/**",
+    "tests/integration/**",
+    "tests/unit/**"
+  ],
+  "at": "2026-10-21T18:01:09.860843801Z",
+  "note": "task 7 gets its own gate (test:build) and scripts/**",
+  "self_approved": true
+}

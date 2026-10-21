@@ -1,0 +1,9 @@
+- [minor] `app/mailbox.py` `load_mailbox`: possible Duplicated Code; skip counting only on the `.pdf` branch, so an `.eml` with unparseable Date is dropped uncounted, against DOMAIN.md's Skipped File definition.
+- [minor] `load_messages`: possible Middle Man / Speculative Generality; only returns `load_mailbox(...)[0]`.
+- [minor] `_parse_file` is a Mysterious Name (means `.eml`); `"eml"`/`"pdf"` literals are possible Primitive Obsession for Source.
+- [minor] `_parse_pdf`: blanket `except Exception` hides bugs as Skipped Files.
+- [minor] `_parse_file`/`_parse_pdf`: possible Duplicated Code building a Message.
+- [minor] `build_digest`/`server._digest`: possible Data Clumps / Primitive Obsession with untyped dicts.
+- [minor] `render_html`: possible Feature Envy; redundant `.get` defaults for keys the digest always sets.
+- [nit] `render_html` `parts += [` with a single item; `Handler._digest` mixes parsing and loading (possible Divergent Change); `log_message` silences logging.
+- [nit] `scripts/build_check.sh` dead `$svc` loop; `make_sample_pdfs.py` imports from `tests.support`.
