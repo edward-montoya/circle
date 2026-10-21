@@ -252,7 +252,7 @@ const gitattributes = "# Append-only logs: keep both sides' lines on merge.\n*.j
 
 var stateFiles = map[string]string{
 	".gitattributes": gitattributes,
-	".gitignore":     "# Volatile and regenerable. Everything else in .circle/ is committed.\nruntime/\n",
+	".gitignore":     "# Volatile and regenerable. Everything else in .circle/ is committed.\nruntime/\n# Machine-local gate variables (circle local set).\nlocal.env\n",
 }
 
 func renderContract(root string, d detected) string {

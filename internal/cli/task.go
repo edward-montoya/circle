@@ -391,6 +391,7 @@ func runTaskClose(e Env, args []string) int {
 	ev.Task, ev.Item, ev.Gate = t.ID, task.ItemOf(t), t.Verify.Gate
 	_ = events.Append(repo, ev)
 	fmt.Fprintf(e.Stdout, "closed %s  evidence: %s\n", t.ID, t.ClosedBy)
+	fmt.Fprintln(e.Stdout, "  the closure is recorded in .circle/ — it lands with your next commit")
 	return ExitOK
 }
 

@@ -2,7 +2,6 @@ package cli
 
 import (
 	"fmt"
-	"os"
 	"os/exec"
 	"strings"
 	"time"
@@ -96,7 +95,7 @@ func runQualityRun(e Env, args []string) int {
 		cmd := exec.Command("sh", "-c", b)
 		cmd.Dir = repo.Root
 		cmd.Stdout, cmd.Stderr = e.Stderr, e.Stderr
-		cmd.Env = os.Environ()
+		cmd.Env = gateEnv(repo)
 		if err := cmd.Run(); err != nil {
 			fmt.Fprintf(e.Stdout, "%s✗%s bootstrap failed: %s\n", p.R, p.N, b)
 			fmt.Fprintln(e.Stdout, "  the gates cannot prove the current tree until it succeeds")
@@ -112,7 +111,7 @@ func runQualityRun(e Env, args []string) int {
 		cmd := exec.Command("sh", "-c", g.Command)
 		cmd.Dir = repo.Root
 		cmd.Stdout, cmd.Stderr = e.Stdout, e.Stderr
-		cmd.Env = os.Environ()
+		cmd.Env = gateEnv(repo)
 		runErr := cmd.Run()
 		dur := time.Since(start)
 

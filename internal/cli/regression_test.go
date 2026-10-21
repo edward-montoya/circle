@@ -2,6 +2,7 @@ package cli
 
 import (
 	"os"
+	"os/exec"
 	"path/filepath"
 	"strings"
 	"testing"
@@ -229,5 +230,24 @@ func TestTaskUpdateVoidsTheApproval(t *testing.T) {
 	}
 	if code, _ := run(t, root, "task", "update", "alpha-1", "--verify-gate", "test:nope"); code != ExitGate {
 		t.Fatal("an update must satisfy the task contract")
+	}
+}
+
+func TestLocalEnvReachesGatesInEveryWorktree(t *testing.T) {
+	root := newGitRepo(t)
+	mustRun(t, root, "quality", "add", "test:env", `test "$PROXY_CA_DIR" = /opt/ca`)
+	if code, _ := run(t, root, "quality", "run", "test:env"); code != ExitQuality {
+		t.Fatal("without the variable the gate fails")
+	}
+	mustRun(t, root, "local", "set", "PROXY_CA_DIR", "/opt/ca")
+	git(t, root, "add", "-A")
+	git(t, root, "commit", "-q", "-m", "gate")
+	wt := filepath.Join(t.TempDir(), "wt")
+	git(t, root, "worktree", "add", "-q", wt, "-b", "wt")
+	if code, out := run(t, wt, "quality", "run", "test:env"); code != ExitOK {
+		t.Fatalf("a machine-local variable must reach the gate in another worktree:\n%s", out)
+	}
+	if out, _ := exec.Command("git", "-C", root, "status", "--porcelain").Output(); strings.Contains(string(out), "local.env") {
+		t.Fatal("machine-local variables must never show up as a change to commit")
 	}
 }
