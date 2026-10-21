@@ -58,6 +58,14 @@ func runSessionStart(e Env, args []string) int {
 	if envFile := os.Getenv("CLAUDE_ENV_FILE"); envFile != "" && sid != "" {
 		if fh, err := os.OpenFile(envFile, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0o644); err == nil {
 			fmt.Fprintf(fh, "export %s=%s\n", session.EnvSession, sid)
+			// Machine-local variables reach the agent's own commands too, not
+			// only the gates: `docker compose up` typed by the agent needs the
+			// same proxy CA directory the bootstrap does.
+			for k, v := range localEnv(repo) {
+				if os.Getenv(k) == "" {
+					fmt.Fprintf(fh, "export %s=%q\n", k, v)
+				}
+			}
 			fh.Close()
 		}
 	}

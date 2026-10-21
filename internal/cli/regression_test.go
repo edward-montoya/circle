@@ -269,3 +269,17 @@ func TestTaskVerifyCommandIsEnforced(t *testing.T) {
 	mustRun(t, root, "quality", "run", "--task", "n-1")
 	mustRun(t, root, "task", "close", "n-1")
 }
+
+func TestLocalEnvReachesTheAgentShell(t *testing.T) {
+	root := newGitRepo(t)
+	mustRun(t, root, "local", "set", "CA_BUNDLE_DIR", "/opt/ca")
+	envFile := filepath.Join(t.TempDir(), "env")
+	t.Setenv("CLAUDE_ENV_FILE", envFile)
+	runStdin(t, root, `{"session_id":"s1","cwd":"`+root+`"}`, "session", "start", "--hook")
+	if b, _ := os.ReadFile(envFile); !strings.Contains(string(b), `export CA_BUNDLE_DIR="/opt/ca"`) {
+		t.Fatalf("SessionStart must export machine-local variables to the agent's shell:\n%s", b)
+	}
+	if out := mustRun(t, root, "local", "export"); !strings.Contains(out, `export CA_BUNDLE_DIR="/opt/ca"`) {
+		t.Fatalf("local export:\n%s", out)
+	}
+}

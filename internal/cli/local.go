@@ -15,6 +15,7 @@ import (
 func init() {
 	register(Command{"local set", "Set a machine-local variable for gates and the bootstrap. Never committed", runLocalSet})
 	register(Command{"local list", "The machine-local variables gates run with", runLocalList})
+	register(Command{"local export", "Print them as export lines: eval \"$(circle local export)\"", runLocalExport})
 }
 
 // Machine-local environment is for what is true of this machine and no other:
@@ -140,6 +141,23 @@ func runLocalList(e Env, args []string) int {
 	sort.Strings(keys)
 	for _, k := range keys {
 		fmt.Fprintf(e.Stdout, "%s=%s\n", k, m[k])
+	}
+	return ExitOK
+}
+
+func runLocalExport(e Env, args []string) int {
+	repo, code := openRepo(e)
+	if repo == nil {
+		return code
+	}
+	m := localEnv(repo)
+	keys := make([]string, 0, len(m))
+	for k := range m {
+		keys = append(keys, k)
+	}
+	sort.Strings(keys)
+	for _, k := range keys {
+		fmt.Fprintf(e.Stdout, "export %s=%q\n", k, m[k])
 	}
 	return ExitOK
 }
