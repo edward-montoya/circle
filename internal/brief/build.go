@@ -31,13 +31,22 @@ func Build(r *contract.Repo, item string) (domain.Brief, error) {
 	if err != nil {
 		return domain.Brief{}, err
 	}
-	scoped := tasks
-	if item != "" && item != "default" {
-		scoped = nil
-		for _, t := range tasks {
-			if t.Parent == item || t.ID == item || strings.HasPrefix(t.ID, item+".") {
-				scoped = append(scoped, t)
-			}
+	if item == "" {
+		item = task.DefaultItem
+	}
+	// An item's plan is its own tasks and nothing else. When the default item
+	// covered every task in the repository, planning a second item changed the
+	// first one's plan hash and voided an approval nobody had touched.
+	//
+	// Tasks from before items had files named their item through Parent or an
+	// id prefix; those still count toward the named item.
+	var scoped []domain.Task
+	for _, t := range tasks {
+		own := task.ItemOf(t) == item
+		legacy := item != task.DefaultItem && t.Item == "" &&
+			(t.Parent == item || t.ID == item || strings.HasPrefix(t.ID, item+"."))
+		if own || legacy {
+			scoped = append(scoped, t)
 		}
 	}
 

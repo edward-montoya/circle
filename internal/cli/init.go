@@ -216,9 +216,29 @@ func runInit(e Env, args []string) int {
 		return ExitError
 	}
 	fmt.Fprintf(e.Stdout, "\n  %s✓%s wrote        .circle/project.toml %s— commit this%s\n", p.G, p.N, p.D, p.N)
+	for name, body := range stateFiles {
+		path := filepath.Join(filepath.Dir(target), name)
+		if _, err := os.Stat(path); err == nil {
+			continue // never overwrite a file the user may have edited
+		}
+		if err := os.WriteFile(path, []byte(body), 0o644); err == nil {
+			fmt.Fprintf(e.Stdout, "  %s✓%s wrote        .circle/%s\n", p.G, p.N, name)
+		}
+	}
 	fmt.Fprintf(e.Stdout, "\n%sNext%s\n  %scircle preflight%s   validate the three contracts\n\n",
 		p.B, p.N, p.B, p.N)
 	return ExitOK
+}
+
+// stateFiles are written beside project.toml once.
+//
+// The attributes matter for parallel work: every item appends to its own JSONL
+// files on its own branch, and a union merge keeps both sides' lines where a
+// normal merge would stop on a conflict at the end of the file. Readers already
+// resolve the newest record per id, so the line order a union produces is safe.
+var stateFiles = map[string]string{
+	".gitattributes": "# Append-only logs: keep both sides' lines on merge.\n*.jsonl merge=union\n",
+	".gitignore":     "# Volatile and regenerable. Everything else in .circle/ is committed.\nruntime/\n",
 }
 
 func renderContract(root string, d detected) string {

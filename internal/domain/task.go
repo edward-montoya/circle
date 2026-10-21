@@ -48,7 +48,11 @@ func VerifyKinds() string { return "unit, integration, e2e, manual" }
 // The two required blocks are the point: a task without a goal is a prompt, and
 // a task without a verification closes on the agent's word.
 type Task struct {
-	ID        string       `toml:"id"        json:"id"`
+	ID string `toml:"id" json:"id"`
+	// Item is the work item this task belongs to, and decides which file stores
+	// it. Empty is the default item, which keeps repositories from before items
+	// existed working unchanged.
+	Item      string       `toml:"item"      json:"item,omitempty"`
 	Parent    string       `toml:"parent"    json:"parent,omitempty"`
 	Title     string       `toml:"title"     json:"title"`
 	State     TaskState    `toml:"state"     json:"state"`

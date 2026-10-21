@@ -11,7 +11,10 @@ import (
 	"github.com/edwardmontoya/circle/internal/brief"
 	"github.com/edwardmontoya/circle/internal/contract"
 	"github.com/edwardmontoya/circle/internal/domain"
+	"github.com/edwardmontoya/circle/internal/domaindoc"
 	"github.com/edwardmontoya/circle/internal/events"
+	"github.com/edwardmontoya/circle/internal/session"
+	"github.com/edwardmontoya/circle/internal/task"
 )
 
 func init() {
@@ -26,6 +29,7 @@ func init() {
 // exist to enable.
 type hookPayload struct {
 	Cwd       string `json:"cwd"`
+	SessionID string `json:"session_id"`
 	ToolName  string `json:"tool_name"`
 	ToolInput struct {
 		FilePath string `json:"file_path"`
@@ -56,6 +60,7 @@ func deny(w io.Writer, reason string) int {
 func runGateCheck(e Env, args []string) int {
 	f := fs("gate check", e)
 	skill := f.String("skill", "", "skill being invoked (for the abort message)")
+	itemFlag := f.String("item", "", "item to check against; defaults to this session's")
 	hook := f.Bool("hook", false, "read a PreToolUse payload from stdin and emit a decision")
 	tool := f.String("tool", "", "tool name, when not reading a payload")
 	path := f.String("path", "", "target path, when not reading a payload")
@@ -65,6 +70,7 @@ func runGateCheck(e Env, args []string) int {
 
 	cwd := e.Cwd
 	toolName, target := *tool, *path
+	sid := ""
 
 	if *hook {
 		b, err := io.ReadAll(e.Stdin)
@@ -81,7 +87,7 @@ func runGateCheck(e Env, args []string) int {
 			// moment someone is trusting it.
 			return deny(e.Stdout, "circle: hook payload carried no cwd; refusing to guess which repo to validate")
 		}
-		cwd, toolName, target = p.Cwd, p.ToolName, p.ToolInput.FilePath
+		cwd, toolName, target, sid = p.Cwd, p.ToolName, p.ToolInput.FilePath, p.SessionID
 	}
 
 	repo, err := contract.Open(cwd)
@@ -119,9 +125,10 @@ func runGateCheck(e Env, args []string) int {
 	// human has not signed off on. This is the constraint the whole framework
 	// exists for, so it is checked on every single write rather than trusted
 	// once at session start.
-	if reason, blocked := approvalGate(repo, target); blocked {
+	item, src := session.Resolve(repo, *itemFlag, session.ID(sid))
+	if reason, blocked := approvalGate(repo, item, src, target); blocked {
 		ev := domain.NewEvent(domain.EvGateDeny)
-		ev.Reason, ev.Path = reason, target
+		ev.Reason, ev.Path, ev.Item, ev.Session = reason, target, item, sid
 		_ = events.Append(repo, ev)
 		if *hook {
 			return deny(e.Stdout, reason)
@@ -134,50 +141,118 @@ func runGateCheck(e Env, args []string) int {
 	return ExitOK
 }
 
-// approvalGate decides whether this write may proceed.
+// approvalGate decides whether this write may proceed for the session's item.
 //
-// Three questions, in order: is there an approval at all, is it still bound to
-// the current plan, and does the path fall inside what was approved.
-//
-// A repository with no tasks has nothing to approve, so the gate stays open —
-// otherwise adopting Circle would block the very edits needed to configure it.
-func approvalGate(repo *contract.Repo, target string) (string, bool) {
-	b, err := brief.Build(repo, "default")
-	if err != nil || len(b.Tasks) == 0 {
+// Questions, in order: is the path Circle's own state, does the item have a plan
+// at all, is there an approval, is it still bound to the current plan, and does
+// the path fall inside what was approved.
+func approvalGate(repo *contract.Repo, item string, src session.Source, target string) (string, bool) {
+	rel := ""
+	if target != "" {
+		r, err := filepath.Rel(repo.Root, target)
+		if err != nil || strings.HasPrefix(r, "..") {
+			r = target
+		}
+		rel = filepath.ToSlash(r)
+	}
+
+	// Circle's own state is writable, so recording a shape or a spec is never
+	// blocked by the gate those files feed. The records the gate itself trusts
+	// are the exception: those change only through the commands that validate
+	// and record them.
+	if strings.HasPrefix(rel, contract.Dir+"/") {
+		if protectedState(rel) {
+			return fmt.Sprintf("circle: %s is written by circle commands, not by hand — "+
+				"use `circle task`, `circle brief approve` or `circle review close`.", rel), true
+		}
 		return "", false
 	}
 
-	a, err := brief.LoadApproval(repo, "default", b.PlanHash)
+	b, err := brief.Build(repo, item)
+	if err != nil {
+		return "circle: the plan for item " + item + " could not be read: " + err.Error(), true
+	}
+
+	if len(b.Tasks) == 0 {
+		if item == task.DefaultItem {
+			// A session bound to nothing, in a repository where items have plans,
+			// would otherwise write freely into code some approved plan covers.
+			if planned := plannedItems(repo); len(planned) > 0 && src == session.FromDefault {
+				return fmt.Sprintf("circle: this session is not bound to an item, and %s %s plans. "+
+					"Bind one — `circle session bind --item <id>` — or start `claude --worktree <id>`.",
+					strings.Join(planned, ", "), plural(len(planned), "has", "have")), true
+			}
+			// A repository with no tasks has nothing to approve, so the gate stays
+			// open — otherwise adopting Circle would block the very edits needed
+			// to configure it.
+			return "", false
+		}
+		// A named item with no plan is being shaped. Shaping writes language and
+		// decisions — the domain model — and nothing else.
+		if domaindoc.IsDomainDoc(rel) {
+			return "", false
+		}
+		return fmt.Sprintf("circle: item %s has no plan yet, so only DOMAIN.md files and ADRs are writable. "+
+			"Plan it (`/circle:tasks`) and get the brief approved before writing %s.", item, rel), true
+	}
+
+	a, err := brief.LoadApproval(repo, item, b.PlanHash)
 	switch {
 	case errors.Is(err, brief.ErrNoApproval):
-		return "circle: no approved brief. Implementation is blocked until a human reads it — " +
-			"`circle brief generate` then `circle brief approve`.", true
+		return fmt.Sprintf("circle: no approved brief for item %s. Implementation is blocked until it is read — "+
+			"`circle brief generate` then `circle brief approve`.", item), true
 	case err != nil:
 		return "circle: the approval record could not be read: " + err.Error(), true
 	case !a.Valid:
 		// Stale approvals are the quiet failure this guards against: the plan
 		// moved, and the signature no longer covers what is about to be written.
-		return "circle: the approved brief is stale — " + a.Reason +
+		return "circle: the approved brief for item " + item + " is stale — " + a.Reason +
 			". Regenerate it and have it re-approved.", true
 	}
 
-	if target == "" || len(a.Radius) == 0 {
+	if rel == "" || len(a.Radius) == 0 {
 		return "", false
 	}
-	rel, relErr := filepath.Rel(repo.Root, target)
-	if relErr != nil || strings.HasPrefix(rel, "..") {
-		rel = target
-	}
-	// Circle's own state is always writable: recording an event or closing a
-	// task must never be blocked by the gate those actions serve.
-	if strings.HasPrefix(rel, contract.Dir+string(filepath.Separator)) {
-		return "", false
-	}
-	if domain.InRadius(rel, a.Radius) {
+	// Domain docs ride along with any approved plan: a new concept is meant to
+	// be written down the moment it appears, wherever its DOMAIN.md lives.
+	if domain.InRadius(rel, a.Radius) || domaindoc.IsDomainDoc(rel) {
 		return "", false
 	}
 	return fmt.Sprintf(
-		"circle: %s is outside the approved blast radius (%s). "+
+		"circle: %s is outside item %s's approved blast radius (%s). "+
 			"Record an addendum, or widen the plan and have it re-approved.",
-		rel, strings.Join(a.Radius, " ")), true
+		rel, item, strings.Join(a.Radius, " ")), true
+}
+
+// protectedState lists the .circle/ files the gate trusts. Writing them by hand
+// would forge the evidence the gate reads.
+func protectedState(rel string) bool {
+	base := filepath.Base(rel)
+	switch base {
+	case "approval.json", "approved-radius", "done.json", "tasks.jsonl", "DOMAIN-INDEX.md":
+		return true
+	}
+	return false
+}
+
+// plannedItems lists the named items that have tasks.
+func plannedItems(repo *contract.Repo) []string {
+	ts, _ := task.Load(repo)
+	seen := map[string]bool{}
+	var out []string
+	for _, t := range ts {
+		id := task.ItemOf(t)
+		if id != task.DefaultItem && !seen[id] {
+			seen[id] = true
+			out = append(out, id)
+		}
+	}
+	return out
+}
+
+func plural(n int, one, many string) string {
+	if n == 1 {
+		return one
+	}
+	return many
 }

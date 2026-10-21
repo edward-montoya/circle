@@ -1,14 +1,17 @@
 package cli
 
 import (
+	"errors"
 	"fmt"
 	"os/user"
 	"strings"
 	"time"
 
+	"github.com/edwardmontoya/circle/internal/claims"
 	"github.com/edwardmontoya/circle/internal/contract"
 	"github.com/edwardmontoya/circle/internal/domain"
 	"github.com/edwardmontoya/circle/internal/events"
+	"github.com/edwardmontoya/circle/internal/session"
 	"github.com/edwardmontoya/circle/internal/task"
 )
 
@@ -16,7 +19,8 @@ func init() {
 	register(Command{"task create", "Create a task. Rejects a missing goal or verification", runTaskCreate})
 	register(Command{"task validate", "Check the task contract. TaskCreated hook target", runTaskValidate})
 	register(Command{"task ready", "Claimable tasks, with their goals", runTaskReady})
-	register(Command{"task claim", "Take a task", runTaskClaim})
+	register(Command{"task claim", "Take a task. Visible to every worktree", runTaskClaim})
+	register(Command{"task release", "Give a claimed task back", runTaskRelease})
 	register(Command{"task close", "Close a task. Requires a passing gate since its last commit", runTaskClose})
 	register(Command{"task list", "The graph", runTaskList})
 	register(Command{"task show", "Goal, verification, evidence", runTaskShow})
@@ -33,8 +37,9 @@ func openRepo(e Env) (*contract.Repo, int) {
 
 func runTaskCreate(e Env, args []string) int {
 	f := fs("task create", e)
-	id := f.String("id", "", "task id, e.g. task-118.3")
-	parent := f.String("parent", "", "parent item or task")
+	id := f.String("id", "", "task id; generated from the item when omitted")
+	itemFlag := f.String("item", "", "the item this task belongs to; defaults to this session's")
+	parent := f.String("parent", "", "parent task")
 	title := f.String("title", "", "one line")
 	goal := f.String("goal", "", "REQUIRED: one sentence, what done means for this task alone")
 	kind := f.String("verify-kind", "", "REQUIRED: "+domain.VerifyKinds())
@@ -52,8 +57,27 @@ func runTaskCreate(e Env, args []string) int {
 		return code
 	}
 
+	itemID, _ := currentItem(repo, *itemFlag)
+	if itemID != task.DefaultItem && !session.Exists(repo, itemID) {
+		fmt.Fprintf(e.Stderr, "circle: no item %q — `circle item new %s --title \"...\"`\n", itemID, itemID)
+		return ExitPrecond
+	}
+	if *id == "" && strings.TrimSpace(*title) != "" {
+		*id = task.NewID(itemID, *title)
+	}
+	if *id != "" {
+		if existing, err := task.Get(repo, *id); err == nil {
+			fmt.Fprintf(e.Stderr, "circle: task %s already exists in item %s\n", *id, task.ItemOf(existing))
+			return ExitGate
+		}
+	}
+	stored := itemID
+	if stored == task.DefaultItem {
+		stored = ""
+	}
+
 	t := domain.Task{
-		ID: *id, Parent: *parent, Title: *title, State: domain.StateReady,
+		ID: *id, Item: stored, Parent: *parent, Title: *title, State: domain.StateReady,
 		Goal: domain.Goal{Statement: *goal},
 		Verify: domain.Verification{
 			Kind: domain.VerifyKind(*kind), Gate: *gate, Command: *command,
@@ -83,10 +107,10 @@ func runTaskCreate(e Env, args []string) int {
 		return ExitError
 	}
 	ev := domain.NewEvent(domain.EvTaskCreate)
-	ev.Task, ev.Item = t.ID, t.Parent
+	ev.Task, ev.Item = t.ID, itemID
 	_ = events.Append(repo, ev)
 
-	fmt.Fprintf(e.Stdout, "created %s  %s\n", t.ID, t.Title)
+	fmt.Fprintf(e.Stdout, "created %s  %s  %s(item %s)%s\n", t.ID, t.Title, NewPalette(e.Stdout).D, itemID, NewPalette(e.Stdout).N)
 	fmt.Fprintf(e.Stdout, "  goal    %s\n", t.Goal.Statement)
 	fmt.Fprintf(e.Stdout, "  verify  %s via %s\n", t.Verify.Kind, t.Verify.Gate)
 	return ExitOK
@@ -139,12 +163,26 @@ func runTaskValidate(e Env, args []string) int {
 }
 
 func runTaskReady(e Env, args []string) int {
+	f := fs("task ready", e)
+	itemFlag := f.String("item", "", "only this item's tasks; defaults to this session's")
+	all := f.Bool("all", false, "every item's ready tasks")
+	asJSON := f.Bool("json", false, "machine-readable")
+	if err := parse(f, args); err != nil {
+		return ExitError
+	}
 	repo, code := openRepo(e)
 	if repo == nil {
 		return code
 	}
+	if f.NArg() > 0 {
+		*itemFlag = f.Arg(0)
+	}
 	ts, _ := task.Load(repo)
-	ready := task.Ready(ts)
+	itemID, _ := currentItem(repo, *itemFlag)
+	ready := readyTasks(repo, ts, itemID, *all)
+	if *asJSON {
+		return writeJSON(e, ready)
+	}
 	if len(ready) == 0 {
 		fmt.Fprintln(e.Stdout, "no claimable tasks")
 		return ExitOK
@@ -153,42 +191,111 @@ func runTaskReady(e Env, args []string) int {
 	// The goal and verification print alongside the title on purpose: a
 	// cold-resuming agent must know what done means without reading the brief.
 	for _, t := range ready {
-		fmt.Fprintf(e.Stdout, "%s%-14s%s %s\n", p.B, t.ID, p.N, t.Title)
+		fmt.Fprintf(e.Stdout, "%s%-14s%s %s", p.B, t.ID, p.N, t.Title)
+		if *all {
+			fmt.Fprintf(e.Stdout, "  %s(item %s)%s", p.D, task.ItemOf(t), p.N)
+		}
+		fmt.Fprintln(e.Stdout)
 		fmt.Fprintf(e.Stdout, "  %sgoal%s    %s\n", p.D, p.N, t.Goal.Statement)
 		fmt.Fprintf(e.Stdout, "  %sverify%s  %s via %s\n", p.D, p.N, t.Verify.Kind, t.Verify.Gate)
 	}
 	return ExitOK
 }
 
+// readyTasks is the ready set: open, unblocked, and unclaimed in the shared
+// ledger — so a task another worktree took a second ago is already gone.
+func readyTasks(repo *contract.Repo, ts []domain.Task, itemID string, all bool) []domain.Task {
+	held := claims.All(repo.Root)
+	var out []domain.Task
+	for _, t := range task.Ready(ts) {
+		if !all && task.ItemOf(t) != itemID {
+			continue
+		}
+		if _, ok := held[t.ID]; ok {
+			continue
+		}
+		out = append(out, t)
+	}
+	return out
+}
+
+// holder identifies who is claiming: the person, and the session or worktree
+// they are claiming from, so a second implementer sees exactly where the task
+// went.
+func holder(repo *contract.Repo) claims.Claim {
+	who := gitEmail(repo.Root)
+	if who == "" {
+		who = "unknown"
+		if u, err := user.Current(); err == nil {
+			who = u.Username
+		}
+	}
+	return claims.Claim{
+		Holder: who, Session: session.ID(""), Worktree: session.WorktreeName(repo.Root),
+		At: time.Now().UTC(),
+	}
+}
+
 func runTaskClaim(e Env, args []string) int {
+	f := fs("task claim", e)
+	steal := f.Bool("steal", false, "take a task someone else holds")
+	if err := parse(f, args); err != nil {
+		return ExitError
+	}
 	repo, code := openRepo(e)
 	if repo == nil {
 		return code
 	}
-	if len(args) == 0 {
-		fmt.Fprintln(e.Stderr, "usage: circle task claim <id>")
+	if f.NArg() == 0 {
+		fmt.Fprintln(e.Stderr, "usage: circle task claim <id> [--steal]")
 		return ExitError
 	}
-	t, err := task.Get(repo, args[0])
+	t, err := task.Get(repo, f.Arg(0))
 	if err != nil {
 		fmt.Fprintf(e.Stderr, "circle: %v\n", err)
 		return ExitError
+	}
+	if t.State == domain.StateClosed {
+		fmt.Fprintf(e.Stderr, "circle: %s is already closed\n", t.ID)
+		return ExitGate
 	}
 	ts, _ := task.Load(repo)
 	if t.Blocked(task.ByID(ts)) {
 		fmt.Fprintf(e.Stderr, "circle: %s is blocked on %s\n", t.ID, strings.Join(t.DependsOn, ", "))
 		return ExitGate
 	}
-	who := "unknown"
-	if u, err := user.Current(); err == nil {
-		who = u.Username
+	c := holder(repo)
+	c.Task, c.Item = t.ID, task.ItemOf(t)
+	if err := claims.Take(repo.Root, c, *steal); err != nil {
+		fmt.Fprintf(e.Stderr, "circle: %v\n", err)
+		var held claims.HeldError
+		if errors.As(err, &held) {
+			fmt.Fprintln(e.Stderr, "Pick another from `circle task ready`, or pass --steal if the holder is gone.")
+			return ExitGate
+		}
+		return ExitError
 	}
-	t.State, t.ClaimedBy = domain.StateClaimed, who
-	_ = task.Save(repo, t)
 	ev := domain.NewEvent(domain.EvTaskClaim)
-	ev.Task, ev.Actor = t.ID, who
+	ev.Task, ev.Item, ev.Actor, ev.Session = t.ID, c.Item, c.Holder, c.Session
 	_ = events.Append(repo, ev)
-	fmt.Fprintf(e.Stdout, "claimed %s by %s\n", t.ID, who)
+	fmt.Fprintf(e.Stdout, "claimed %s by %s\n", t.ID, c.Holder)
+	return ExitOK
+}
+
+func runTaskRelease(e Env, args []string) int {
+	repo, code := openRepo(e)
+	if repo == nil {
+		return code
+	}
+	if len(args) == 0 {
+		fmt.Fprintln(e.Stderr, "usage: circle task release <id>")
+		return ExitError
+	}
+	if err := claims.Release(repo.Root, args[0]); err != nil {
+		fmt.Fprintf(e.Stderr, "circle: %v\n", err)
+		return ExitError
+	}
+	fmt.Fprintf(e.Stdout, "released %s\n", args[0])
 	return ExitOK
 }
 
@@ -225,7 +332,7 @@ func runTaskClose(e Env, args []string) int {
 		}
 	} else {
 		evs, _ := events.All(repo)
-		since := lastCommitTime(repo, t.ID)
+		since := lastCommitTime(repo, t)
 		ev, passed := events.GatePassedSince(evs, t.Verify.Gate, since)
 		if !passed {
 			p := NewPalette(e.Stderr)
@@ -248,8 +355,9 @@ func runTaskClose(e Env, args []string) int {
 
 	t.State, t.ClosedAt = domain.StateClosed, time.Now().UTC().Format(time.RFC3339)
 	_ = task.Save(repo, t)
+	_ = claims.Release(repo.Root, t.ID)
 	ev := domain.NewEvent(domain.EvTaskClose)
-	ev.Task, ev.Gate = t.ID, t.Verify.Gate
+	ev.Task, ev.Item, ev.Gate = t.ID, task.ItemOf(t), t.Verify.Gate
 	_ = events.Append(repo, ev)
 	fmt.Fprintf(e.Stdout, "closed %s  evidence: %s\n", t.ID, t.ClosedBy)
 	return ExitOK
@@ -299,21 +407,37 @@ func runTaskList(e Env, args []string) int {
 }
 
 func runTaskShow(e Env, args []string) int {
+	f := fs("task show", e)
+	current := f.Bool("current", false, "the task this session holds")
+	if err := parse(f, args); err != nil {
+		return ExitError
+	}
 	repo, code := openRepo(e)
 	if repo == nil {
 		return code
 	}
-	if len(args) == 0 {
-		fmt.Fprintln(e.Stderr, "usage: circle task show <id>")
+	id := f.Arg(0)
+	if *current {
+		id = heldBy(repo, holder(repo))
+		if id == "" {
+			fmt.Fprintln(e.Stderr, "circle: this session holds no task — `circle task ready`, then `circle task claim <id>`")
+			return ExitPrecond
+		}
+	}
+	if id == "" {
+		fmt.Fprintln(e.Stderr, "usage: circle task show <id> | --current")
 		return ExitError
 	}
-	t, err := task.Get(repo, args[0])
+	t, err := task.Get(repo, id)
 	if err != nil {
 		fmt.Fprintf(e.Stderr, "circle: %v\n", err)
 		return ExitError
 	}
 	p := NewPalette(e.Stdout)
-	fmt.Fprintf(e.Stdout, "%s%s%s  %s\n\n", p.B, t.ID, p.N, t.Title)
+	fmt.Fprintf(e.Stdout, "%s%s%s  %s  %s(item %s)%s\n\n", p.B, t.ID, p.N, t.Title, p.D, task.ItemOf(t), p.N)
+	if len(t.Paths) > 0 {
+		fmt.Fprintf(e.Stdout, "%sPATHS%s\n  %s\n\n", p.B, p.N, strings.Join(t.Paths, " "))
+	}
 	fmt.Fprintf(e.Stdout, "%sGOAL%s\n  %s\n\n", p.B, p.N, t.Goal.Statement)
 	fmt.Fprintf(e.Stdout, "%sVERIFICATION%s\n", p.B, p.N)
 	fmt.Fprintf(e.Stdout, "  kind     %s\n", t.Verify.Kind)
@@ -327,9 +451,28 @@ func runTaskShow(e Env, args []string) int {
 		fmt.Fprintf(e.Stdout, "  reviewer %s\n  why      %s\n", t.Verify.Reviewer, t.Verify.Justification)
 	}
 	fmt.Fprintf(e.Stdout, "\n%sSTATE%s\n  %s", p.B, p.N, t.State)
+	if c, ok := claims.All(repo.Root)[t.ID]; ok {
+		fmt.Fprintf(e.Stdout, "  held by %s", c.Holder)
+		if c.Worktree != "" {
+			fmt.Fprintf(e.Stdout, " in %s", c.Worktree)
+		}
+	}
 	if t.ClosedBy != "" {
 		fmt.Fprintf(e.Stdout, "  evidence: %s", t.ClosedBy)
 	}
 	fmt.Fprintln(e.Stdout)
 	return ExitOK
+}
+
+// heldBy finds the open task a holder has claimed, preferring the session match.
+func heldBy(repo *contract.Repo, me claims.Claim) string {
+	for _, c := range claims.All(repo.Root) {
+		if me.Session != "" && c.Session == me.Session {
+			return c.Task
+		}
+		if me.Session == "" && c.Holder == me.Holder && c.Worktree == me.Worktree {
+			return c.Task
+		}
+	}
+	return ""
 }

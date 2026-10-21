@@ -64,7 +64,7 @@ func TestSaveAppendsAndLoadResolvesLatest(t *testing.T) {
 func TestLoadSkipsMalformedLines(t *testing.T) {
 	r := newRepo(t)
 	_ = Save(r, mk("a", domain.StateReady))
-	f, err := os.OpenFile(file(r), os.O_APPEND|os.O_WRONLY, 0o644)
+	f, err := os.OpenFile(file(r, DefaultItem), os.O_APPEND|os.O_WRONLY, 0o644)
 	if err != nil {
 		t.Fatal(err)
 	}

@@ -18,6 +18,7 @@ import (
 	"github.com/edwardmontoya/circle/internal/contract"
 	"github.com/edwardmontoya/circle/internal/domain"
 	"github.com/edwardmontoya/circle/internal/events"
+	"github.com/edwardmontoya/circle/internal/session"
 	"github.com/edwardmontoya/circle/internal/task"
 	"github.com/edwardmontoya/circle/internal/timeline"
 )
@@ -71,7 +72,10 @@ func build(repo *contract.Repo) Snapshot {
 			}
 		}
 	}
-	tl, _ := timeline.Load(repo, "default")
+	// The page has no session, so it follows $CIRCLE_ITEM, else the default
+	// item — the same resolution the CLI uses outside Claude Code.
+	itemID, _ := session.Resolve(repo, "", "")
+	tl, _ := timeline.Load(repo, itemID)
 	res := contract.Validate(repo)
 	s := domain.ComputeStatus(pass, total, verified, len(ts), closed, len(ts), 0, res.Forced)
 

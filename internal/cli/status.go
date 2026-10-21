@@ -7,6 +7,7 @@ import (
 	"github.com/edwardmontoya/circle/internal/contract"
 	"github.com/edwardmontoya/circle/internal/domain"
 	"github.com/edwardmontoya/circle/internal/events"
+	"github.com/edwardmontoya/circle/internal/item"
 	"github.com/edwardmontoya/circle/internal/task"
 	"github.com/edwardmontoya/circle/internal/timeline"
 )
@@ -32,7 +33,7 @@ func computeStatus(repo *contract.Repo) (domain.Status, []domain.Task, domain.Ti
 		}
 	}
 
-	tl, _ := timeline.Load(repo, "default")
+	tl, _ := timeline.Load(repo, resolveItem(repo, ""))
 
 	// Goal criteria in v0.1 are the tasks themselves: each carries a goal and a
 	// verification, so "verified" means a gate proved it (D-35).
@@ -106,7 +107,22 @@ func runStatus(e Env, args []string) int {
 			p.B, p.N, p.R, len(u), p.N)
 	}
 
-	ready := task.Ready(ts)
+	// Several items in flight is the normal case, so show each one's state —
+	// the score above is the repository's, but the work is per item.
+	if items, _ := item.List(repo); len(items) > 1 || (len(items) == 1 && items[0].ID != task.DefaultItem) {
+		cur := resolveItem(repo, "")
+		fmt.Fprintf(e.Stdout, "\n  %sITEMS%s\n", p.B, p.N)
+		for _, it := range items {
+			v := viewOf(repo, it)
+			mark := " "
+			if v.ID == cur {
+				mark = p.G + "▸" + p.N
+			}
+			fmt.Fprintf(e.Stdout, "   %s %-20s %-10s %s%s%s\n", mark, v.ID, v.State, p.D, v.Reason, p.N)
+		}
+	}
+
+	ready := readyTasks(repo, ts, resolveItem(repo, ""), false)
 	if len(ready) > 0 {
 		fmt.Fprintf(e.Stdout, "\n  %sNEXT%s\n", p.B, p.N)
 		for _, t := range ready {

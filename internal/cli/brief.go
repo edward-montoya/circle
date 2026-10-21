@@ -29,7 +29,7 @@ func briefPath(r *contract.Repo, item string) string {
 
 func runBriefGenerate(e Env, args []string) int {
 	f := fs("brief generate", e)
-	item := f.String("item", "default", "work item id")
+	item := f.String("item", "", "work item id; defaults to this session's")
 	if err := parse(f, args); err != nil {
 		return ExitError
 	}
@@ -40,6 +40,7 @@ func runBriefGenerate(e Env, args []string) int {
 	if repo == nil {
 		return code
 	}
+	*item = resolveItem(repo, *item)
 
 	b, err := brief.Build(repo, *item)
 	if err != nil {
@@ -91,7 +92,7 @@ func runBriefGenerate(e Env, args []string) int {
 
 func runBriefShow(e Env, args []string) int {
 	f := fs("brief show", e)
-	item := f.String("item", "default", "work item id")
+	item := f.String("item", "", "work item id; defaults to this session's")
 	if err := parse(f, args); err != nil {
 		return ExitError
 	}
@@ -102,6 +103,7 @@ func runBriefShow(e Env, args []string) int {
 	if repo == nil {
 		return code
 	}
+	*item = resolveItem(repo, *item)
 	b, err := os.ReadFile(briefPath(repo, *item))
 	if err != nil {
 		fmt.Fprintf(e.Stderr, "circle: no brief for %q — run `circle brief generate`\n", *item)
@@ -142,7 +144,7 @@ func runBriefStatus(e Env, args []string) int {
 
 func runBriefApprove(e Env, args []string) int {
 	f := fs("brief approve", e)
-	item := f.String("item", "default", "work item id")
+	item := f.String("item", "", "work item id; defaults to this session's")
 	approver := f.String("approver", "", "defaults to git config user.email")
 	note := f.String("note", "", "recorded with the approval")
 	allowSelf := f.Bool("allow-self", false, "approve a plan you wrote yourself")
@@ -156,6 +158,7 @@ func runBriefApprove(e Env, args []string) int {
 	if repo == nil {
 		return code
 	}
+	*item = resolveItem(repo, *item)
 	b, err := brief.Build(repo, *item)
 	if err != nil {
 		fmt.Fprintf(e.Stderr, "circle: %v\n", err)
@@ -193,7 +196,7 @@ func runBriefApprove(e Env, args []string) int {
 
 func runBriefReject(e Env, args []string) int {
 	f := fs("brief reject", e)
-	item := f.String("item", "default", "work item id")
+	item := f.String("item", "", "work item id; defaults to this session's")
 	reason := f.String("reason", "", "required")
 	if err := parse(f, args); err != nil {
 		return ExitError
@@ -205,6 +208,7 @@ func runBriefReject(e Env, args []string) int {
 	if repo == nil {
 		return code
 	}
+	*item = resolveItem(repo, *item)
 	b, err := brief.Build(repo, *item)
 	if err != nil {
 		fmt.Fprintf(e.Stderr, "circle: %v\n", err)
@@ -228,7 +232,7 @@ func runBriefReject(e Env, args []string) int {
 // touched.
 func runBriefVerify(e Env, args []string) int {
 	f := fs("brief verify", e)
-	item := f.String("item", "default", "work item id")
+	item := f.String("item", "", "work item id; defaults to this session's")
 	failOn := f.Bool("fail-on-drift", false, "exit 7 when anything drifted")
 	if err := parse(f, args); err != nil {
 		return ExitError
@@ -240,12 +244,13 @@ func runBriefVerify(e Env, args []string) int {
 	if repo == nil {
 		return code
 	}
+	*item = resolveItem(repo, *item)
 	b, err := brief.Build(repo, *item)
 	if err != nil {
 		fmt.Fprintf(e.Stderr, "circle: %v\n", err)
 		return ExitError
 	}
-	tl, err := timeline.Sync(repo, "default", true)
+	tl, err := timeline.Sync(repo, *item, true)
 	if err != nil {
 		fmt.Fprintf(e.Stderr, "circle: %v\n", err)
 		return ExitExternal

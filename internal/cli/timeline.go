@@ -7,8 +7,10 @@ import (
 	"strings"
 	"time"
 
+	"github.com/edwardmontoya/circle/internal/brief"
 	"github.com/edwardmontoya/circle/internal/contract"
 	"github.com/edwardmontoya/circle/internal/domain"
+	"github.com/edwardmontoya/circle/internal/task"
 	"github.com/edwardmontoya/circle/internal/timeline"
 )
 
@@ -22,7 +24,7 @@ func init() {
 func itemFlag(f interface {
 	String(string, string, string) *string
 }) *string {
-	return f.String("item", "default", "work item id")
+	return f.String("item", "", "work item id; defaults to this session's")
 }
 
 func runTimelineOpen(e Env, args []string) int {
@@ -35,7 +37,7 @@ func runTimelineOpen(e Env, args []string) int {
 	if repo == nil {
 		return code
 	}
-	t, err := timeline.Open(repo, *item)
+	t, err := timeline.Open(repo, resolveItem(repo, *item))
 	if err != nil {
 		fmt.Fprintf(e.Stderr, "circle: %v\n", err)
 		return ExitExternal
@@ -55,7 +57,7 @@ func runTimelineSync(e Env, args []string) int {
 	if repo == nil {
 		return code
 	}
-	t, err := timeline.Sync(repo, *item, !*noResolve)
+	t, err := timeline.Sync(repo, resolveItem(repo, *item), !*noResolve)
 	if err != nil {
 		fmt.Fprintf(e.Stderr, "circle: %v\n", err)
 		return ExitExternal
@@ -82,7 +84,7 @@ func runTimelineShow(e Env, args []string) int {
 	if f.NArg() > 0 {
 		*item = f.Arg(0)
 	}
-	t, err := timeline.Sync(repo, *item, true)
+	t, err := timeline.Sync(repo, resolveItem(repo, *item), true)
 	if err != nil {
 		fmt.Fprintf(e.Stderr, "circle: %v\n", err)
 		return ExitExternal
@@ -206,12 +208,12 @@ func runTimelineDrift(e Env, args []string) int {
 	if f.NArg() > 0 {
 		*item = f.Arg(0)
 	}
-	t, err := timeline.Sync(repo, *item, true)
+	t, err := timeline.Sync(repo, resolveItem(repo, *item), true)
 	if err != nil {
 		fmt.Fprintf(e.Stderr, "circle: %v\n", err)
 		return ExitExternal
 	}
-	radius := approvedRadius(repo)
+	radius := approvedRadius(repo, resolveItem(repo, *item))
 	if len(radius) == 0 {
 		fmt.Fprintln(e.Stdout, "no approved blast radius recorded — nothing to compare against")
 		return ExitOK
@@ -239,8 +241,10 @@ func runTimelineDrift(e Env, args []string) int {
 	return ExitOK
 }
 
-func approvedRadius(r *contract.Repo) []string {
-	b, err := readFileTrim(r.StateDir("approved-radius"))
+// approvedRadius is what a human approved for one item. Per item, so drift on
+// one initiative is measured against its own plan and not another's.
+func approvedRadius(r *contract.Repo, item string) []string {
+	b, err := readFileTrim(brief.RadiusPath(r, item))
 	if err != nil {
 		return nil
 	}
@@ -269,10 +273,16 @@ func shortSHA(s string) string {
 
 // lastCommitTime backs the task-closure rule: a gate run must be newer than the
 // work it claims to verify, or a stale green would close anything.
-func lastCommitTime(r *contract.Repo, taskID string) time.Time {
-	t, err := timeline.Load(r, "default")
+func lastCommitTime(r *contract.Repo, tk domain.Task) time.Time {
+	t, err := timeline.Load(r, task.ItemOf(tk))
 	if err != nil {
 		return time.Time{}
 	}
 	return timeline.LastCommitAt(t)
+}
+
+// resolveItem turns an empty --item into this session's item.
+func resolveItem(r *contract.Repo, flag string) string {
+	id, _ := currentItem(r, flag)
+	return id
 }
