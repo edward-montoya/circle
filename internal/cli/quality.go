@@ -44,6 +44,7 @@ func runQualityRun(e Env, args []string) int {
 	noRecord := f.Bool("no-record", false, "do not emit result events")
 	failFast := f.Bool("fail-fast", false, "stop at the first failure")
 	taskID := f.String("task", "", "attribute the run to a task, for its red → green history")
+	noBootstrap := f.Bool("no-bootstrap", false, "skip quality.bootstrap before the gates")
 	expect := f.String("expect", "", "red or green: exit 0 only when every gate matches. For test-first work")
 	if err := parse(f, args); err != nil {
 		return ExitError
@@ -80,6 +81,25 @@ func runQualityRun(e Env, args []string) int {
 	}
 
 	p := NewPalette(e.Stdout)
+
+	// Bootstrap first. A gate that runs inside a container proves the image it
+	// runs in, and an image built before the last edit proves old code: the
+	// first gate an agent ran after writing new code came back red for exactly
+	// that reason. The bootstrap is what makes the gates runnable on the
+	// current tree, so it runs before them unless told otherwise.
+	if b := strings.TrimSpace(repo.Contract.Quality.Bootstrap); b != "" && !*noBootstrap {
+		cmd := exec.Command("sh", "-c", b)
+		cmd.Dir = repo.Root
+		cmd.Stdout, cmd.Stderr = e.Stderr, e.Stderr
+		cmd.Env = os.Environ()
+		if err := cmd.Run(); err != nil {
+			fmt.Fprintf(e.Stdout, "%s✗%s bootstrap failed: %s\n", p.R, p.N, b)
+			fmt.Fprintln(e.Stdout, "  the gates cannot prove the current tree until it succeeds")
+			return ExitQuality
+		}
+		fmt.Fprintf(e.Stdout, "%s·%s bootstrap   %s\n", p.D, p.N, b)
+	}
+
 	failed, ran := 0, 0
 	for _, g := range gates {
 		ran++

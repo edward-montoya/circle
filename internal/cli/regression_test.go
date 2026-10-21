@@ -154,3 +154,23 @@ func mustRepo(t *testing.T, root string) *contract.Repo {
 	}
 	return r
 }
+
+// A gate proves the current tree only if what it runs in was rebuilt from it:
+// the bootstrap runs before the gates.
+func TestBootstrapRunsBeforeGates(t *testing.T) {
+	root := newGitRepo(t)
+	toml := filepath.Join(root, ".circle", "project.toml")
+	b, _ := os.ReadFile(toml)
+	s := strings.Replace(string(b), "[quality.test]", "[quality]\nbootstrap = \"touch built\"\n\n[quality.test]", 1)
+	s = strings.Replace(s, `unit = "true"`, `unit = "test -f built"`, 1)
+	_ = os.WriteFile(toml, []byte(s), 0o644)
+	mustRun(t, root, "quality", "run", "test:unit")
+	_ = os.Remove(filepath.Join(root, "built"))
+	if code, _ := run(t, root, "quality", "run", "test:unit", "--no-bootstrap"); code != ExitQuality {
+		t.Fatal("--no-bootstrap must skip it")
+	}
+	_ = os.WriteFile(toml, []byte(strings.Replace(s, `"touch built"`, `"false"`, 1)), 0o644)
+	if code, out := run(t, root, "quality", "run", "test:unit"); code != ExitQuality || !strings.Contains(out, "bootstrap failed") {
+		t.Fatalf("a failed bootstrap must fail the run: %d\n%s", code, out)
+	}
+}
