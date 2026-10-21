@@ -8,6 +8,7 @@ package brief
 
 import (
 	"fmt"
+	"os"
 	"os/exec"
 	"path/filepath"
 	"sort"
@@ -17,6 +18,7 @@ import (
 	"github.com/edwardmontoya/circle/internal/compose"
 	"github.com/edwardmontoya/circle/internal/contract"
 	"github.com/edwardmontoya/circle/internal/domain"
+	"github.com/edwardmontoya/circle/internal/domaindoc"
 	"github.com/edwardmontoya/circle/internal/task"
 )
 
@@ -48,6 +50,25 @@ func Build(r *contract.Repo, item string) (domain.Brief, error) {
 	}
 
 	radius := domain.ComputeRadius(scoped)
+
+	// What the plan rests on: registered definitions, the domain model Circle
+	// discovers on its own, and this item's own shape and spec. Reporting "no
+	// definitions" while a spec sits beside the brief would be the brief lying
+	// about its own evidence.
+	knowledge := r.Contract.Knowledge
+	defs := append([]string(nil), knowledge.Definitions...)
+	for _, f := range []string{"shape.md", "spec.md"} {
+		rel := filepath.ToSlash(filepath.Join(contract.Dir, "items", item, f))
+		if _, err := os.Stat(r.Path(rel)); err == nil {
+			defs = append(defs, rel)
+		}
+	}
+	for _, f := range domaindoc.Files(r.Root) {
+		if domaindoc.IsDomainDoc(f) {
+			defs = append(defs, f)
+		}
+	}
+	knowledge.Definitions = defs
 	b := domain.Brief{
 		Item:         item,
 		Title:        titleFor(r, item, scoped),
@@ -55,11 +76,11 @@ func Build(r *contract.Repo, item string) (domain.Brief, error) {
 		Author:       gitIdentity(r.Root),
 		Tasks:        scoped,
 		Radius:       radius,
-		Definitions:  r.Contract.Knowledge.Definitions,
+		Definitions:  defs,
 		Services:     servicesTouched(r, radius),
 		Contradicted: Contradictions(r),
 		Risks: domain.DeriveRisks(scoped, radius,
-			r.Contract.Knowledge, r.Contract.Quality.Coverage.Min),
+			knowledge, r.Contract.Quality.Coverage.Min),
 		PlanHash: domain.ComputePlanHash(scoped, radius),
 	}
 	if len(b.Contradicted) > 0 {

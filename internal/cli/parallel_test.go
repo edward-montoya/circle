@@ -372,6 +372,17 @@ func TestGreenfieldBootstrapIsNotADeadlock(t *testing.T) {
 	if ok, out := writeAllowed(t, root, "first", "compose.yml"); !ok {
 		t.Fatalf("the approved plan that creates the compose file must be able to:\n%s", out)
 	}
+	t.Setenv("CIRCLE_ITEM", "first")
+	if out := mustRun(t, root, "next"); !strings.Contains(out, "/circle:implement") {
+		t.Fatalf("next must route the approved bootstrap item to implement, not declare it stuck:\n%s", out)
+	}
+	_ = os.WriteFile(filepath.Join(root, ".circle", "items", "first", "spec.md"), []byte("# s\n"), 0o644)
+	mustRun(t, root, "brief", "generate", "--item", "first")
+	md, _ := os.ReadFile(filepath.Join(root, ".circle", "items", "first", "brief.md"))
+	if strings.Contains(string(md), "No definitions are registered") || !strings.Contains(string(md), "items/first/spec.md") {
+		t.Fatalf("the brief must count the item's own spec as a definition:\n%s", md)
+	}
+	t.Setenv("CIRCLE_ITEM", "")
 	if ok, _ := writeAllowed(t, root, "first", "other/x.go"); ok {
 		t.Fatal("outside the approved radius stays blocked")
 	}

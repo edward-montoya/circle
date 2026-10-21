@@ -49,7 +49,7 @@ var boundaries = map[item.State][3]string{
 
 func computeNext(repo *contract.Repo) Suggestion {
 	res := contract.Validate(repo)
-	if res.Blocked() && !res.Incubating {
+	if res.Blocked() && !res.Incubating && !approvedBootstrap(repo) {
 		return Suggestion{State: "blocked", Reason: "the contracts are invalid", Skill: "",
 			Command: "circle preflight --explain", Boundary: "continue", Why: "nothing can be written until preflight passes"}
 	}
@@ -219,4 +219,17 @@ func runEventList(e Env, args []string) int {
 		fmt.Fprintln(e.Stdout, "no matching events")
 	}
 	return ExitOK
+}
+
+// approvedBootstrap is the greenfield case: preflight fails because the
+// contract declares what the session's approved item has yet to build. The gate
+// lets that plan write, so `next` must route to it rather than declare the
+// session stuck.
+func approvedBootstrap(repo *contract.Repo) bool {
+	id, _ := currentItem(repo, "")
+	if id == task.DefaultItem {
+		return false
+	}
+	st := item.Derive(repo, id).State
+	return st == item.Approved || st == item.Building
 }
