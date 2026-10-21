@@ -61,6 +61,26 @@ func Main() int {
 			}
 		}
 	}
+	// A group name on its own, or with --help: list that group's commands
+	// rather than the whole tree.
+	var group []Command
+	for _, c := range commands {
+		if strings.HasPrefix(c.Name, name+" ") {
+			group = append(group, c)
+		}
+	}
+	if len(group) > 0 {
+		w := e.Stdout
+		code := ExitOK
+		if len(args) > 1 && args[1] != "-h" && args[1] != "--help" && args[1] != "help" {
+			fmt.Fprintf(e.Stderr, "circle: unknown command %q\n\n", strings.Join(args[:2], " "))
+			w, code = e.Stderr, ExitError
+		}
+		for _, c := range group {
+			fmt.Fprintf(w, "  %-22s %s\n", c.Name, c.Summary)
+		}
+		return code
+	}
 	fmt.Fprintf(e.Stderr, "circle: unknown command %q\n\n", strings.Join(args, " "))
 	usage(e.Stderr)
 	return ExitError

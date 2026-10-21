@@ -3,6 +3,8 @@ package cli
 import (
 	"bytes"
 	"fmt"
+	"os"
+	"sort"
 	"os/exec"
 	"strings"
 	"time"
@@ -111,6 +113,19 @@ func runQualityRun(e Env, args []string) int {
 			return ExitQuality
 		}
 		fmt.Fprintf(e.Stdout, "%s·%s bootstrap   %s\n", p.D, p.N, b)
+	}
+
+	if local := localEnv(repo); len(local) > 0 {
+		keys := make([]string, 0, len(local))
+		for k := range local {
+			if os.Getenv(k) == "" {
+				keys = append(keys, k)
+			}
+		}
+		sort.Strings(keys)
+		if len(keys) > 0 {
+			fmt.Fprintf(e.Stdout, "%s·%s local       %s %s(circle local list)%s\n", p.D, p.N, strings.Join(keys, " "), p.D, p.N)
+		}
 	}
 
 	failed, ran := 0, 0
