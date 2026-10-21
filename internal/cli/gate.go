@@ -102,12 +102,14 @@ func runGateCheck(e Env, args []string) int {
 	}
 
 	res := contract.Validate(repo)
+	item, src := session.Resolve(repo, *itemFlag, session.ID(sid))
 	// A project on day zero has nothing to run and nothing to prove, so there is
 	// nothing to enforce. Blocking here would mean a new repository cannot write
 	// its first file, and the only escape would be --force from minute one —
 	// which teaches the user the gate is noise before it has ever been useful.
-	if res.Blocked() && !res.Incubating {
-		reason := "circle: preflight is failing, so writes are blocked. Run `circle preflight --explain` and fix the contract."
+	if res.Blocked() && !res.Incubating && !repairWrite(repo, item, target) {
+		reason := "circle: preflight is failing, so writes are blocked outside .circle/, the domain model, " +
+			"and the bound item's approved paths. Run `circle preflight --explain` and fix the contract."
 		if *skill != "" {
 			reason = fmt.Sprintf("circle: %s cannot run — the contracts are invalid. Run `circle preflight --explain`.", *skill)
 		}
@@ -126,7 +128,6 @@ func runGateCheck(e Env, args []string) int {
 	// human has not signed off on. This is the constraint the whole framework
 	// exists for, so it is checked on every single write rather than trusted
 	// once at session start.
-	item, src := session.Resolve(repo, *itemFlag, session.ID(sid))
 	reason, blocked := approvalGate(repo, item, src, target)
 	if b, ok := session.Lookup(repo.Root, session.ID(sid)); ok && b.Decision != "" && b.Item == "" && *itemFlag == "" {
 		reason, blocked = decisionGate(repo, b.Decision, target)
@@ -256,6 +257,40 @@ func decisionGate(repo *contract.Repo, decision, target string) (string, bool) {
 	}
 	return fmt.Sprintf("circle: this session works decision %s, which produces decisions, not code. "+
 		"Prototype on a prototype/<name> branch, or turn the decision into an item once the way is clear.", decision), true
+}
+
+// repairWrite reports whether a write may proceed while preflight fails.
+//
+// A failing preflight blocks writes so nobody builds on a contract that lies.
+// But the writes that make it honest must stay open, or the only way out is
+// around the gate: the contract itself and Circle's own state, the domain
+// model, and — for a greenfield project whose first item creates the very
+// compose file and gates the contract now declares — the paths a human
+// approved for the bound item. Approval is what makes the last one safe.
+func repairWrite(repo *contract.Repo, item, target string) bool {
+	if target == "" {
+		return false
+	}
+	rel, err := filepath.Rel(repo.Root, target)
+	if err != nil || strings.HasPrefix(rel, "..") {
+		return false
+	}
+	rel = filepath.ToSlash(rel)
+	if strings.HasPrefix(rel, contract.Dir+"/") {
+		return !protectedState(rel)
+	}
+	if domaindoc.IsDomainDoc(rel) {
+		return true
+	}
+	if item == task.DefaultItem {
+		return false
+	}
+	b, err := brief.Build(repo, item)
+	if err != nil || len(b.Tasks) == 0 {
+		return false
+	}
+	a, err := brief.LoadApproval(repo, item, b.PlanHash)
+	return err == nil && a.Valid && domain.InRadius(rel, a.Radius)
 }
 
 // protectedState lists the .circle/ files the gate trusts. Writing them by hand

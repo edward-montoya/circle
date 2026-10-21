@@ -334,3 +334,48 @@ func TestSpecCheckCommand(t *testing.T) {
 		t.Fatalf("item show --with spec:\n%s", out)
 	}
 }
+
+// Greenfield: declaring the first gate ends incubation, and preflight then
+// fails until the compose file the contract names exists. The writes that fix
+// that — the contract, the domain model, and the approved plan that builds the
+// missing execution — must stay open, or the only way out is around the gate.
+func TestGreenfieldBootstrapIsNotADeadlock(t *testing.T) {
+	t.Setenv("CIRCLE_ITEM", "")
+	t.Setenv("CIRCLE_SESSION", "")
+	root := t.TempDir()
+	git(t, root, "init", "-q", "-b", "main")
+	git(t, root, "config", "user.email", "dev@example.com")
+	_ = os.MkdirAll(filepath.Join(root, ".circle"), 0o755)
+	_ = os.WriteFile(filepath.Join(root, ".circle", "project.toml"), []byte("[project]\nname = \"g\"\n"), 0o644)
+	if ok, out := writeAllowed(t, root, "", "README.md"); !ok {
+		t.Fatalf("an incubating repo writes freely:\n%s", out)
+	}
+
+	mustRun(t, root, "item", "new", "first", "--title", "first slice")
+	toml := filepath.Join(root, ".circle", "project.toml")
+	b, _ := os.ReadFile(toml)
+	_ = os.WriteFile(toml, append(b, []byte("\n[execution]\ncompose = \"compose.yml\"\napp_services = [\"web\"]\nup = \"docker compose up -d\"\ndown = \"docker compose down\"\n")...), 0o644)
+	mustRun(t, root, "quality", "add", "test:unit", "true")
+	if code, _ := run(t, root, "preflight", "--quiet"); code != ExitGate {
+		t.Fatal("with the compose file missing, preflight must fail")
+	}
+	mustRun(t, root, "task", "create", "--item", "first", "--id", "first-1", "--title", "stack", "--goal", "the stack starts",
+		"--verify-kind", "unit", "--verify-gate", "test:unit", "--paths", "compose.yml,Dockerfile,app/**")
+
+	if ok, out := writeAllowed(t, root, "first", ".circle/project.toml"); !ok {
+		t.Fatalf("the contract must stay writable while preflight fails:\n%s", out)
+	}
+	if ok, _ := writeAllowed(t, root, "first", "compose.yml"); ok {
+		t.Fatal("before approval, nothing outside .circle/ and the domain model is writable")
+	}
+	approve(t, root, "first")
+	if ok, out := writeAllowed(t, root, "first", "compose.yml"); !ok {
+		t.Fatalf("the approved plan that creates the compose file must be able to:\n%s", out)
+	}
+	if ok, _ := writeAllowed(t, root, "first", "other/x.go"); ok {
+		t.Fatal("outside the approved radius stays blocked")
+	}
+	if ok, _ := writeAllowed(t, root, "first", ".circle/items/first/approval.json"); ok {
+		t.Fatal("protected state stays protected")
+	}
+}
