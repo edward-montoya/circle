@@ -86,16 +86,16 @@ func TestReady(t *testing.T) {
 		mk("a", domain.StateClosed),
 		mk("b", domain.StateReady, "a"),     // dependency closed -> claimable
 		mk("c", domain.StateReady, "b"),     // dependency open   -> blocked
-		mk("d", domain.StateClaimed),        // already taken
+		mk("d", domain.StateClaimed),        // legacy claim: the shared ledger decides now
 		mk("e", domain.StateReady, "ghost"), // dependency does not exist
 	}
 	got := Ready(ts)
-	if len(got) != 1 || got[0].ID != "b" {
+	if len(got) != 2 || got[0].ID != "b" || got[1].ID != "d" {
 		ids := make([]string, len(got))
 		for i, x := range got {
 			ids[i] = x.ID
 		}
-		t.Fatalf("Ready() = %v, want [b]", ids)
+		t.Fatalf("Ready() = %v, want [b d]", ids)
 	}
 }
 
