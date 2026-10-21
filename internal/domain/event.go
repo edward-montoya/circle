@@ -22,6 +22,9 @@ const (
 	EvToolUse        EventType = "tool.use"
 	EvWorktreeUp     EventType = "worktree.provision"
 	EvWorktreeDown   EventType = "worktree.release"
+	EvItemDone       EventType = "item.done"
+	EvSkillRun       EventType = "skill.run"
+	EvDecision       EventType = "decision"
 )
 
 // SchemaVersion is bumped when the event shape changes incompatibly.
