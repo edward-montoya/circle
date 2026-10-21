@@ -20,6 +20,32 @@ type Contract struct {
 	Quality   Quality   `toml:"quality"`
 	Gate      Gate      `toml:"gate"`
 	Domain    DomainCfg `toml:"domain"`
+	Lifecycle Lifecycle `toml:"lifecycle"`
+}
+
+// Lifecycle names the practice skills the orchestrators call. Swapping one keeps
+// Circle's enforcement and brings a team's own discipline: tdd =
+// "acme:property-tests". An orchestrator never names a practice directly; it
+// reads the slot.
+type Lifecycle struct {
+	Grill  string `toml:"grill,omitempty"`
+	Domain string `toml:"domain,omitempty"`
+	TDD    string `toml:"tdd,omitempty"`
+}
+
+// Slots returns every slot with its default filled in, in a stable order.
+func (l Lifecycle) Slots() [][2]string {
+	or := func(v, def string) string {
+		if v == "" {
+			return def
+		}
+		return v
+	}
+	return [][2]string{
+		{"grill", or(l.Grill, "circle:grill")},
+		{"domain", or(l.Domain, "circle:domain")},
+		{"tdd", or(l.TDD, "circle:tdd")},
+	}
 }
 
 // DomainCfg tunes how strictly new concepts must be written into a DOMAIN.md.

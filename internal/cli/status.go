@@ -1,13 +1,16 @@
 package cli
 
 import (
+	"encoding/json"
 	"fmt"
+	"io"
 	"strings"
 
 	"github.com/edwardmontoya/circle/internal/contract"
 	"github.com/edwardmontoya/circle/internal/domain"
 	"github.com/edwardmontoya/circle/internal/events"
 	"github.com/edwardmontoya/circle/internal/item"
+	"github.com/edwardmontoya/circle/internal/session"
 	"github.com/edwardmontoya/circle/internal/task"
 	"github.com/edwardmontoya/circle/internal/timeline"
 )
@@ -187,11 +190,43 @@ func runEventRecord(e Env, args []string) int {
 	item := f.String("item", "", "item id")
 	taskID := f.String("task", "", "task id")
 	reason := f.String("reason", "", "free-form context")
+	skill := f.String("skill", "", "for skill.run: the skill that ran")
+	hook := f.Bool("hook", false, "read a hook payload from stdin (PreToolUse on Skill, or UserPromptSubmit)")
 	if err := parse(f, args); err != nil {
 		return ExitOK
 	}
 	ev := domain.NewEvent(domain.EventType(*typ))
 	ev.Item, ev.Task, ev.Reason = *item, *taskID, *reason
+	if *skill != "" {
+		ev.Reason = *skill
+	}
+	if *hook {
+		var p struct {
+			SessionID string `json:"session_id"`
+			Prompt    string `json:"prompt"`
+			ToolInput struct {
+				Skill string `json:"skill"`
+			} `json:"tool_input"`
+		}
+		b, _ := io.ReadAll(e.Stdin)
+		_ = json.Unmarshal(b, &p)
+		ev.Session = p.SessionID
+		if ev.Type == domain.EvSkillRun {
+			name := p.ToolInput.Skill
+			// A slash command typed by the user never passes through the Skill
+			// tool, so UserPromptSubmit catches it from the prompt instead.
+			if name == "" && strings.HasPrefix(strings.TrimSpace(p.Prompt), "/") {
+				name = strings.TrimPrefix(strings.Fields(strings.TrimSpace(p.Prompt))[0], "/")
+			}
+			if name == "" {
+				return ExitOK // not a skill: nothing to record
+			}
+			ev.Reason = name
+		}
+	}
+	if ev.Item == "" {
+		ev.Item, _ = session.Resolve(repo, "", session.ID(ev.Session))
+	}
 	_ = events.Append(repo, ev)
 	return ExitOK
 }

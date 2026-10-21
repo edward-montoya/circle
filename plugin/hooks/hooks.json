@@ -22,6 +22,17 @@
             "statusMessage": "circle: checking contracts"
           }
         ]
+      },
+      {
+        "matcher": "Skill",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "circle event record --type skill.run --hook",
+            "timeout": 10,
+            "async": true
+          }
+        ]
       }
     ],
     "PostToolUse": [
@@ -91,6 +102,18 @@
             "type": "command",
             "command": "circle worktree release --hook",
             "timeout": 120
+          }
+        ]
+      }
+    ],
+    "UserPromptSubmit": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "circle event record --type skill.run --hook",
+            "timeout": 10,
+            "async": true
           }
         ]
       }

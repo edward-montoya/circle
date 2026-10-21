@@ -9,6 +9,7 @@ import (
 	"github.com/edwardmontoya/circle/internal/contract"
 	"github.com/edwardmontoya/circle/internal/domain"
 	"github.com/edwardmontoya/circle/internal/events"
+	"github.com/edwardmontoya/circle/internal/item"
 )
 
 func init() {
@@ -64,6 +65,7 @@ func runPreflight(e Env, args []string) int {
 	case *quiet:
 	case *ctx:
 		RenderContext(e.Stdout, filepath.Base(repo.Root), res, NewPalette(e.Stdout))
+		renderSessionContext(e, repo)
 	case *explain:
 		RenderExplain(e.Stdout, repo.Root, res, NewPalette(e.Stdout))
 	default:
@@ -74,4 +76,18 @@ func runPreflight(e Env, args []string) int {
 		return ExitGate
 	}
 	return ExitOK
+}
+
+// renderSessionContext adds what a skill needs beyond the contracts: which item
+// this session works on and where it stands, and which practice fills each
+// lifecycle slot.
+func renderSessionContext(e Env, repo *contract.Repo) {
+	id, src := currentItem(repo, "")
+	st := item.Derive(repo, id)
+	fmt.Fprintf(e.Stdout, "\nITEM       %s — %s (%s; resolved from %s)\n", id, st.State, st.Reason, src)
+	var slots []string
+	for _, s := range repo.Contract.Lifecycle.Slots() {
+		slots = append(slots, s[0]+"="+s[1])
+	}
+	fmt.Fprintf(e.Stdout, "LIFECYCLE  %s\n", strings.Join(slots, "  "))
 }
