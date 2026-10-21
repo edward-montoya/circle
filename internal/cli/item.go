@@ -8,7 +8,9 @@ import (
 	"path/filepath"
 	"strings"
 
+	"github.com/edwardmontoya/circle/internal/claims"
 	"github.com/edwardmontoya/circle/internal/contract"
+	"github.com/edwardmontoya/circle/internal/domain"
 	"github.com/edwardmontoya/circle/internal/item"
 	"github.com/edwardmontoya/circle/internal/session"
 	"github.com/edwardmontoya/circle/internal/task"
@@ -182,8 +184,13 @@ func runItemShow(e Env, args []string) int {
 	}
 	fmt.Fprintf(e.Stdout, "  state       %s%s%s  %s%s%s\n", p.B, v.State, p.N, p.D, v.Reason, p.N)
 	ts, _ := task.LoadItem(repo, id)
+	held := claims.All(repo.Root)
 	for _, t := range ts {
-		fmt.Fprintf(e.Stdout, "    %-18s %-8s %s\n", t.ID, t.State, t.Title)
+		state, by := string(t.State), ""
+		if c, ok := held[t.ID]; ok && t.State != domain.StateClosed {
+			state, by = "held", "  — "+c.Holder+worktreeSuffix(c.Worktree)
+		}
+		fmt.Fprintf(e.Stdout, "    %-18s %-8s %s%s\n", t.ID, state, t.Title, by)
 	}
 	return ExitOK
 }
@@ -237,6 +244,13 @@ func stateNames() string {
 		out = append(out, string(s))
 	}
 	return strings.Join(out, ", ")
+}
+
+func worktreeSuffix(w string) string {
+	if w == "" {
+		return ""
+	}
+	return " in worktree " + w
 }
 
 // multiFlag collects a repeatable string flag.

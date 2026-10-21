@@ -148,6 +148,7 @@ func Validate(r *Repo) Result {
 	validateKnowledge(r, c, &res)
 	validateDefinitionDrift(r, &res)
 	validateDomain(r, &res)
+	validateMerge(r, &res)
 	validateForce(r, &res)
 	return res
 }
@@ -370,6 +371,21 @@ func validateDomain(r *Repo, res *Result) {
 		res.add(Warn, "knowledge", "modules", fmt.Sprintf("%d undocumented", undocumented),
 			"see .circle/DOMAIN-INDEX.md; name each in a DOMAIN.md")
 	}
+}
+
+// validateMerge checks that .circle/ merges cleanly across parallel branches.
+//
+// Every item appends to its own JSONL files on its own branch, and every
+// worktree regenerates the domain index. Without union merges, two finished
+// items cannot both land without someone hand-resolving files they never wrote.
+func validateMerge(r *Repo, res *Result) {
+	b, err := os.ReadFile(r.StateDir(".gitattributes"))
+	have := string(b)
+	if err == nil && strings.Contains(have, "*.jsonl merge=union") && strings.Contains(have, "DOMAIN-INDEX.md merge=union") {
+		return
+	}
+	res.add(Warn, "execution", "merges", "parallel items will conflict on merge",
+		"add to .circle/.gitattributes:  *.jsonl merge=union  and  DOMAIN-INDEX.md merge=union")
 }
 
 // validateForce surfaces a recorded bypass. A --force with no consequence is a

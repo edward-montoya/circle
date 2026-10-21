@@ -241,8 +241,17 @@ func runInit(e Env, args []string) int {
 // files on its own branch, and a union merge keeps both sides' lines where a
 // normal merge would stop on a conflict at the end of the file. Readers already
 // resolve the newest record per id, so the line order a union produces is safe.
+// gitattributes is also what preflight checks for, so the two cannot drift.
+//
+// The domain index is generated, so a merge of two branches that each
+// regenerated it cannot be resolved by hand — only by regenerating. A union
+// merge never stops the merge; the next session start or write regenerates the
+// file, and `circle domain index --check` fails CI until it has.
+const gitattributes = "# Append-only logs: keep both sides' lines on merge.\n*.jsonl merge=union\n" +
+	"# Generated; regenerated after every merge by the next session or write.\nDOMAIN-INDEX.md merge=union\n"
+
 var stateFiles = map[string]string{
-	".gitattributes": "# Append-only logs: keep both sides' lines on merge.\n*.jsonl merge=union\n",
+	".gitattributes": gitattributes,
 	".gitignore":     "# Volatile and regenerable. Everything else in .circle/ is committed.\nruntime/\n",
 }
 

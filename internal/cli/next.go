@@ -102,6 +102,14 @@ func computeNext(repo *contract.Repo) Suggestion {
 		s.Command = "circle brief generate && circle brief approve"
 	case item.Approved, item.Building:
 		ts, _ := task.Load(repo)
+		if mine := heldBy(repo, holder(repo)); mine != "" {
+			if t, err := task.Get(repo, mine); err == nil && task.ItemOf(t) == id && t.State != domain.StateClosed {
+				s.Command = "circle task show --current"
+				s.Boundary = "continue"
+				s.Why = fmt.Sprintf("you hold %s — finish it: red → green at its gate, commit, then `circle task close %s`", mine, mine)
+				break
+			}
+		}
 		if ready := readyTasks(repo, ts, id, false); len(ready) > 0 {
 			s.Command = "circle task claim " + ready[0].ID
 		} else {
