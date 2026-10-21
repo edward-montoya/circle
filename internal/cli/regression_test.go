@@ -185,3 +185,36 @@ func TestAdvisoryPreflightLetsPlanningRun(t *testing.T) {
 		t.Fatalf("advisory context must report and pass: %d\n%s", code, out)
 	}
 }
+
+// A session is held to the paths of the task it claimed, not the union the
+// item's approval covers, and is told which task owns a path it strays into.
+func TestHeldTaskNarrowsTheRadius(t *testing.T) {
+	root := newGitRepo(t)
+	mustRun(t, root, "item", "new", "alpha", "--title", "alpha")
+	mustRun(t, root, "task", "create", "--item", "alpha", "--id", "alpha-1", "--title", "stack", "--goal", "g",
+		"--verify-kind", "unit", "--verify-gate", "test:unit", "--paths", "compose.yml")
+	mustRun(t, root, "task", "create", "--item", "alpha", "--id", "alpha-2", "--title", "code", "--goal", "g",
+		"--verify-kind", "unit", "--verify-gate", "test:unit", "--paths", "src/a/**")
+	approve(t, root, "alpha")
+	t.Setenv("CIRCLE_SESSION", "s-two")
+	mustRun(t, root, "task", "claim", "alpha-2")
+	hook := func(rel string) string {
+		return hookOut(t, root, toolPayload(root, "s-two", "Write", "file_path", rel))
+	}
+	if out := hook("src/a/x.go"); strings.Contains(out, "deny") {
+		t.Fatalf("inside the held task's paths must be allowed:\n%s", out)
+	}
+	if out := hook("compose.yml"); !strings.Contains(out, "belongs to alpha-1") {
+		t.Fatalf("a path owned by another task must be denied, naming the owner:\n%s", out)
+	}
+	if out := hook("src/a/DOMAIN.md"); strings.Contains(out, "deny") {
+		t.Fatalf("the domain model stays writable:\n%s", out)
+	}
+	t.Setenv("CIRCLE_ITEM", "alpha")
+	if out := hookOut(t, root, toolPayload(root, "s-other", "Write", "file_path", "compose.yml")); strings.Contains(out, "deny") {
+		t.Fatalf("a session holding no task keeps the item's radius:\n%s", out)
+	}
+	if out := mustRun(t, root, "quality", "run", "unit"); !strings.Contains(out, "test:unit") {
+		t.Fatalf("the short gate name should resolve:\n%s", out)
+	}
+}

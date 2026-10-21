@@ -266,6 +266,18 @@ func runTaskClaim(e Env, args []string) int {
 	}
 	c := holder(repo)
 	c.Task, c.Item = t.ID, task.ItemOf(t)
+	// A session works on one item. Claiming a task binds an unbound session to
+	// the task's item; a session bound elsewhere must say so first, rather than
+	// quietly start work on a second item.
+	if c.Session != "" {
+		if b, ok := session.Lookup(repo.Root, c.Session); ok && b.Item != "" && b.Item != c.Item {
+			fmt.Fprintf(e.Stderr, "circle: this session works on item %s; %s belongs to %s. "+
+				"Finish or hand off first, or `circle session bind --item %s`.\n", b.Item, t.ID, c.Item, c.Item)
+			return ExitGate
+		} else if !ok || b.Item == "" {
+			_ = session.Bind(repo.Root, session.Binding{Session: c.Session, Item: c.Item, Worktree: c.Worktree})
+		}
+	}
 	if err := claims.Take(repo.Root, c, *steal); err != nil {
 		fmt.Fprintf(e.Stderr, "circle: %v\n", err)
 		var held claims.HeldError

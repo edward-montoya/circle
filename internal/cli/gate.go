@@ -9,6 +9,7 @@ import (
 	"strings"
 
 	"github.com/edwardmontoya/circle/internal/brief"
+	"github.com/edwardmontoya/circle/internal/claims"
 	"github.com/edwardmontoya/circle/internal/contract"
 	"github.com/edwardmontoya/circle/internal/domain"
 	"github.com/edwardmontoya/circle/internal/domaindoc"
@@ -157,6 +158,9 @@ func runGateCheck(e Env, args []string) int {
 	if b, ok := session.Lookup(repo.Root, session.ID(sid)); ok && b.Decision != "" && b.Item == "" && *itemFlag == "" {
 		reason, blocked = decisionGate(repo, b.Decision, target)
 	}
+	if !blocked {
+		reason, blocked = taskGate(repo, item, session.ID(sid), target)
+	}
 	if blocked {
 		ev := domain.NewEvent(domain.EvGateDeny)
 		ev.Reason, ev.Path, ev.Item, ev.Session = reason, target, item, sid
@@ -256,6 +260,68 @@ func approvalGate(repo *contract.Repo, item string, src session.Source, target s
 		"circle: %s is outside item %s's approved blast radius (%s). "+
 			"Record an addendum, or widen the plan and have it re-approved.",
 		rel, item, strings.Join(a.Radius, " ")), true
+}
+
+// taskGate narrows the item's approved radius to the task this session holds.
+//
+// The approval covers the union of every task's paths, so without this a
+// session holding task 2 could edit a file only task 1 declared, and nothing
+// would say so — the plan said one thing and the work did another. Holding no
+// task leaves the item's radius in force.
+func taskGate(repo *contract.Repo, item, sid, target string) (string, bool) {
+	if target == "" {
+		return "", false
+	}
+	rel, err := filepath.Rel(repo.Root, target)
+	if err != nil || strings.HasPrefix(rel, "..") {
+		return "", false
+	}
+	rel = filepath.ToSlash(rel)
+	if strings.HasPrefix(rel, contract.Dir+"/") || domaindoc.IsDomainDoc(rel) {
+		return "", false
+	}
+	held, ok := heldTask(repo, item, sid)
+	if !ok || len(held.Paths) == 0 || domain.InRadius(rel, held.Paths) {
+		return "", false
+	}
+	owner := ""
+	if ts, err := task.LoadItem(repo, item); err == nil {
+		for _, t := range ts {
+			if t.ID != held.ID && domain.InRadius(rel, t.Paths) {
+				owner = t.ID
+				break
+			}
+		}
+	}
+	msg := fmt.Sprintf("circle: %s is outside the paths of %s, the task you hold (%s).", rel, held.ID, strings.Join(held.Paths, " "))
+	if owner != "" {
+		msg += fmt.Sprintf(" It belongs to %s. Say so: either the plan missed that %s needs it — widen %s's paths and re-approve — or the edit belongs to %s.", owner, held.ID, held.ID, owner)
+	} else {
+		msg += " Nothing in the plan covers it: widen the task's paths and re-approve, or leave it out."
+	}
+	return msg, true
+}
+
+// heldTask is the open task this session holds in the item: matched by session
+// id when the hook carries one, otherwise by the worktree it runs in.
+func heldTask(repo *contract.Repo, item, sid string) (domain.Task, bool) {
+	wt := session.WorktreeName(repo.Root)
+	for _, c := range claims.All(repo.Root) {
+		if !c.Held() || c.Item != item {
+			continue
+		}
+		sameSession := sid != "" && c.Session == sid
+		// Without a session id on one side, the worktree is the identity.
+		sameWorktree := wt != "" && c.Worktree == wt && (sid == "" || c.Session == "")
+		mine := sameSession || sameWorktree
+		if !mine {
+			continue
+		}
+		if t, err := task.Get(repo, c.Task); err == nil && t.State != domain.StateClosed {
+			return t, true
+		}
+	}
+	return domain.Task{}, false
 }
 
 // decisionGate governs a session working an initiative decision. A decision is

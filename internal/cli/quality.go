@@ -67,6 +67,11 @@ func runQualityRun(e Env, args []string) int {
 		for _, name := range wanted {
 			g, ok := repo.Contract.Quality.Gate(name)
 			if !ok {
+				// "unit" for "test:unit": the key in [quality.test] is the name
+				// people type.
+				g, ok = repo.Contract.Quality.Gate("test:" + name)
+			}
+			if !ok {
 				fmt.Fprintf(e.Stderr, "circle: no gate %q. declared: %s\n",
 					name, repo.Contract.Quality.GateNames())
 				return ExitError
