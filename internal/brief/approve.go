@@ -148,25 +148,23 @@ func Reject(r *contract.Repo, b domain.Brief, by, reason string) error {
 	return writeRadius(r, b.Item, nil)
 }
 
-// RadiusPath is the file the gate consults. One per item, plus a pointer at the
-// active item so the hook does not have to guess.
+// RadiusPath is the approved radius of one item.
+//
+// One file per item and no repository-wide copy: a shared "current radius"
+// file was rewritten by every approval, so two items approved on two branches
+// always conflicted on it at merge.
 func RadiusPath(r *contract.Repo, item string) string {
 	return filepath.Join(itemDir(r, item), "approved-radius")
 }
 
 func writeRadius(r *contract.Repo, item string, radius []string) error {
 	p := RadiusPath(r, item)
+	_ = os.Remove(r.StateDir("approved-radius")) // the old repository-wide copy
 	if len(radius) == 0 {
 		_ = os.Remove(p)
-		_ = os.Remove(r.StateDir("approved-radius"))
 		return nil
 	}
-	body := strings.Join(radius, "\n") + "\n"
-	if err := os.WriteFile(p, []byte(body), 0o644); err != nil {
-		return err
-	}
-	// Mirror to the well-known path the gate reads without knowing the item.
-	return os.WriteFile(r.StateDir("approved-radius"), []byte(body), 0o644)
+	return os.WriteFile(p, []byte(strings.Join(radius, "\n")+"\n"), 0o644)
 }
 
 // Pending lists items whose brief is generated but not approved.
