@@ -42,10 +42,7 @@ func Build(r *contract.Repo, item string) (domain.Brief, error) {
 	// id prefix; those still count toward the named item.
 	var scoped []domain.Task
 	for _, t := range tasks {
-		own := task.ItemOf(t) == item
-		legacy := item != task.DefaultItem && t.Item == "" &&
-			(t.Parent == item || t.ID == item || strings.HasPrefix(t.ID, item+"."))
-		if own || legacy {
+		if task.InItem(t, item) {
 			scoped = append(scoped, t)
 		}
 	}

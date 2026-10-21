@@ -10,6 +10,7 @@ import (
 	"github.com/edwardmontoya/circle/internal/domain"
 	"github.com/edwardmontoya/circle/internal/domaindoc"
 	"github.com/edwardmontoya/circle/internal/events"
+	"github.com/edwardmontoya/circle/internal/initiative"
 	"github.com/edwardmontoya/circle/internal/session"
 	"github.com/edwardmontoya/circle/internal/task"
 	"github.com/edwardmontoya/circle/internal/timeline"
@@ -110,6 +111,12 @@ func bindSession(e Env, repo *contract.Repo, itemID, decision string) int {
 		fmt.Fprintln(e.Stderr, "Inside Claude Code the SessionStart hook sets it; is the circle plugin enabled?")
 		fmt.Fprintf(e.Stderr, "Outside it, export %s=%s for this shell instead.\n", session.EnvItem, itemID)
 		return ExitPrecond
+	}
+	if decision != "" {
+		if _, err := initiative.GetDecision(repo, decision); err != nil {
+			fmt.Fprintf(e.Stderr, "circle: %v — `circle decision frontier` lists the open ones\n", err)
+			return ExitPrecond
+		}
 	}
 	if itemID != "" && itemID != task.DefaultItem && !session.Exists(repo, itemID) {
 		fmt.Fprintf(e.Stderr, "circle: no item %q — `circle item new %s --title \"...\"`\n", itemID, itemID)

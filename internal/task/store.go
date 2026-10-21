@@ -14,6 +14,7 @@ import (
 	"os"
 	"path/filepath"
 	"sort"
+	"strings"
 	"time"
 
 	"github.com/edwardmontoya/circle/internal/contract"
@@ -74,11 +75,25 @@ func LoadItem(r *contract.Repo, item string) ([]domain.Task, error) {
 	}
 	var out []domain.Task
 	for _, t := range all {
-		if ItemOf(t) == item {
+		if InItem(t, item) {
 			out = append(out, t)
 		}
 	}
 	return out, nil
+}
+
+// InItem reports whether a task is part of an item's plan. One definition, used
+// by the brief, the gate and the item's derived state alike, so they cannot
+// disagree about which tasks an approval covers.
+//
+// Tasks from before items had files named their item through Parent or an id
+// prefix; those still count toward the named item.
+func InItem(t domain.Task, item string) bool {
+	if ItemOf(t) == item {
+		return true
+	}
+	return item != DefaultItem && t.Item == "" &&
+		(t.Parent == item || t.ID == item || strings.HasPrefix(t.ID, item+"."))
 }
 
 // ItemOf names the item a task belongs to.
@@ -132,7 +147,7 @@ func NewID(item, title string) string {
 	if prefix == "" || prefix == DefaultItem {
 		prefix = "t"
 	}
-	return fmt.Sprintf("%s-%x", prefix, h[:2])
+	return fmt.Sprintf("%s-%x", prefix, h[:4])
 }
 
 // Save appends a task record to its item's file. Append-only so a concurrent
@@ -183,7 +198,9 @@ func Ready(ts []domain.Task) []domain.Task {
 	idx := ByID(ts)
 	var out []domain.Task
 	for _, t := range ts {
-		if t.State != domain.StateReady {
+		// StateClaimed is from before claims moved to the shared ledger. The
+		// ledger decides who holds a task now, so a legacy claim is claimable.
+		if t.State != domain.StateReady && t.State != domain.StateClaimed {
 			continue
 		}
 		if t.Blocked(idx) {

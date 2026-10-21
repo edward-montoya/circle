@@ -115,7 +115,7 @@ func computeNext(repo *contract.Repo) Suggestion {
 		} else {
 			held := 0
 			for _, c := range claims.All(repo.Root) {
-				if c.Item == id {
+				if c.Item == id && c.Held() {
 					held++
 				}
 			}
@@ -197,6 +197,10 @@ func runEventList(e Env, args []string) int {
 			continue
 		}
 		out = append(out, ev)
+	}
+	if *limit < 0 {
+		fmt.Fprintln(e.Stderr, "circle: --limit must be zero or more")
+		return ExitError
 	}
 	if len(out) > *limit {
 		out = out[len(out)-*limit:]

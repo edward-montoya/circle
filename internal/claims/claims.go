@@ -25,7 +25,14 @@ type Claim struct {
 	Session  string    `json:"session,omitempty"`
 	Worktree string    `json:"worktree,omitempty"`
 	At       time.Time `json:"at"`
+	// Closed marks a task closed in some worktree. The closure itself lives in
+	// that worktree's task file and reaches the others only on merge; until it
+	// does, this is how another worktree knows not to offer the task again.
+	Closed bool `json:"closed,omitempty"`
 }
+
+// Held reports whether a claim is a live hold rather than a closure marker.
+func (c Claim) Held() bool { return !c.Closed }
 
 type ledger struct {
 	Claims []Claim `json:"claims"`
@@ -64,6 +71,9 @@ func Take(dir string, c Claim, steal bool) error {
 			if have.Task != c.Task {
 				continue
 			}
+			if have.Closed {
+				return ClosedError{have}
+			}
 			if !same(have, c) && !steal {
 				return HeldError{have}
 			}
@@ -75,8 +85,35 @@ func Take(dir string, c Claim, steal bool) error {
 	})
 }
 
-// Release drops the claim on a task, whoever holds it. Closing a task releases
-// it; so does an explicit `circle task release`.
+// ClosedError is returned when the task was already closed in some worktree.
+type ClosedError struct{ Claim Claim }
+
+func (e ClosedError) Error() string {
+	where := e.Claim.Holder
+	if e.Claim.Worktree != "" {
+		where += " in " + e.Claim.Worktree
+	}
+	return fmt.Sprintf("%s was already closed by %s; the closure arrives here on merge", e.Claim.Task, where)
+}
+
+// Close turns a task's claim into a closure marker every worktree can see.
+func Close(dir string, c Claim) error {
+	var l ledger
+	c.Closed = true
+	return shared.Update(Path(dir), &l, func() error {
+		for i, have := range l.Claims {
+			if have.Task == c.Task {
+				l.Claims[i] = c
+				return nil
+			}
+		}
+		l.Claims = append(l.Claims, c)
+		return nil
+	})
+}
+
+// Release drops the claim on a task, whoever holds it: `circle task release`,
+// and a resolved or ruled-out decision.
 func Release(dir, taskID string) error {
 	var l ledger
 	return shared.Update(Path(dir), &l, func() error {

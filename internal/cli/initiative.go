@@ -155,7 +155,7 @@ func runInitiativeShow(e Env, args []string) int {
 	front := initiative.Frontier(ds)
 	for _, d := range front {
 		claim := ""
-		if c, ok := held[d.ID]; ok {
+		if c, ok := held[d.ID]; ok && c.Held() {
 			claim = " — claimed by " + c.Holder
 		}
 		fmt.Fprintf(e.Stdout, "- [%s] %s (`%s`)%s\n", d.Type, d.Title, d.ID, claim)
@@ -249,15 +249,11 @@ func runDecisionLink(e Env, args []string) int {
 		fmt.Fprintf(e.Stderr, "circle: %v\n", err)
 		return ExitError
 	}
+	if err := initiative.CheckBlockers(repo, d.Initiative, d.ID, splitList(*blocked)); err != nil {
+		fmt.Fprintf(e.Stderr, "circle: %v\n", err)
+		return ExitError
+	}
 	for _, b := range splitList(*blocked) {
-		if b == d.ID {
-			fmt.Fprintln(e.Stderr, "circle: a decision cannot block itself")
-			return ExitError
-		}
-		if _, err := initiative.GetDecision(repo, b); err != nil {
-			fmt.Fprintf(e.Stderr, "circle: %v\n", err)
-			return ExitError
-		}
 		if !contains(d.BlockedBy, b) {
 			d.BlockedBy = append(d.BlockedBy, b)
 		}

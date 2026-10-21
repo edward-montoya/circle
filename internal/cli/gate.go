@@ -33,7 +33,8 @@ type hookPayload struct {
 	SessionID string `json:"session_id"`
 	ToolName  string `json:"tool_name"`
 	ToolInput struct {
-		FilePath string `json:"file_path"`
+		FilePath     string `json:"file_path"`
+		NotebookPath string `json:"notebook_path"`
 	} `json:"tool_input"`
 }
 
@@ -89,16 +90,40 @@ func runGateCheck(e Env, args []string) int {
 			return deny(e.Stdout, "circle: hook payload carried no cwd; refusing to guess which repo to validate")
 		}
 		cwd, toolName, target, sid = p.Cwd, p.ToolName, p.ToolInput.FilePath, p.SessionID
+		if target == "" {
+			target = p.ToolInput.NotebookPath
+		}
 	}
 
 	repo, err := contract.Open(cwd)
 	if err != nil {
 		// Not a Circle repo: nothing to enforce. Allow.
-		if *hook {
+		if errors.Is(err, contract.ErrNoContract) {
+			if *hook {
+				return ExitOK
+			}
+			fmt.Fprintf(e.Stderr, "circle: %v\n", err)
+			return ExitPrecond
+		}
+		// A contract that exists but does not parse is not "no contract": treating
+		// it so would let one bad edit switch the gate off for every write. Only
+		// the repair — writing project.toml itself — is allowed.
+		reason := "circle: .circle/project.toml does not parse (" + err.Error() + "). Fix it; nothing else is writable until it does."
+		if root, rerr := contract.FindRoot(cwd); rerr == nil && target != "" &&
+			filepath.Clean(target) == filepath.Join(root, contract.Dir, "project.toml") {
 			return ExitOK
 		}
-		fmt.Fprintf(e.Stderr, "circle: %v\n", err)
-		return ExitPrecond
+		if *hook {
+			return deny(e.Stdout, reason)
+		}
+		fmt.Fprintln(e.Stderr, reason)
+		return ExitGate
+	}
+	if *hook && target == "" {
+		// Every gated tool names the file it writes. A payload without one is a
+		// tool this gate does not understand, and guessing "allow" is how a gate
+		// quietly stops gating.
+		return deny(e.Stdout, "circle: the "+toolName+" payload named no file; refusing to allow a write the gate cannot check")
 	}
 
 	res := contract.Validate(repo)
@@ -183,7 +208,10 @@ func approvalGate(repo *contract.Repo, item string, src session.Source, target s
 		if item == task.DefaultItem {
 			// A session bound to nothing, in a repository where items have plans,
 			// would otherwise write freely into code some approved plan covers.
-			if planned := plannedItems(repo); len(planned) > 0 && src == session.FromDefault {
+			// Whatever resolved it — no binding, a binding to "default", or
+			// $CIRCLE_ITEM=default — the default item has no plan of its own, so it
+			// cannot be a way around the plans other items have.
+			if planned := plannedItems(repo); len(planned) > 0 {
 				return fmt.Sprintf("circle: this session is not bound to an item, and %s %s plans. "+
 					"Bind one — `circle session bind --item <id>` — or start `claude --worktree <id>`.",
 					strings.Join(planned, ", "), plural(len(planned), "has", "have")), true
@@ -295,11 +323,20 @@ func repairWrite(repo *contract.Repo, item, target string) bool {
 
 // protectedState lists the .circle/ files the gate trusts. Writing them by hand
 // would forge the evidence the gate reads.
+//
+// Compared case-insensitively: on a case-insensitive filesystem Approval.json
+// is approval.json. The runtime directory is protected whole, because the event
+// log there is the evidence task close and review close read.
 func protectedState(rel string) bool {
-	base := filepath.Base(rel)
-	switch base {
-	case "approval.json", "approved-radius", "done.json", "tasks.jsonl", "DOMAIN-INDEX.md":
+	if strings.HasPrefix(strings.ToLower(rel), strings.ToLower(contract.Dir+"/runtime/")) {
 		return true
+	}
+	base := filepath.Base(rel)
+	for _, p := range []string{"approval.json", "approved-radius", "done.json", "tasks.jsonl",
+		"DOMAIN-INDEX.md", "review.json", "claims.json"} {
+		if strings.EqualFold(base, p) {
+			return true
+		}
 	}
 	return false
 }

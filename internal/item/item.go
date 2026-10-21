@@ -168,7 +168,7 @@ func Derive(r *contract.Repo, id string) Status {
 			if t.State == domain.StateClosed {
 				s.Closed++
 			}
-			if _, ok := held[t.ID]; ok && t.State != domain.StateClosed {
+			if c, ok := held[t.ID]; ok && c.Held() && t.State != domain.StateClosed {
 				s.Held++
 			}
 		}

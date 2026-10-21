@@ -157,15 +157,36 @@ func NewDecision(r *contract.Repo, d Decision) (Decision, error) {
 	if d.Title == "" {
 		d.Title = d.Question
 	}
-	for _, b := range d.BlockedBy {
-		if _, err := GetDecision(r, b); err != nil {
-			return d, fmt.Errorf("blocked by %s: %w", b, err)
-		}
+	if err := CheckBlockers(r, d.Initiative, "", d.BlockedBy); err != nil {
+		return d, err
 	}
 	h := sha256.Sum256([]byte(fmt.Sprintf("%s\x00%s\x00%d", d.Initiative, d.Question, time.Now().UnixNano())))
-	d.ID = fmt.Sprintf("%s-%x", d.Initiative, h[:2])
+	d.ID = fmt.Sprintf("%s-%x", d.Initiative, h[:4])
+	if _, err := os.Stat(filepath.Join(decisionDir(r, d.Initiative), d.ID+".toml")); err == nil {
+		return d, fmt.Errorf("decision id %s collided with an existing one; try again", d.ID)
+	}
 	d.State, d.Created = Open, time.Now().UTC()
 	return d, SaveDecision(r, d)
+}
+
+// CheckBlockers validates blocking edges: each must be a decision of the same
+// initiative — the frontier is computed per map, so a blocker on another map
+// could never be seen to resolve — and none may be the decision itself.
+func CheckBlockers(r *contract.Repo, initiative, self string, blockers []string) error {
+	ds, err := Decisions(r, initiative)
+	if err != nil {
+		return err
+	}
+	idx := ByID(ds)
+	for _, b := range blockers {
+		if b == self {
+			return errors.New("a decision cannot block itself")
+		}
+		if _, ok := idx[b]; !ok {
+			return fmt.Errorf("blocked by %s: no such decision in initiative %s", b, initiative)
+		}
+	}
+	return nil
 }
 
 // SaveDecision writes a decision.

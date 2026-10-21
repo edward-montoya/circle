@@ -102,7 +102,7 @@ func renderHandoff(repo *contract.Repo, id, focus string) (string, error) {
 	held := claims.All(repo.Root)
 	for _, t := range ts {
 		state := string(t.State)
-		if c, ok := held[t.ID]; ok && t.State != domain.StateClosed {
+		if c, ok := held[t.ID]; ok && c.Held() && t.State != domain.StateClosed {
 			state = "held by " + c.Holder
 		}
 		fmt.Fprintf(&b, "- `%s` %s — %s · gate `%s`\n", t.ID, t.Title, state, t.Verify.Gate)

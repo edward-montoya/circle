@@ -80,8 +80,9 @@ func runQualityRun(e Env, args []string) int {
 	}
 
 	p := NewPalette(e.Stdout)
-	failed := 0
+	failed, ran := 0, 0
 	for _, g := range gates {
+		ran++
 		start := time.Now()
 		cmd := exec.Command("sh", "-c", g.Command)
 		cmd.Dir = repo.Root
@@ -127,7 +128,7 @@ func runQualityRun(e Env, args []string) int {
 	// Test-first: a new test must fail before the code exists. A red that came
 	// out green means the test is not testing the new behaviour.
 	if *expect == "red" {
-		if failed == len(gates) {
+		if failed == ran {
 			fmt.Fprintf(e.Stdout, "\n%sred, as expected — now write the code that turns it green%s\n", p.Y, p.N)
 			return ExitOK
 		}

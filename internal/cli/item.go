@@ -187,7 +187,7 @@ func runItemShow(e Env, args []string) int {
 	held := claims.All(repo.Root)
 	for _, t := range ts {
 		state, by := string(t.State), ""
-		if c, ok := held[t.ID]; ok && t.State != domain.StateClosed {
+		if c, ok := held[t.ID]; ok && c.Held() && t.State != domain.StateClosed {
 			state, by = "held", "  — "+c.Holder+worktreeSuffix(c.Worktree)
 		}
 		fmt.Fprintf(e.Stdout, "    %-18s %-8s %s%s\n", t.ID, state, t.Title, by)

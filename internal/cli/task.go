@@ -269,6 +269,10 @@ func runTaskClaim(e Env, args []string) int {
 	if err := claims.Take(repo.Root, c, *steal); err != nil {
 		fmt.Fprintf(e.Stderr, "circle: %v\n", err)
 		var held claims.HeldError
+		var closed claims.ClosedError
+		if errors.As(err, &closed) {
+			return ExitGate
+		}
 		if errors.As(err, &held) {
 			fmt.Fprintln(e.Stderr, "Pick another from `circle task ready`, or pass --steal if the holder is gone.")
 			return ExitGate
@@ -355,7 +359,9 @@ func runTaskClose(e Env, args []string) int {
 
 	t.State, t.ClosedAt = domain.StateClosed, time.Now().UTC().Format(time.RFC3339)
 	_ = task.Save(repo, t)
-	_ = claims.Release(repo.Root, t.ID)
+	c := holder(repo)
+	c.Task, c.Item = t.ID, task.ItemOf(t)
+	_ = claims.Close(repo.Root, c)
 	ev := domain.NewEvent(domain.EvTaskClose)
 	ev.Task, ev.Item, ev.Gate = t.ID, task.ItemOf(t), t.Verify.Gate
 	_ = events.Append(repo, ev)
@@ -451,7 +457,7 @@ func runTaskShow(e Env, args []string) int {
 		fmt.Fprintf(e.Stdout, "  reviewer %s\n  why      %s\n", t.Verify.Reviewer, t.Verify.Justification)
 	}
 	fmt.Fprintf(e.Stdout, "\n%sSTATE%s\n  %s", p.B, p.N, t.State)
-	if c, ok := claims.All(repo.Root)[t.ID]; ok {
+	if c, ok := claims.All(repo.Root)[t.ID]; ok && c.Held() {
 		fmt.Fprintf(e.Stdout, "  held by %s", c.Holder)
 		if c.Worktree != "" {
 			fmt.Fprintf(e.Stdout, " in %s", c.Worktree)
@@ -467,6 +473,9 @@ func runTaskShow(e Env, args []string) int {
 // heldBy finds the open task a holder has claimed, preferring the session match.
 func heldBy(repo *contract.Repo, me claims.Claim) string {
 	for _, c := range claims.All(repo.Root) {
+		if c.Closed {
+			continue
+		}
 		if me.Session != "" && c.Session == me.Session {
 			return c.Task
 		}
