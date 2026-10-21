@@ -54,25 +54,43 @@ func computeTrace(repo *contract.Repo, id string) (trace, error) {
 		return trace{}, err
 	}
 	tr := trace{Base: tl.Baseline, tasks: map[string]bool{}}
-	ts, _ := task.LoadItem(repo, id)
-	for _, t := range ts {
-		tr.tasks[t.ID] = true
+	// Every task id in the repository, by item: a commit that names another
+	// item's task is that item's work, merged in — not this item's drift.
+	others := map[string]bool{}
+	all, _ := task.Load(repo)
+	for _, t := range all {
+		if task.InItem(t, id) {
+			tr.tasks[t.ID] = true
+		} else {
+			others[t.ID] = true
+		}
 	}
 	radius := approvedRadius(repo, id)
-	for _, path := range tl.TouchedFiles() {
-		if len(radius) > 0 && !domain.InRadius(path, radius) && !domaindoc.IsDomainDoc(path) &&
-			!strings.HasPrefix(path, contract.Dir+"/") {
-			tr.Drifted = append(tr.Drifted, path)
-		}
-	}
+	drifted := map[string]bool{}
 	for _, en := range tl.Entries {
-		if en.State != domain.EntryLive || en.SHA == "" {
+		live := en.State == domain.EntryLive && en.SHA != ""
+		if !live && en.State != domain.EntryUncommitted {
 			continue
 		}
-		tr.Commits++
-		if !bookkeeping(en) && !namesTask(en.Subject, tr.tasks) {
-			tr.Untraced = append(tr.Untraced, en.Short+" "+en.Subject)
+		if live && !namesTask(en.Subject, tr.tasks) && namesTask(en.Subject, others) {
+			continue // another item's commit, brought in by a merge
 		}
+		if live {
+			tr.Commits++
+			if !bookkeeping(en) && !namesTask(en.Subject, tr.tasks) && !strings.HasPrefix(en.Subject, "Merge ") {
+				tr.Untraced = append(tr.Untraced, en.Short+" "+en.Subject)
+			}
+		}
+		for _, f := range en.Files {
+			path := f.Path
+			if len(radius) > 0 && !domain.InRadius(path, radius) && !domaindoc.IsDomainDoc(path) &&
+				!strings.HasPrefix(path, contract.Dir+"/") {
+				drifted[path] = true
+			}
+		}
+	}
+	for p := range drifted {
+		tr.Drifted = append(tr.Drifted, p)
 	}
 	if tl.Baseline != "" {
 		tr.DomainGaps = domaindoc.CheckSince(repo.Root, domaindoc.Discover(repo.Root), tl.Baseline, repo.Contract.Domain.Ignore)

@@ -102,3 +102,23 @@ func TestReviewCloseRefusesAStaleAxis(t *testing.T) {
 		t.Fatalf("review show must flag the stale axis:\n%s", out)
 	}
 }
+
+// An item whose timeline began before another item was merged in must not
+// count that item's commits and files as its own drift.
+func TestTraceIgnoresAnotherItemsMergedWork(t *testing.T) {
+	root := buildAlpha(t)
+	planItem(t, root, "beta", "src/b/**")
+	approve(t, root, "beta")
+	mustRun(t, root, "timeline", "open", "--item", "beta")
+	git(t, root, "add", "-A")
+	git(t, root, "commit", "-q", "-m", "plan beta")
+	commitFile(t, root, "src/a/merged.go", "package a\n", "alpha-1: work that arrived by merge")
+	commitFile(t, root, "src/b/b.go", "package b\n", "beta-1: beta's own work")
+	out := mustRun(t, root, "review", "drift", "--item", "beta")
+	if strings.Contains(out, "src/a/merged.go") || strings.Contains(out, "names no task") {
+		t.Fatalf("alpha's commit was counted against beta:\n%s", out)
+	}
+	if !strings.Contains(out, "1 commit(s)") && !strings.Contains(out, "2 commit(s)") {
+		t.Fatalf("beta's own commits should be counted:\n%s", out)
+	}
+}
