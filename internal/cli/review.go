@@ -159,7 +159,13 @@ type axisRecord struct {
 	Blocking int       `json:"blocking"`
 	Findings int       `json:"findings"`
 	At       time.Time `json:"at"`
+	// Head is the commit the axis reviewed. A review of an older commit says
+	// nothing about the code that landed after it.
+	Head string `json:"head,omitempty"`
 }
+
+// stale reports whether an axis reviewed a commit other than HEAD.
+func (a axisRecord) stale(head string) bool { return head != "" && a.Head != head }
 
 type reviewState struct {
 	Axes map[string]axisRecord `json:"axes"`
@@ -210,7 +216,8 @@ func runReviewRecord(e Env, args []string) int {
 		fmt.Fprintf(e.Stderr, "circle: %v\n", err)
 		return ExitError
 	}
-	rec := axisRecord{Axis: *axis, At: time.Now().UTC()}
+	head, _ := timeline.HeadSHA(repo.Root)
+	rec := axisRecord{Axis: *axis, At: time.Now().UTC(), Head: head}
 	for _, line := range strings.Split(string(body), "\n") {
 		if findingRe.MatchString(line) {
 			rec.Findings++
@@ -256,11 +263,16 @@ func runReviewShow(e Env, args []string) int {
 	}
 	renderTrace(e, id, tr, repo.Contract.Domain.Blocks())
 	s := loadReview(repo, id)
+	head, _ := timeline.HeadSHA(repo.Root)
 	for _, axis := range []string{"spec", "standards"} {
 		r, ok := s.Axes[axis]
 		if !ok {
 			fmt.Fprintf(e.Stdout, "\n%s — not recorded yet\n", strings.ToUpper(axis))
 			continue
+		}
+		if r.stale(head) {
+			fmt.Fprintf(e.Stdout, "\n%s — STALE: reviewed %s, HEAD is %s. Review again before trusting it.\n",
+				strings.ToUpper(axis), shortSHA(r.Head), shortSHA(head))
 		}
 		body, _ := os.ReadFile(filepath.Join(reviewDir(repo, id), axis+".md"))
 		fmt.Fprintf(e.Stdout, "\n%s — %d finding(s), %d blocking\n%s\n", strings.ToUpper(axis), r.Findings, r.Blocking,
@@ -290,9 +302,13 @@ func runReviewClose(e Env, args []string) int {
 		reasons = append(reasons, fmt.Sprintf("the item is %s (%s), not reviewing", st.State, st.Reason))
 	}
 	s := loadReview(repo, id)
+	head, _ := timeline.HeadSHA(repo.Root)
 	for _, axis := range []string{"spec", "standards"} {
 		r, ok := s.Axes[axis]
 		switch {
+		case ok && r.stale(head):
+			reasons = append(reasons, fmt.Sprintf("the %s axis reviewed %s, not HEAD %s — review the code that landed since",
+				axis, shortSHA(r.Head), shortSHA(head)))
 		case !ok:
 			reasons = append(reasons, fmt.Sprintf("the %s axis is not recorded — `circle review record --axis %s`", axis, axis))
 		case r.Blocking > 0:

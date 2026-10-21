@@ -86,3 +86,19 @@ func TestReviewTraceBlocksOnRadiusDriftAndDomainGaps(t *testing.T) {
 		t.Fatalf("drift must block close: %d\n%s", code, out)
 	}
 }
+
+// A review of an older commit says nothing about what landed after it.
+func TestReviewCloseRefusesAStaleAxis(t *testing.T) {
+	root := buildAlpha(t)
+	tmp := t.TempDir()
+	mustRun(t, root, "review", "record", "--item", "alpha", "--axis", "spec", "--file", findings(t, tmp, "s.md", "ok\n"))
+	mustRun(t, root, "review", "record", "--item", "alpha", "--axis", "standards", "--file", findings(t, tmp, "t.md", "ok\n"))
+	commitFile(t, root, "src/a/more.go", "package a\n", "alpha-1: one more change")
+	mustRun(t, root, "quality", "run")
+	if code, out := run(t, root, "review", "close", "--item", "alpha"); code != ExitGate || !strings.Contains(out, "not HEAD") {
+		t.Fatalf("an axis recorded before the last commit must not close the item: %d\n%s", code, out)
+	}
+	if out := mustRun(t, root, "review", "show", "--item", "alpha"); !strings.Contains(out, "STALE") {
+		t.Fatalf("review show must flag the stale axis:\n%s", out)
+	}
+}
