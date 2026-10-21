@@ -309,6 +309,10 @@ An orchestrator never names a practice directly. It reads the slot from
 | ✅ | `circle knowledge add <p> --as standards` / `knowledge list --as <c> --content` | review, retro | A standards class and its contents |
 | ✅ | `circle initiative new\|list\|show`, `circle decision new\|link\|frontier\|claim\|show\|resolve\|scope-out` | chart, next | Initiatives and decisions |
 | ✅ | `circle skill validate [paths]` / `skill new <name>` | extending | Check a skill against the contract; scaffold one that passes |
+| ✅ | `circle task update <id>` | tasks | Change an open task's goal, gate, paths or dependencies; voids the approval |
+| ✅ | `circle local set\|list\|export` | gates | Machine-local variables (a proxy CA, a mirror) for every gate and agent shell, shared by worktrees, never committed |
+| ✅ | `circle preflight --context --advisory` | shape, chart, retro | Report a failing contract without aborting planning |
+| ✅ | `circle quality run --task <id>` | tdd, implement | Runs the task's own verify command when it has one; the bootstrap runs first unless `--no-bootstrap` |
 | ✅ | `circle handoff write [--item <id>]` | handoff | Writes `handoff.md` from the timeline |
 | ✅ | `circle quality add <name> <cmd>` | retro | Adds a gate |
 | ✅ | `circle next [--json]` | next | State → suggested skill and phase-boundary move |

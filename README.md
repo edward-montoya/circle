@@ -334,7 +334,8 @@ circle knowledge add <p> --as <class>
 circle quality list | run [gate]
 circle item new | list | show | require
 circle session bind | current
-circle task create | ready | claim | release | close | list | show
+circle task create | update | ready | claim | release | close | list | show
+circle local set | list | export
 circle domain index | check
 circle spec check
 circle review drift | record | show | close

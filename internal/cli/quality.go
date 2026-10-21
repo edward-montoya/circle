@@ -4,8 +4,8 @@ import (
 	"bytes"
 	"fmt"
 	"os"
-	"sort"
 	"os/exec"
+	"sort"
 	"strings"
 	"time"
 
