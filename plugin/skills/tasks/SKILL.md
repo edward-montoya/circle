@@ -5,7 +5,7 @@ allowed-tools: Read Grep Glob Bash(circle *)
 metadata:
   circle:
     kind: orchestrator
-    requires: specified
+    requires: specified | planned | approved | building | reviewing
     produces: planned
     reads: [spec, quality, domain]
     writes: [tasks]
@@ -13,8 +13,13 @@ metadata:
 
 # Tasks
 
+Runs on a freshly specified item, and again whenever the plan must change: a
+task that turned out too narrow, or blocking review findings. Adding or
+changing a task changes the plan, so the approval goes stale and the human
+approves again — that is the point, not a cost.
+
 ```!
-circle item require --state specified
+circle item require --state specified --state planned --state approved --state building --state reviewing
 ```
 
 ```!
