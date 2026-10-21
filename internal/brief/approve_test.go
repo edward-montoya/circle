@@ -61,8 +61,8 @@ func TestApprovalLifecycle(t *testing.T) {
 		t.Fatalf("got %+v, want valid and not self-approved", a)
 	}
 
-	// The radius file is the hot path the gate reads on every write.
-	body, err := os.ReadFile(r.StateDir("approved-radius"))
+	// The item's radius file records what the approval covers.
+	body, err := os.ReadFile(RadiusPath(r, "default"))
 	if err != nil {
 		t.Fatalf("the gate's radius file was not written: %v", err)
 	}
