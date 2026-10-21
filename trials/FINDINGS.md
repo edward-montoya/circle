@@ -475,3 +475,63 @@ small on purpose, path detection only accepts backticked paths containing a
 slash, and every finding carries its line and excerpt so a human can dismiss a
 bad one in a second. There is a test whose only job is to prove a document that
 agrees with its repository produces nothing at all.
+
+---
+
+# Iteration 7 — dogfooding: a real app built by agents under Circle
+
+Circle was used, end to end, to build a small product: **Mail Digest**, a web
+app that reads a mailbox and shows a daily summary, then an enhancement that
+reads emails delivered as PDF. Every lifecycle step ran as a separate headless
+Claude Code session (`claude -p`) with the Circle plugin and its hooks loaded;
+the human steps — approving briefs, merging, deciding on stuck tasks — were
+taken by the operator. Everything ran in Docker. Two items moved in parallel:
+`pdf-ingest` was shaped, specified and planned on main while `daily-digest` was
+being built in its worktree, and two `pdf-ingest` tasks were implemented
+concurrently in two task worktrees.
+
+Every agent was asked to report "Circle friction". It found real defects; each
+was fixed in Circle during the run, with a regression test, and the run
+continued on the fixed binary.
+
+| # | Found by | Defect | Fix |
+|---|---|---|---|
+| F-25 | planning a greenfield repo | Declaring the first gate ends incubation; preflight then fails until the compose file exists — and a failing preflight blocked every write, including the compose file and `project.toml`. The only way out was Bash, around the gate | While preflight fails, `.circle/`, the domain model and the bound item's *approved* radius stay writable |
+| F-26 | reading the first brief | "No definitions are registered — HIGH" beside a shape, a spec and a DOMAIN.md | Definitions consulted include the item's shape and spec and every DOMAIN.md, ADR and architecture doc |
+| F-27 | `circle next` in the new worktree | Declared the session stuck on the failing preflight the approved item was about to fix | `next` routes an approved bootstrap item to implement |
+| F-28 | task 1 agent | `docker compose run` does not rebuild, so the first green proved the image from before the change | `quality run` runs the bootstrap first |
+| F-29 | second item's shaping | Aborted in zero turns: `/circle:shape` injects preflight, which fails until item one lands | `preflight --context --advisory` for planning skills |
+| F-30 | task 2 agent | Edited `docker-compose.yml`, owned by task 1, and *expected* to be stopped — the gate checked the item's union radius | A session holding a task is held to that task's paths; the denial names the owning task |
+| F-31 | review → fix | Review says "fix blocking findings through `/circle:tasks`"; `/circle:tasks` refused an item in review | `/circle:tasks` runs on planned through reviewing items; any change voids the approval |
+| F-32 | task 7 agent | Stopped, correctly, on a task whose gate could not see what it changed — and there was no command for the human to fix the task | `circle task update` (voids the approval) |
+| F-33 | second review | The first round's findings were still recorded and shown as current | Each axis records the commit it reviewed; `review close` refuses a stale one |
+| F-34 | merging two items | Every approval rewrote a repo-wide `approved-radius` copy, so two items always conflicted | Per-item radius only |
+| F-35 | PDF agents | A machine-only value (the proxy CA directory) had to be typed into every command | `circle local set`: machine-local gate variables, shared by every worktree, never committed |
+| F-36 | repair agent | The bootstrap's build log buried which gate had failed | Bootstrap output only on failure |
+| F-37 | several | `task validate` checked every item; main showed a worktree's closures as 0/4 | Scoped validate; "closed in another worktree, not merged yet" |
+
+## What held without change
+
+- **Approval binding.** Every change to a task — two review rounds, one human
+  re-plan, one merge repair — made the approval stale and sent the item back to
+  `planned`. Nothing was built against a plan a human had not signed.
+- **Agents stayed inside their paths and said so.** Three times an agent reported
+  that the fix it needed was outside its task's paths rather than widening them;
+  once it stopped entirely and asked for a decision. That is the behaviour the
+  framework exists to produce, and it came from the gate, not from the prompt.
+- **The review caught what green gates did not.** All four gates were green when
+  the first review found the Owner read from the wrong variable and a container
+  that served an empty mailbox. The live `curl` returned `total: 0` for a day
+  with four messages.
+- **The gates caught what parallel work broke.** Two tasks built concurrently
+  each passed alone; merged, an integration test still expected the pre-PDF
+  count and a build check assumed a dependency-free image. `quality run` on the
+  merged branch failed both, and they went back through the plan.
+- **The domain model stayed current without anyone remembering.** Shaping wrote
+  ten terms, the second item four more; no implementation agent was ever
+  flagged, because every concept it wrote already had a term.
+
+## Cost
+
+The whole run — shaping, specs, plans, 15 implementation sessions, three
+reviews — cost about **$5–6** in model usage and fit in an afternoon.
