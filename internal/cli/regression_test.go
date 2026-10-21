@@ -174,3 +174,14 @@ func TestBootstrapRunsBeforeGates(t *testing.T) {
 		t.Fatalf("a failed bootstrap must fail the run: %d\n%s", code, out)
 	}
 }
+
+func TestAdvisoryPreflightLetsPlanningRun(t *testing.T) {
+	root := newGitRepo(t)
+	_ = os.Remove(filepath.Join(root, "compose.yml"))
+	if code, _ := run(t, root, "preflight", "--context"); code != ExitGate {
+		t.Fatal("strict context must still abort a skill")
+	}
+	if code, out := run(t, root, "preflight", "--context", "--advisory"); code != ExitOK || !strings.Contains(out, "PLANNING ONLY") {
+		t.Fatalf("advisory context must report and pass: %d\n%s", code, out)
+	}
+}

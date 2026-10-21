@@ -16,7 +16,7 @@ metadata:
 # Shape
 
 ```!
-circle preflight --context
+circle preflight --context --advisory
 ```
 
 ## 1. Open the item

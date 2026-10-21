@@ -17,7 +17,7 @@ circle event list --item "$(circle session current)" --types gate.deny,gate.run,
 ```
 
 ```!
-circle preflight --context
+circle preflight --context --advisory
 ```
 
 You are improving the **environment** the next agent works in. The primary

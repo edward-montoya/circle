@@ -14,7 +14,7 @@ metadata:
 # Chart
 
 ```!
-circle preflight --context
+circle preflight --context --advisory
 ```
 
 An idea has arrived that is too big for one session and wrapped in fog: the way

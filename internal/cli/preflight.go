@@ -21,6 +21,7 @@ func runPreflight(e Env, args []string) int {
 	f := fs("preflight", e)
 	explain := f.Bool("explain", false, "full report with fixes")
 	ctx := f.Bool("context", false, "compact block for skill injection")
+	advisory := f.Bool("advisory", false, "report a failure but exit 0: for skills that only plan and write documents")
 	quiet := f.Bool("quiet", false, "exit code only")
 	force := f.Bool("force", false, "bypass; requires --reason, recorded, caps the score")
 	reason := f.String("reason", "", "why the bypass is justified")
@@ -73,6 +74,14 @@ func runPreflight(e Env, args []string) int {
 	}
 
 	if res.Blocked() && !res.Incubating {
+		// Planning does not need a runnable stack: shaping, charting and retro
+		// write documents, which the gate allows while preflight fails. Aborting
+		// them would stop a team from planning the next item while the current
+		// one is still building the stack the contract declares.
+		if *advisory {
+			fmt.Fprintln(e.Stdout, "\nPLANNING ONLY — documents and .circle/ are writable; code is not until preflight passes")
+			return ExitOK
+		}
 		return ExitGate
 	}
 	return ExitOK
