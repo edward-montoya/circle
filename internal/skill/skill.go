@@ -307,6 +307,11 @@ func Find(roots ...string) []string {
 			out = append(out, r)
 			continue
 		}
+		// A single skill's own directory.
+		if _, err := os.Stat(filepath.Join(r, "SKILL.md")); err == nil {
+			out = append(out, filepath.Join(r, "SKILL.md"))
+			continue
+		}
 		matches, _ := filepath.Glob(filepath.Join(r, "*", "SKILL.md"))
 		out = append(out, matches...)
 	}
