@@ -78,7 +78,7 @@ orchestrators do, and only through the CLI.
 Initiative                  .circle/initiatives/<id>/       multi-session, foggy
   ├─ Decision               .circle/initiatives/<id>/decisions/<nn>-<slug>.md
   └─ Item ───────────────── .circle/items/<id>/             one brief, one approval
-       └─ Task ──────────── beads (bd)                      goal + gate + paths + deps
+       └─ Task ──────────── .circle/items/<id>/tasks.jsonl  goal + gate + paths + deps
 Session ── bound to ──▶ Item | Decision                     .circle/runtime/sessions/<id>.toml
 ```
 
@@ -87,7 +87,7 @@ Session ── bound to ──▶ Item | Decision                     .circle/ru
 | **Initiative** | A destination too big for one session, charted as decisions | `.circle/initiatives/<id>/initiative.toml` + `map.md` | Destination, notes, decisions so far, not yet specified, out of scope |
 | **Decision** | One question whose answer is a decision, not a deliverable. Typed `research`, `prototype`, `grill` or `task` | `.circle/initiatives/<id>/decisions/` | The question, its blockers, its claim, its answer |
 | **Item** | One unit a human approves: a feature, a fix, a refactor. Optionally belongs to an initiative | `.circle/items/<id>/` | `item.toml` (state), `shape.md`, `spec.md`, `brief.md`, approval, `review.md`, `handoff.md`, `timeline.jsonl` |
-| **Task** | One tracer-bullet slice of an item | **beads** | Status, claim, dependencies, and Circle's contract fields |
+| **Task** | One tracer-bullet slice of an item | `.circle/items/<id>/tasks.jsonl` (committed) + claims in the shared git dir | Goal, gate, paths, dependencies, closure |
 | **Session** | One Claude Code session, bound to exactly one item or decision | `.circle/runtime/` (gitignored) | Which item the hooks enforce against |
 | **Glossary / ADRs** | Shared language and hard-to-reverse decisions | `GLOSSARY.md`, `docs/adr/` — registered as knowledge | Vocabulary every skill uses |
 
@@ -135,38 +135,44 @@ A session's item resolves in this order:
 The `PreToolUse` gate checks **the bound item's** approval and **the claimed
 task's** paths, not the union of every task in the repo.
 
-### Tasks in beads — proposed D-41
+### The task graph stays in Circle
 
-You chose beads for tasks and dependencies. That reverses D-4 and D-24, which
-dropped it because beads became Dolt-only. Proposed decision to record:
+D-4 and D-24 stand: **Circle's CLI owns the task graph, and tasks live in
+`.circle/`.** Beads was considered for dependency tracking and rejected again.
+It would replace the easy part (a DAG, a ready set, claim, close), which Circle
+already has. It would also move tasks out of git into Dolt, put a database
+subprocess on every write-hook call, and give `bd close` a way past the closure
+gate. The `TaskGraphPort` stays, so a beads adapter remains possible later if
+many agents across machines ever need claims coordinated in real time.
 
-> **D-41.** Tasks and their dependencies live in beads. Circle reaches beads only
-> through `circle task *` — the `TaskGraphPort` from Phase 8 — never by having a
-> skill call `bd` directly.
+Two changes to today's store, both needed for parallel work:
 
-The reason for the indirection is enforcement, not taste. The hooks need a
-task's paths and gate in under 15 seconds, and `circle task close` must refuse
-without a passing gate. If skills called `bd close` directly, that rule would
-be bypassable. It also keeps the JSONL store as a fallback when `bd` is absent.
-
-| Circle field | Beads field | Note |
+| Problem | Today | Change |
 |---|---|---|
-| `id`, `title` | `id`, `title` | beads hierarchical ids (`bd-a1b2.1`) replace `feat-1` |
-| item | parent epic, or label `circle:item=<id>` | |
-| `depends_on` | `blocks` dependency | `circle task ready` ⇐ `bd ready` filtered by item |
-| `state`, `claimed_by` | `status`, `assignee` | |
-| `goal.statement` | `acceptance_criteria` | |
-| `verification.kind`, `.gate` | labels `circle:verify=unit`, `circle:gate=test:unit` | **verify against the installed `bd` version** |
-| `paths` | metadata or a structured block in `design` | **verify** — this is the field the write hook reads most |
-| `closed_by` | close reason | the gate-run event id |
+| **Claims are invisible across worktrees.** `tasks.jsonl` sits in each worktree's own `.circle/`, so two implementers in `/circle:implement --all` can both claim one task | Claim is a line in the per-worktree `tasks.jsonl` | **Claims move to the shared git directory**, `$(git rev-parse --git-common-dir)/circle/claims.json`, under `flock` — the same mechanism the port ledger already uses (`internal/worktree/ports.go:39-87`). Claims are runtime state, so they are not committed |
+| **Ids collide across branches.** Two branches can each create `feat-3` | Human-chosen ids, repo-wide file | **Per-item files** (`.circle/items/<id>/tasks.jsonl`), and an omitted `--id` generates `<item>-<4 hex>` from a hash of title and time. A human-chosen id is still allowed and is checked for uniqueness within the item |
+
+What stays committed and what does not:
+
+| State | Where | Committed |
+|---|---|---|
+| Task definition: goal, gate, kind, paths, dependencies | `.circle/items/<id>/tasks.jsonl`, append-only | yes — it is what the plan hash and the brief cover |
+| Closure: `closed_at`, `closed_by` (the gate-run event) | same file | yes — closure is a durable fact |
+| Claim: who holds a task right now | `<git-common-dir>/circle/claims.json` | no — visible to every worktree on the machine |
+| Cross-machine visibility | GitHub issue assignee, via the projection below | — |
+
+`circle task close` stays the only way to close a task, so the gate rule holds.
+The existing repo-level `.circle/tasks.jsonl` is read as the `default` item, so
+current repos keep working without a migration.
 
 ### GitHub issues
 
 A one-way **projection**, never a source of truth: `circle sync github` writes
 an item as an issue (body = `brief.md`, which already renders mermaid), its tasks
 as sub-issues with native blocking links, and an initiative as an issue
-labelled `circle:initiative`. State is read from `.circle/` and beads, never back
-from GitHub. Phase 9's `TrackerPort` owns it.
+labelled `circle:initiative`. State is read from `.circle/`, never back from
+GitHub. A claim also sets the task's issue assignee, which is how a teammate on
+another machine sees who holds what. Phase 9's `TrackerPort` owns it.
 
 ---
 
@@ -236,7 +242,8 @@ Everything here is **new**. Grouped by the skill that first needs it.
 | `circle item plan` | tasks | → `planned`; validates the graph |
 | `circle knowledge add <p> --as glossary\|standards` | shape, retro | Two new knowledge classes; drift detection covers both |
 | `circle spec check [--item <id>]` | spec | Sections present; every seam maps to a declared gate |
-| `circle task create --item <id> ...` | tasks | Same contract as today; backend is beads |
+| `circle task create --item <id> ...` | tasks | Same contract as today; writes the item's own `tasks.jsonl`; generates a hash id when `--id` is omitted |
+| `circle task claim` (changed) | implement | Claims through the shared, locked `claims.json`, so every worktree sees it |
 | `circle task ready --item <id> --json` | implement | The ready set |
 | `circle quality run <gate> --task <id> --expect red\|green` | tdd | Records the cycle; `--expect red` passes only when the gate fails |
 | `circle review drift` | review | Alias of `circle timeline drift`, scoped to the item |
@@ -269,15 +276,12 @@ Flags added to commands that already exist:
 
 ## Open questions
 
-1. **Beads field mapping.** `paths` and the verification fields need a home that
-   `bd` round-trips reliably. Verify against the installed version before
-   building the adapter.
-2. **Glossary location.** Repo root `GLOSSARY.md` (Matt's convention, visible to
+1. **Glossary location.** Repo root `GLOSSARY.md` (Matt's convention, visible to
    every tool) or `.circle/glossary.md` (Circle's state directory)? Drafts assume
    the root, registered as knowledge.
-3. **Decision granularity for `prototype`.** Matt keeps prototypes on a
+2. **Decision granularity for `prototype`.** Matt keeps prototypes on a
    `prototype/<name>` branch. Does a prototype get its own worktree and item,
    or stay a branch the decision links to? Drafts assume a branch.
-4. **Phase 7 barrier.** The PRD makes the cold-start trial a hard stop before
+3. **Phase 7 barrier.** The PRD makes the cold-start trial a hard stop before
    v0.2. This lifecycle is v0.2 scope. Session binding (the `"default"` fix)
    arguably is not.

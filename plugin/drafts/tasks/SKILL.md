@@ -69,7 +69,9 @@ circle task create --item <id> --title "..." --goal "..." \
   [--depends-on <ids>]
 ```
 
-Tasks are stored in beads; `circle` is the only way you touch them. Then:
+Tasks land in `.circle/items/<id>/tasks.jsonl`. Write them only through
+`circle task`, never by editing the file: the CLI validates the contract and
+records the event. Then:
 
 ```
 circle item plan
