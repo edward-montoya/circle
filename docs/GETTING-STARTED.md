@@ -281,8 +281,8 @@ than trusted.
 claude --plugin-dir /path/to/circle/plugin
 ```
 
-The plugin ships five skills and, more importantly, the hooks that enforce all of
-the above. A skill is text the model may ignore; a hook is not.
+The plugin ships the lifecycle skills and, more importantly, the hooks that
+enforce all of the above. A skill is text the model may ignore; a hook is not.
 
 Why a plugin rather than files in `.claude/`: many repositories gitignore
 `.claude/`, so skills committed there do not travel — which breaks the whole
@@ -290,12 +290,56 @@ Why a plugin rather than files in `.claude/`: many repositories gitignore
 plugin is enabled, whereas project `settings.json` hooks wait for a workspace
 trust dialog.
 
-Start a session with `/circle:start`. It aborts if the contracts are invalid, so
-a session cannot begin on a repository that cannot run itself.
+Start with `/circle:start`. It aborts if the contracts are invalid, then binds
+the session to one item. From there the flow is:
+
+```
+/circle:shape → /circle:spec → /circle:tasks → /circle:brief → /circle:implement → /circle:review → /circle:handoff → /circle:retro
+```
+
+Lost? `/circle:next` reads the recorded state and says which skill is next, and
+whether to continue in this context, `/clear`, hand off or compact. For work too
+big for one session, `/circle:chart` maps it as decisions first; for a bug,
+`/circle:hunt` builds a failing command before anyone theorises. The full flow,
+and how to plug your own skills in, is in [`LIFECYCLE.md`](LIFECYCLE.md).
 
 ---
 
-## Running several agents at once
+## Several initiatives at once
+
+A session works on exactly one **item** — a feature, a fix, a refactor with its
+own tasks, brief and approval. Planning or changing one item never touches
+another's approval.
+
+```bash
+circle item new orders  --title "Cancel orders"
+circle item new billing --title "Usage billing"
+claude --worktree orders     # this session works on orders
+claude --worktree billing    # this one on billing, in parallel
+```
+
+A worktree named after an item binds to it; otherwise `/circle:start` binds the
+session (`circle session bind --item <id>`). The write hook then allows only the
+bound item's approved paths. Task claims are shared across every worktree, so two
+agents cannot take the same task. `circle status` lists every item and its state.
+
+## Keeping the domain model current
+
+Put a `DOMAIN.md` in the directory each part of the system lives in — terms as
+`**Term**:` lines, the modules it owns under `## Modules`. Circle indexes every
+`DOMAIN.md`, ADR and architecture document into `.circle/DOMAIN-INDEX.md` and
+regenerates it on every write. When a write adds a type with no term for it, or a
+module nothing describes, the agent is told at once which `DOMAIN.md` it belongs
+in. Only new concepts are flagged, so existing code does not block anyone.
+
+```bash
+circle domain index          # regenerate, and see what is undocumented
+circle domain check --since main   # what a branch added that the model lacks
+```
+
+---
+
+## Isolated stacks per worktree
 
 ```bash
 claude --worktree feat-1

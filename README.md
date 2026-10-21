@@ -20,9 +20,11 @@ No task closes without a passing gate dated after its last commit.
 
 ## Status
 
-**Pre-v0.1.** Six of seven phases built and verified against two real
-repositories. The cold-start trial that would confirm the central premise has not
-been run — see [`docs/TRIAL.md`](docs/TRIAL.md) if you are a participant.
+**Pre-v0.1.** The contracts, the enforcement, the brief gate, the full skill
+lifecycle, parallel items across worktrees and the self-maintaining domain model
+are built, tested, and exercised end to end (`scripts/e2e-parallel.sh`). The
+cold-start trial that would confirm the central premise has not been run — see
+[`docs/TRIAL.md`](docs/TRIAL.md) if you are a participant.
 
 Everything below works today. Nothing below is stable API.
 

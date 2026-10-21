@@ -105,12 +105,12 @@ that holds wins:
 
 | State | Holds when | Produced by |
 |---|---|---|
-| `done` | `.circle/items/<id>/done.json` exists | `circle review close` *(not built)* |
+| `done` | `.circle/items/<id>/done.json` exists | `circle review close` |
 | `reviewing` | approval valid, every task closed | the last `circle task close` |
 | `building` | approval valid, some task closed or claimed | `circle task claim` |
 | `approved` | approval valid for the current plan hash | `circle brief approve` |
 | `planned` | tasks exist, no valid approval — including a **stale** one | `circle task create` |
-| `specified` | `spec.md` exists | `/circle:spec` (`circle spec check` *not built*) |
+| `specified` | `spec.md` exists | `/circle:spec`, checked by `circle spec check` |
 | `shaped` | `shape.md` exists | `/circle:shape` |
 | `shaping` | none of the above | `circle item new` |
 
@@ -123,7 +123,7 @@ and the state it produces. Its first injected command is
 item is in the wrong state. A team's custom skill gets the same enforcement as a
 built-in one by declaring two fields. See [Skill contract](#skill-contract).
 
-### Session binding *(built)*
+### Session binding
 
 Every enforcing path used to read the item `"default"`, so two items in one repo
 shared a plan: planning one voided the other's approval, and a session on one
@@ -150,7 +150,7 @@ The write hook then enforces **that item's** approval and radius:
 | Repository with no plans at all | Everything (unchanged: adopting Circle must not block configuring it) |
 | `approval.json`, `approved-radius`, `tasks.jsonl`, `done.json`, `DOMAIN-INDEX.md` | Never by hand — only through `circle` commands |
 
-### The task graph stays in Circle *(built)*
+### The task graph stays in Circle
 
 D-4 and D-24 stand: **Circle's CLI owns the task graph, and tasks live in
 `.circle/`.** Beads was considered for dependency tracking and rejected again.
@@ -189,7 +189,7 @@ labelled `circle:initiative`. State is read from `.circle/`, never back from
 GitHub. A claim also sets the task's issue assignee, which is how a teammate on
 another machine sees who holds what. Phase 9's `TrackerPort` owns it.
 
-### The domain model *(built)*
+### The domain model
 
 The domain model is **kept current by Circle, not by memory.**
 
