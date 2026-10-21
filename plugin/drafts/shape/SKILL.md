@@ -1,5 +1,5 @@
 ---
-description: Shapes an idea into a settled item by interview, building the glossary and ADRs as it goes. Use when starting any new feature, fix or refactor that fits in one session's thinking.
+description: Shapes an idea into a settled item by interview, writing the domain model — DOMAIN.md terms and ADRs — as it goes. Use when starting any new feature, fix or refactor that fits in one session's thinking.
 disable-model-invocation: true
 allowed-tools: Read Grep Glob Edit Write Bash(circle *) Agent Skill
 argument-hint: "<the idea>"
@@ -8,8 +8,8 @@ metadata:
     kind: orchestrator
     requires: none | shaping
     produces: shaped
-    reads: [contracts, knowledge, glossary]
-    writes: [item, glossary, adr]
+    reads: [contracts, knowledge, domain]
+    writes: [item, domain, adr]
     calls: [lifecycle.grill, lifecycle.domain]
 ---
 
@@ -24,9 +24,12 @@ circle preflight --context
 If the session is not bound to an item in state `shaping`, create one:
 
 ```
-circle item new <id> --title "<title>" --kind feature|fix|refactor [--initiative <i>]
-circle session bind --item <id>
+circle item new <id> --title "<title>" --kind feature|fix|refactor [--initiative <i>] --bind
 ```
+
+Until the item has an approved plan, the write hook lets this session write only
+`DOMAIN.md` files, ADRs and the item's own files under `.circle/items/<id>/` —
+exactly what shaping produces.
 
 Pick a short kebab-case id from the idea. If the idea already belongs to an
 initiative, name it.
@@ -75,13 +78,9 @@ do not build the prototype in this session.
 <!-- must be empty to advance -->
 ```
 
-Then:
-
-```
-circle item shape --from .circle/items/<id>/shape.md
-```
-
-It refuses while **Open** is non-empty.
+Write the file only once **Open** is empty. The item's state is derived from
+what is on disk, so `shape.md` existing *is* the item being shaped — writing it
+with open questions would advance an item that is not settled.
 
 ## Done
 

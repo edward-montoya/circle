@@ -7,7 +7,7 @@ metadata:
     kind: orchestrator
     requires: specified
     produces: planned
-    reads: [spec, quality, glossary]
+    reads: [spec, quality, domain]
     writes: [tasks]
 ---
 
@@ -38,7 +38,7 @@ A prefactor the spec named goes first.
 
 | Field | Rule |
 |---|---|
-| **goal** | One sentence. What done means for this task *alone*. Glossary terms |
+| **goal** | One sentence. What done means for this task *alone*. Domain terms |
 | **gate** | A gate from the list above, and the seam row from the spec it proves |
 | **kind** | `unit` · `integration` · `e2e` · `manual` (needs `--justification` and `--reviewer`) |
 | **paths** | The blast radius, as **directory globs** (`src/orders/**`), not files. Directories survive the implementation; file names do not |
@@ -74,10 +74,11 @@ Tasks land in `.circle/items/<id>/tasks.jsonl`. Write them only through
 records the event. Then:
 
 ```
-circle item plan
+circle task validate
 ```
 
-It refuses on a cycle or any task missing its contract.
+It exits 2 on any task missing its contract. The item becomes `planned` the
+moment it has tasks — the state is derived, not set.
 
 ## Done
 

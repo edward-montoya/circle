@@ -47,8 +47,9 @@ it rather than rebinding.
 
 1. **Do not re-derive how to run or test this project.** It is in the block
    above. If something is missing, propose the edit to `.circle/project.toml`.
-2. **Speak the glossary.** Use registered terms exactly; an unregistered term
-   you find yourself needing is a `circle:domain` moment.
+2. **Speak the domain.** Use the terms in `.circle/DOMAIN-INDEX.md` exactly. A
+   concept you need that is not there is a `circle:domain` moment — and Circle
+   will flag it anyway the moment you write a type for it.
 3. **You may not open a gate.** You can generate a brief, not approve it; run a
    gate, not declare it passed.
 

@@ -18,7 +18,7 @@ as a **design tree**: every decision branches into the decisions that hang off i
 **Facts are yours. Decisions are theirs.**
 
 - A fact is anything the repository, the contracts or the running system can
-  answer: what the stack is, which gates exist, what the glossary says, whether a
+  answer: what the stack is, which gates exist, what the `DOMAIN.md` files say, whether a
   module already does this. Find it yourself. `circle preflight --context`
   already holds how to run and test; the knowledge registry holds where the
   truth lives. When a fact needs digging, send a subagent and keep asking the

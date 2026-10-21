@@ -39,8 +39,9 @@ The `circle` binary must be on PATH. Build it with `go build -o bin/circle ./cmd
 
 | Hook | Enforces |
 |---|---|
-| `PreToolUse` | Denies file writes while preflight fails |
+| `PreToolUse` | Denies file writes while preflight fails, or outside the session's item's approved plan |
 | `TaskCompleted` | Refuses to close a task with no passing gate behind it |
-| `SessionStart` | Records the timeline baseline |
-| `PostToolUse` | Records tool use as events |
+| `SessionStart` | Exports the session id, opens the item's timeline once, refreshes the domain index |
+| `PostToolUse` (writes) | Regenerates `.circle/DOMAIN-INDEX.md`; feeds a new, undocumented concept straight back to the agent |
+| `PostToolUse` (Bash) | Records tool use as events |
 | `FileChanged` | Revalidates when a manifest changes |

@@ -7,14 +7,14 @@ standard always overrides it.
 Each reads *what it is* → *the fix*.
 
 - **Mysterious Name** — a name that does not say what it does or holds, or
-  disagrees with the glossary. → Rename it to the glossary term; if no honest
+  disagrees with the domain model. → Rename it to the `DOMAIN.md` term; if no honest
   name comes, the design is murky.
 - **Duplicated Code** — the same logic shape in more than one hunk. → Extract it.
 - **Feature Envy** — a function that reaches into another module's data more
   than its own. → Move it to the data.
 - **Data Clumps** — the same few fields travelling together. → Give them a type.
 - **Primitive Obsession** — a string or number standing in for a domain
-  concept the glossary names. → Give the concept its own type.
+  concept a `DOMAIN.md` names. → Give the concept its own type.
 - **Repeated Switches** — the same branch on the same type in several places.
   → One map or polymorphism.
 - **Shotgun Surgery** — one logical change scattered across many files. → Gather

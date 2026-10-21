@@ -7,7 +7,7 @@ parses the **Seams** table.
 # <item title>
 
 ## Problem
-<From the user's perspective. Glossary terms.>
+<From the user's perspective. Terms from the DOMAIN.md files.>
 
 ## Solution
 <From the user's perspective.>

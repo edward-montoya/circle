@@ -1,10 +1,11 @@
 # The Circle lifecycle — design draft
 
-**Status: draft for review.** Nothing in this document is built yet. The skills
-it describes live in [`plugin/drafts/`](../plugin/drafts/), where the plugin
-loader does not see them, and they call CLI commands listed under
-[CLI surface](#cli-surface) that do not exist yet. Review the skills and this
-document together; build the CLI once both are agreed.
+**Status: partly built.** The foundation is in the CLI: items, session binding,
+per-item plans and approvals, shared claims, derived item states, and the domain
+model with its self-maintaining index. The skills still live in
+[`plugin/drafts/`](../plugin/drafts/), where the plugin loader does not see them,
+because several call commands that are not built yet — [CLI surface](#cli-surface)
+marks which.
 
 The ideas are adapted from Matt Pocock's skill set
 ([mattpocock/skills](https://github.com/mattpocock/skills)). The adaptation rule
@@ -89,7 +90,7 @@ Session ── bound to ──▶ Item | Decision                     .circle/ru
 | **Item** | One unit a human approves: a feature, a fix, a refactor. Optionally belongs to an initiative | `.circle/items/<id>/` | `item.toml` (state), `shape.md`, `spec.md`, `brief.md`, approval, `review.md`, `handoff.md`, `timeline.jsonl` |
 | **Task** | One tracer-bullet slice of an item | `.circle/items/<id>/tasks.jsonl` (committed) + claims in the shared git dir | Goal, gate, paths, dependencies, closure |
 | **Session** | One Claude Code session, bound to exactly one item or decision | `.circle/runtime/` (gitignored) | Which item the hooks enforce against |
-| **Glossary / ADRs** | Shared language and hard-to-reverse decisions | `GLOSSARY.md`, `docs/adr/` — registered as knowledge | Vocabulary every skill uses |
+| **Domain model** | Shared language per bounded context, hard-to-reverse decisions, and which domain owns each module | `DOMAIN.md` files (one per context, in the directory it covers), `adr/` directories, `ARCHITECTURE.md`; indexed into `.circle/DOMAIN-INDEX.md` | Vocabulary every skill uses — see [The domain model](#the-domain-model) |
 
 ### Item states
 
@@ -99,18 +100,24 @@ shaping ─▶ shaped ─▶ specified ─▶ planned ─▶ approved ─▶ bui
    └──────────┴──────────┴───────────┴── plan changes void approval ◀────┘ blocking finding
 ```
 
-Each transition is a CLI command that checks its precondition and exits 2 if it
-does not hold:
+**The state is derived, never stored.** Every state is a fact already on disk, so
+storing it as well would be a second copy that can disagree with the first.
+`item.Derive` checks from the end of the lifecycle backwards and the first fact
+that holds wins:
 
-| Transition | Command | Refuses when |
+| State | Holds when | Produced by |
 |---|---|---|
-| → `shaped` | `circle item shape <id> --from shape.md` | `shape.md` has an unanswered question in its frontier section |
-| → `specified` | `circle spec check` | A required section is empty, or **a seam names no declared quality gate** |
-| → `planned` | `circle task create` (×n), then `circle item plan` | Any task lacks goal, gate or paths; the graph has a cycle |
-| → `approved` | `circle brief approve` (human) | Unchanged from today |
-| → `building` | `circle task claim` | No approval, or approval is stale |
-| → `reviewing` | automatic when the last task closes | — |
-| → `done` | `circle review close` | A blocking finding is open, or `circle quality run` is red |
+| `done` | `.circle/items/<id>/done.json` exists | `circle review close` *(not built)* |
+| `reviewing` | approval valid, every task closed | the last `circle task close` |
+| `building` | approval valid, some task closed or claimed | `circle task claim` |
+| `approved` | approval valid for the current plan hash | `circle brief approve` |
+| `planned` | tasks exist, no valid approval — including a **stale** one | `circle task create` |
+| `specified` | `spec.md` exists | `/circle:spec` (`circle spec check` *not built*) |
+| `shaped` | `shape.md` exists | `/circle:shape` |
+| `shaping` | none of the above | `circle item new` |
+
+A stale approval sends a half-built item back to `planned`: the plan it was
+building against is no longer the one a human signed.
 
 **This is the extensibility mechanism.** A skill declares the state it requires
 and the state it produces. Its first injected command is
@@ -118,24 +125,34 @@ and the state it produces. Its first injected command is
 item is in the wrong state. A team's custom skill gets the same enforcement as a
 built-in one by declaring two fields. See [Skill contract](#skill-contract).
 
-### Session binding
+### Session binding *(built)*
 
-Today every enforcing path hardcodes the item `"default"`
-(`internal/cli/gate.go:145`, `status.go:35`, `timeline.go:273`,
-`serve/server.go:74`). That makes two items in one repo impossible: they share
-one plan hash, so changing one voids the other's approval. Binding fixes it.
+Every enforcing path used to read the item `"default"`, so two items in one repo
+shared a plan: planning one voided the other's approval, and a session on one
+could write into the other. A session now resolves to exactly one item, first
+match wins:
 
-A session's item resolves in this order:
+1. an explicit `--item` flag;
+2. the session's binding — `circle session bind --item <id>`, stored in the
+   shared git directory. The `SessionStart` hook exports the session id as
+   `$CIRCLE_SESSION` through `$CLAUDE_ENV_FILE`, which is how the agent's own
+   `circle` commands find it; the write hook reads it from its payload;
+3. the worktree's name — `claude --worktree alpha` works on item `alpha`, and a
+   worktree named after a task works on that task's item;
+4. `$CIRCLE_ITEM`;
+5. `default`, so a repository with one item behaves exactly as before.
 
-1. `.circle/runtime/sessions/<session_id>.toml` — written by `circle session bind`. Hooks receive `session_id` on stdin.
-2. The worktree name — `claude --worktree feat-1` binds to item `feat-1`; the `WorktreeCreate` hook already knows the name.
-3. `$CIRCLE_ITEM`.
-4. `default` — so a repo with one item behaves exactly as it does today.
+The write hook then enforces **that item's** approval and radius:
 
-The `PreToolUse` gate checks **the bound item's** approval and **the claimed
-task's** paths, not the union of every task in the repo.
+| Situation | Writes allowed |
+|---|---|
+| Item approved | Inside its approved radius, plus any `DOMAIN.md` or ADR |
+| Item with no plan yet (being shaped) | `DOMAIN.md` files, ADRs, architecture docs, and `.circle/` |
+| Session bound to nothing, while other items have plans | Nothing outside `.circle/` — bind first |
+| Repository with no plans at all | Everything (unchanged: adopting Circle must not block configuring it) |
+| `approval.json`, `approved-radius`, `tasks.jsonl`, `done.json`, `DOMAIN-INDEX.md` | Never by hand — only through `circle` commands |
 
-### The task graph stays in Circle
+### The task graph stays in Circle *(built)*
 
 D-4 and D-24 stand: **Circle's CLI owns the task graph, and tasks live in
 `.circle/`.** Beads was considered for dependency tracking and rejected again.
@@ -173,6 +190,42 @@ as sub-issues with native blocking links, and an initiative as an issue
 labelled `circle:initiative`. State is read from `.circle/`, never back from
 GitHub. A claim also sets the task's issue assignee, which is how a teammate on
 another machine sees who holds what. Phase 9's `TrackerPort` owns it.
+
+### The domain model *(built)*
+
+The domain model is **kept current by Circle, not by memory.**
+
+- **`DOMAIN.md`, one per bounded context**, in the directory it covers. Terms are
+  `**Term**:` lines, banned synonyms an `_Avoid_:` line under them, owned modules
+  backticked paths under `## Modules`. Format:
+  [`plugin/drafts/domain/DOMAIN-FORMAT.md`](../plugin/drafts/domain/DOMAIN-FORMAT.md).
+- **ADRs** are any `.md` under an `adr/` directory; **architecture documents** are
+  `ARCHITECTURE.md` or anything under `architecture/`.
+- **`.circle/DOMAIN-INDEX.md`** is generated from all of them plus every source
+  module: domains and terms, decisions, architecture docs, and which domain
+  documents each module. Deterministic, so "current?" is a byte comparison.
+
+What keeps it current, with nobody remembering to:
+
+| When | What runs | Effect |
+|---|---|---|
+| Every Edit / Write | `PostToolUse` → `circle domain sync --hook` | Regenerates the index. If the write added a type the file did not declare at HEAD with no term in any `DOMAIN.md`, used a banned synonym, or started a module nothing describes, the agent is told at once which `DOMAIN.md` it belongs in |
+| Session start, `circle init` | `circle domain index` | Catches edits made outside Claude Code |
+| Review, CI | `circle domain check --since <base>`, `circle domain index --check` | Judges a whole branch; fails CI on a stale index |
+| Preflight | domain line in KNOWLEDGE | Domains, ADRs, stale index, undocumented modules — advisory |
+| `circle knowledge verify` | drift detection | Checks every `DOMAIN.md`, ADR and architecture doc against the code, no registration needed |
+
+Only what is **new** is flagged: a type already in the file at HEAD, or a module
+already tracked, is not — so touching a legacy file does not block on old debt,
+while every new concept is recorded from then on. Technical words (Service,
+Repository, Handler, Config, Props …) and plurals are normalised away, so
+`OrderRepository` is covered by **Order**.
+
+```toml
+[domain]
+enforce = "block"            # default; "advise" turns the feedback into context
+ignore  = ["*Options", "Mock*"]  # plumbing that is not a concept
+```
 
 ---
 
@@ -230,58 +283,51 @@ An orchestrator never names a practice directly. It reads the slot from
 
 ## CLI surface
 
-Everything here is **new**. Grouped by the skill that first needs it.
+✅ built · ⬜ not built yet. Grouped by the skill that first needs it.
 
-| Command | Needed by | Does |
-|---|---|---|
-| `circle session bind --item <id>` / `session current` | start | Binds this session; hooks resolve the item from it |
-| `circle item new <id> --title <t> [--initiative <i>] [--kind feature\|fix\|refactor]` | shape, hunt | Creates `.circle/items/<id>/`, state `shaping` |
-| `circle item show [<id>] [--json]` / `item list` | all | State, initiative, tasks, approval |
-| `circle item require --state <s>` | all orchestrators | Exit 2 unless the bound item is in state `s` |
-| `circle item shape --from <file>` | shape | → `shaped` |
-| `circle item plan` | tasks | → `planned`; validates the graph |
-| `circle knowledge add <p> --as glossary\|standards` | shape, retro | Two new knowledge classes; drift detection covers both |
-| `circle spec check [--item <id>]` | spec | Sections present; every seam maps to a declared gate |
-| `circle task create --item <id> ...` | tasks | Same contract as today; writes the item's own `tasks.jsonl`; generates a hash id when `--id` is omitted |
-| `circle task claim` (changed) | implement | Claims through the shared, locked `claims.json`, so every worktree sees it |
-| `circle task ready --item <id> --json` | implement | The ready set |
-| `circle quality run <gate> --task <id> --expect red\|green` | tdd | Records the cycle; `--expect red` passes only when the gate fails |
-| `circle review drift` | review | Alias of `circle timeline drift`, scoped to the item |
-| `circle review record --axis standards\|spec\|trace --file <f>` | review | Stores findings; blocking ones hold the item in `reviewing` |
-| `circle review close` | review | → `done` |
-| `circle initiative new <id> --destination <d>` | chart | Creates the initiative |
-| `circle initiative show [<id>]` | chart, next | The map at low resolution |
-| `circle decision new --initiative <i> --type <t> --question <q> [--blocked-by <ids>]` | chart | Creates a decision |
-| `circle decision frontier [--initiative <i>]` | chart, next | Open, unblocked, unclaimed decisions |
-| `circle decision claim <id>` / `resolve <id> --answer <file>` / `scope-out <id> --why <w>` | chart | Claim, close with an answer, rule out of scope |
-| `circle handoff write [--item <id>]` | handoff | Writes `handoff.md` from the timeline |
-| `circle quality add <name> <cmd>` / `circle knowledge add` | retro | Retro's two kinds of output |
-| `circle next [--json]` | next | State → suggested skill and phase-boundary move |
-| `circle event record --type skill.run --skill <s>` | hooks | Skill telemetry |
-| `circle event list --item <id> --types <t,...>` | retro | The event log, filtered |
-| `circle sync github` | — | The projection above |
-
-Flags added to commands that already exist:
-
-| Flag | Needed by | Does |
-|---|---|---|
-| `circle knowledge list --as <class> --content` | domain, review | Prints the registered files' contents, not just their paths |
-| `circle task show --current` | tdd | The task this session has claimed, with its spec seams |
-| `circle item show --with shape\|spec` | spec, tasks | Inlines the named artifact |
-| `circle item list --open` | start | Items not yet `done` |
-| `circle item require --state a --state b` | implement | Repeatable: passes on any listed state |
-| `circle session bind --decision <id>` | start, chart | Binds to a decision instead of an item |
+| | Command | Needed by | Does |
+|---|---|---|---|
+| ✅ | `circle session start --hook` | SessionStart | Exports `$CIRCLE_SESSION`, opens the item's timeline once, refreshes the domain index |
+| ✅ | `circle session bind --item <id> \| --decision <id>` / `session current [--why]` | start | Binds this session; prints the resolved item |
+| ✅ | `circle item new <id> --title <t> [--kind] [--initiative] [--bind]` | shape, hunt | Creates `.circle/items/<id>/` |
+| ✅ | `circle item list [--open] [--initiative] [--json]` / `item show [<id>] [--json]` | all | Items with their derived state |
+| ✅ | `circle item require --state <s> [--state <s>]` | all orchestrators | Exit 2 unless the item is in one of the states |
+| ✅ | `circle task create --item <id> ...` | tasks | Writes the item's own `tasks.jsonl`; hash id when `--id` is omitted |
+| ✅ | `circle task ready [--item <id>] [--all] [--json]` | implement | The ready set, minus tasks claimed in any worktree |
+| ✅ | `circle task claim <id> [--steal]` / `task release <id>` | implement | Through the shared, locked claim ledger |
+| ✅ | `circle task show --current` | tdd | The task this session holds |
+| ✅ | `circle domain index [--check] [--print]` | domain, CI | Regenerates / checks / prints `.circle/DOMAIN-INDEX.md` |
+| ✅ | `circle domain check [--since <rev>] [--json]` | review, CI | New concepts and modules the model does not cover |
+| ✅ | `circle domain sync --hook` | PostToolUse | Refreshes the index; feeds new concepts back to the agent |
+| ⬜ | `circle spec check [--item <id>]` | spec | Sections present; every seam maps to a declared gate |
+| ⬜ | `circle item show --with shape\|spec` | spec, tasks | Inlines the named artifact |
+| ⬜ | `circle quality run <gate> --task <id> --expect red\|green` | tdd | Records the cycle; `--expect red` passes only when the gate fails |
+| ⬜ | `circle review drift` / `review record --axis` / `review close` | review | Trace axis, findings, → `done` |
+| ⬜ | `circle knowledge add <p> --as standards` / `knowledge list --as <c> --content` | review, retro | A standards class and its contents |
+| ⬜ | `circle initiative new\|show`, `circle decision new\|frontier\|claim\|resolve\|scope-out` | chart, next | Initiatives and decisions |
+| ⬜ | `circle handoff write [--item <id>]` | handoff | Writes `handoff.md` from the timeline |
+| ⬜ | `circle quality add <name> <cmd>` | retro | Adds a gate |
+| ⬜ | `circle next [--json]` | next | State → suggested skill and phase-boundary move |
+| ⬜ | `circle event list --item <id> --types <t,...>` / `event record --type skill.run` | retro, hooks | Filtered events; skill telemetry |
+| ⬜ | `circle sync github` | — | The GitHub projection |
 
 ---
 
 ## Open questions
 
-1. **Glossary location.** Repo root `GLOSSARY.md` (Matt's convention, visible to
-   every tool) or `.circle/glossary.md` (Circle's state directory)? Drafts assume
-   the root, registered as knowledge.
-2. **Decision granularity for `prototype`.** Matt keeps prototypes on a
-   `prototype/<name>` branch. Does a prototype get its own worktree and item,
-   or stay a branch the decision links to? Drafts assume a branch.
-3. **Phase 7 barrier.** The PRD makes the cold-start trial a hard stop before
-   v0.2. This lifecycle is v0.2 scope. Session binding (the `"default"` fix)
-   arguably is not.
+1. **Phase 7 barrier.** The PRD makes the cold-start trial a hard stop before
+   v0.2. This lifecycle is v0.2 scope. Recommendation: record a decision moving the
+   barrier after the foundation now built — a trial of one item at a time would
+   not exercise what Circle now is.
+
+## Decided
+
+- **Domain model:** `DOMAIN.md` per bounded context, indexed automatically into
+  `.circle/DOMAIN-INDEX.md`; new concepts and modules are caught at the write
+  that adds them. No manual registration.
+- **Prototypes:** a `prototype/<name>` branch the decision links to — never an
+  item, since a prototype is thrown away and needs no approval.
+- **Tasks:** stay in `.circle/`, owned by the Circle CLI; beads is not used.
+- **Parallel initiatives:** one item per session, resolved as above; per-item
+  plans and approvals; claims shared across worktrees.
+- **Approval:** agents may approve; unchanged for now.

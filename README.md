@@ -316,7 +316,10 @@ circle doctor                   check git, docker, gh
 circle preflight [--explain]    validate. exit 2 when they are not honest
 circle knowledge add <p> --as <class>
 circle quality list | run [gate]
-circle task create | ready | claim | close | list | show
+circle item new | list | show | require
+circle session bind | current
+circle task create | ready | claim | release | close | list | show
+circle domain index | check
 circle brief generate | show | approve | reject | verify
 circle timeline show | sync | drift
 circle status | score explain

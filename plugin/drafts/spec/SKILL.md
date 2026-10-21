@@ -7,7 +7,7 @@ metadata:
     kind: orchestrator
     requires: shaped
     produces: specified
-    reads: [item, glossary, knowledge, quality]
+    reads: [item, domain, knowledge, quality]
     writes: [spec]
 ---
 
@@ -31,7 +31,7 @@ fill, the item is not shaped — say so and return to `/circle:shape`.
 
 ## 1. Explore
 
-Read the code the item touches, using glossary terms to search. Respect every
+Read the code the item touches, using domain terms to search. Respect every
 registered ADR in the area. Use a subagent if the area is wide; keep only its
 conclusions.
 
@@ -57,7 +57,7 @@ that could never close honestly.
 
 ## 3. Write the spec
 
-`.circle/items/<id>/spec.md`, using [SPEC-TEMPLATE.md](SPEC-TEMPLATE.md). Glossary
+`.circle/items/<id>/spec.md`, using [SPEC-TEMPLATE.md](SPEC-TEMPLATE.md). Domain
 terms throughout; no file paths or code, except a prototype snippet that encodes
 a decision more exactly than prose can.
 

@@ -36,7 +36,7 @@ command must become a command.**
 | A gate exists but is unwired or broken | Fix the contract | Edit `[quality]`; `circle preflight` must still pass |
 | **Judgement** call the reviewer missed | A standard | Add the rule to the registered standards file (`circle knowledge add <f> --as standards`) |
 | The agent could not find something | Knowledge | `circle knowledge add <path> --as docs` — a pointer, not a copy |
-| A term caused confusion | Glossary | Run the `domain` practice |
+| A term caused confusion | Domain model | Run the `domain` practice; the right `DOMAIN.md` gets the term or an `_Avoid_` |
 | A registered doc misled the agent | Drift | `circle knowledge verify`; fix or unregister the doc |
 | An expensive or repeated tool call | Tooling | A `circle` subcommand or a skill change — propose it as an issue |
 | A plan kept breaking mid-build | Slicing | A note for `/circle:tasks`, or paths that were too narrow |

@@ -32,6 +32,7 @@ func init() {
 func runDomainIndex(e Env, args []string) int {
 	f := fs("domain index", e)
 	check := f.Bool("check", false, "exit 2 if the index is out of date, write nothing. For CI")
+	show := f.Bool("print", false, "refresh the index, then print it. For skill injection")
 	if err := parse(f, args); err != nil {
 		return ExitError
 	}
@@ -57,6 +58,10 @@ func runDomainIndex(e Env, args []string) int {
 		if mo.By == "" {
 			undocumented++
 		}
+	}
+	if *show {
+		fmt.Fprint(e.Stdout, domaindoc.Render(m))
+		return ExitOK
 	}
 	verb := "unchanged"
 	if changed {

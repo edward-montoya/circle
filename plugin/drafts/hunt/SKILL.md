@@ -25,7 +25,7 @@ can only guess. The block above is how this one runs and tests.
 ## 1. State the expected behaviour first
 
 Before observing anything, write what *should* happen — from the registered
-`definitions`, the glossary and the docs — into
+`definitions`, the `DOMAIN.md` files and the docs — into
 `.circle/runtime/hunt/expected.md`. Written first, it cannot be rationalised
 backwards from what you see.
 
