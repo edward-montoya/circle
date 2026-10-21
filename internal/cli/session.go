@@ -8,6 +8,7 @@ import (
 
 	"github.com/edwardmontoya/circle/internal/contract"
 	"github.com/edwardmontoya/circle/internal/domain"
+	"github.com/edwardmontoya/circle/internal/domaindoc"
 	"github.com/edwardmontoya/circle/internal/events"
 	"github.com/edwardmontoya/circle/internal/session"
 	"github.com/edwardmontoya/circle/internal/task"
@@ -61,6 +62,9 @@ func runSessionStart(e Env, args []string) int {
 	}
 
 	id, src := session.Resolve(repo, "", sid)
+
+	// Edits made outside Claude Code — a pull, a hand edit — are caught here.
+	_, _, _ = domaindoc.Sync(repo.Root)
 
 	// One timeline per item, opened once. Reopening on every session would move
 	// the baseline and drop the commits of every earlier session on the item.

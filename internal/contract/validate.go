@@ -147,6 +147,7 @@ func Validate(r *Repo) Result {
 	validateQuality(c, &res)
 	validateKnowledge(r, c, &res)
 	validateDefinitionDrift(r, &res)
+	validateDomain(r, &res)
 	validateForce(r, &res)
 	return res
 }
@@ -334,6 +335,38 @@ func validateDefinitionDrift(r *Repo, res *Result) {
 	res.add(Warn, "knowledge", "definitions drift",
 		fmt.Sprintf("%d contradiction(s): %s", n, summary),
 		"circle knowledge verify — a stale definition misdirects the plan")
+}
+
+// DomainChecker is injected for the same reason as DriftChecker: the domain
+// model lives in a package that must not be imported from here.
+var DomainChecker func(*Repo) (domains, adrs, undocumented int, fresh bool)
+
+// validateDomain reports the domain model: how many domains and ADRs, whether
+// the generated index is current, and how many modules nothing describes.
+//
+// Advisory. Undocumented modules are usually debt from before the model
+// existed, and blocking on debt would block the work that pays it down. New
+// concepts are caught where they are cheapest to fix: at the write that adds
+// them (`circle domain sync`).
+func validateDomain(r *Repo, res *Result) {
+	if DomainChecker == nil {
+		return
+	}
+	domains, adrs, undocumented, fresh := DomainChecker(r)
+	if domains == 0 {
+		res.add(Warn, "knowledge", "domain", "no DOMAIN.md yet",
+			"create one where the code lives; Circle indexes it automatically")
+	} else {
+		res.add(OK, "knowledge", "domain", fmt.Sprintf("%d domain(s) · %d ADR(s)", domains, adrs))
+	}
+	if !fresh {
+		res.add(Warn, "knowledge", "domain index", "out of date",
+			"circle domain index — the hooks keep it current inside Claude Code")
+	}
+	if undocumented > 0 {
+		res.add(Warn, "knowledge", "modules", fmt.Sprintf("%d undocumented", undocumented),
+			"see .circle/DOMAIN-INDEX.md; name each in a DOMAIN.md")
+	}
 }
 
 // validateForce surfaces a recorded bypass. A --force with no consequence is a

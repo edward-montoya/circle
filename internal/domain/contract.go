@@ -19,7 +19,26 @@ type Contract struct {
 	Execution Execution `toml:"execution"`
 	Quality   Quality   `toml:"quality"`
 	Gate      Gate      `toml:"gate"`
+	Domain    DomainCfg `toml:"domain"`
 }
+
+// DomainCfg tunes how strictly new concepts must be written into a DOMAIN.md.
+//
+// The index itself is not configurable: it is always regenerated, because a
+// domain model the repository has to remember to update is one it will forget.
+type DomainCfg struct {
+	// Enforce is "block" (the default) or "advise". Under block, a write that
+	// introduces an undocumented concept is fed back to the agent as a blocking
+	// reason; under advise it arrives as context.
+	Enforce string `toml:"enforce,omitempty"`
+	// Ignore lists identifier globs that are not domain concepts: "*Options",
+	// "*Props", "Mock*". Technical suffixes like Service or Handler are already
+	// stripped before matching, so this is for what is left.
+	Ignore []string `toml:"ignore,omitempty"`
+}
+
+// Blocks reports whether undocumented concepts block.
+func (d DomainCfg) Blocks() bool { return d.Enforce != "advise" }
 
 type Project struct {
 	Name            string `toml:"name"`

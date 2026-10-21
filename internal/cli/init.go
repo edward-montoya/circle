@@ -10,6 +10,7 @@ import (
 	"strings"
 
 	"github.com/edwardmontoya/circle/internal/contract"
+	"github.com/edwardmontoya/circle/internal/domaindoc"
 )
 
 func init() {
@@ -216,6 +217,10 @@ func runInit(e Env, args []string) int {
 		return ExitError
 	}
 	fmt.Fprintf(e.Stdout, "\n  %s✓%s wrote        .circle/project.toml %s— commit this%s\n", p.G, p.N, p.D, p.N)
+	if _, _, err := domaindoc.Sync(root); err == nil {
+		fmt.Fprintf(e.Stdout, "  %s✓%s wrote        .circle/%s %s— regenerated on every write from now on%s\n",
+			p.G, p.N, domaindoc.IndexName, p.D, p.N)
+	}
 	for name, body := range stateFiles {
 		path := filepath.Join(filepath.Dir(target), name)
 		if _, err := os.Stat(path); err == nil {

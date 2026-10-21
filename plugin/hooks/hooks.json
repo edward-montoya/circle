@@ -26,6 +26,17 @@
     ],
     "PostToolUse": [
       {
+        "matcher": "Write|Edit|MultiEdit|NotebookEdit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "circle domain sync --hook",
+            "timeout": 20,
+            "statusMessage": "circle: updating the domain index"
+          }
+        ]
+      },
+      {
         "matcher": "Bash",
         "hooks": [
           {

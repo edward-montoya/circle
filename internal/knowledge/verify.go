@@ -23,6 +23,7 @@ import (
 
 	"github.com/edwardmontoya/circle/internal/compose"
 	"github.com/edwardmontoya/circle/internal/contract"
+	"github.com/edwardmontoya/circle/internal/domaindoc"
 )
 
 // Kind is the closed set of contradictions we can prove.
@@ -97,16 +98,27 @@ var emphasis = regexp.MustCompile(`[*_]{1,3}`)
 
 // Verify checks every registered definition against the repository.
 //
-// Only `definitions` are checked. Docs describe how the system works today and
-// go stale harmlessly; definitions describe what should be built, and a wrong
-// one actively misdirects the plan.
+// Only `definitions` and the domain model are checked. Docs describe how the
+// system works today and go stale harmlessly; definitions describe what should
+// be built, and a wrong one actively misdirects the plan.
 func Verify(r *contract.Repo) ([]Finding, error) {
 	var findings []Finding
 
 	services, images := repoServices(r)
 	present := detectStack(r, images)
 
-	for _, doc := range r.Contract.Knowledge.Definitions {
+	// The domain model is checked whether or not anyone registered it: a
+	// DOMAIN.md, an ADR or an architecture document is a definition by what it
+	// is, and one the code contradicts misdirects the plan just the same.
+	docs := append([]string(nil), r.Contract.Knowledge.Definitions...)
+	for _, f := range domaindoc.Files(r.Root) {
+		if domaindoc.IsDomainDoc(f) {
+			docs = append(docs, f)
+		}
+	}
+	checked := map[string]bool{}
+
+	for _, doc := range docs {
 		matches, _ := filepath.Glob(r.Path(doc))
 		if len(matches) == 0 {
 			if _, err := os.Stat(r.Path(doc)); err == nil {
@@ -119,6 +131,10 @@ func Verify(r *contract.Repo) ([]Finding, error) {
 				continue
 			}
 			rel, _ := filepath.Rel(r.Root, m)
+			if checked[rel] {
+				continue
+			}
+			checked[rel] = true
 			f, err := verifyDoc(r, m, rel, services, present)
 			if err != nil {
 				continue
