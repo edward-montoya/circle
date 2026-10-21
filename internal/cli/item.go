@@ -44,6 +44,12 @@ func runItemNew(e Env, args []string) int {
 	if repo == nil {
 		return code
 	}
+	if *initiative != "" {
+		if _, err := initiativeLoad(repo, *initiative); err != nil {
+			fmt.Fprintf(e.Stderr, "circle: %v\n", err)
+			return ExitPrecond
+		}
+	}
 	it := item.Item{
 		ID: f.Arg(0), Title: *title, Kind: *kind, Initiative: *initiative,
 		Author: gitEmail(repo.Root),

@@ -15,6 +15,7 @@ import (
 	"github.com/edwardmontoya/circle/internal/events"
 	"github.com/edwardmontoya/circle/internal/session"
 	"github.com/edwardmontoya/circle/internal/task"
+	"github.com/edwardmontoya/circle/internal/timeline"
 )
 
 func init() {
@@ -126,7 +127,11 @@ func runGateCheck(e Env, args []string) int {
 	// exists for, so it is checked on every single write rather than trusted
 	// once at session start.
 	item, src := session.Resolve(repo, *itemFlag, session.ID(sid))
-	if reason, blocked := approvalGate(repo, item, src, target); blocked {
+	reason, blocked := approvalGate(repo, item, src, target)
+	if b, ok := session.Lookup(repo.Root, session.ID(sid)); ok && b.Decision != "" && b.Item == "" && *itemFlag == "" {
+		reason, blocked = decisionGate(repo, b.Decision, target)
+	}
+	if blocked {
 		ev := domain.NewEvent(domain.EvGateDeny)
 		ev.Reason, ev.Path, ev.Item, ev.Session = reason, target, item, sid
 		_ = events.Append(repo, ev)
@@ -222,6 +227,35 @@ func approvalGate(repo *contract.Repo, item string, src session.Source, target s
 		"circle: %s is outside item %s's approved blast radius (%s). "+
 			"Record an addendum, or widen the plan and have it re-approved.",
 		rel, item, strings.Join(a.Radius, " ")), true
+}
+
+// decisionGate governs a session working an initiative decision. A decision is
+// a question, not a deliverable: its session writes answers, research notes and
+// domain language — and code only on a prototype/<name> branch, where it is
+// thrown away by design and needs no approval.
+func decisionGate(repo *contract.Repo, decision, target string) (string, bool) {
+	if target == "" {
+		return "", false
+	}
+	rel, err := filepath.Rel(repo.Root, target)
+	if err != nil || strings.HasPrefix(rel, "..") {
+		rel = target
+	}
+	rel = filepath.ToSlash(rel)
+	if strings.HasPrefix(rel, contract.Dir+"/") {
+		if protectedState(rel) {
+			return "circle: " + rel + " is written by circle commands, not by hand.", true
+		}
+		return "", false
+	}
+	if domaindoc.IsDomainDoc(rel) {
+		return "", false
+	}
+	if br, _ := timeline.Branch(repo.Root); strings.HasPrefix(strings.TrimPrefix(br, "refs/heads/"), "prototype/") {
+		return "", false
+	}
+	return fmt.Sprintf("circle: this session works decision %s, which produces decisions, not code. "+
+		"Prototype on a prototype/<name> branch, or turn the decision into an item once the way is clear.", decision), true
 }
 
 // protectedState lists the .circle/ files the gate trusts. Writing them by hand
