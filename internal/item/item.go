@@ -149,6 +149,9 @@ type Status struct {
 	Tasks  []domain.Task
 	Closed int
 	Held   int
+	// ClosedElsewhere counts tasks another worktree has closed whose closure
+	// has not reached this checkout's task file yet — known from the ledger.
+	ClosedElsewhere int
 }
 
 // Derive computes an item's state from what is on disk.
@@ -168,8 +171,12 @@ func Derive(r *contract.Repo, id string) Status {
 			if t.State == domain.StateClosed {
 				s.Closed++
 			}
-			if c, ok := held[t.ID]; ok && c.Held() && t.State != domain.StateClosed {
-				s.Held++
+			if c, ok := held[t.ID]; ok && t.State != domain.StateClosed {
+				if c.Held() {
+					s.Held++
+				} else {
+					s.ClosedElsewhere++
+				}
 			}
 		}
 		b, err := brief.Build(r, id)

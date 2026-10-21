@@ -131,11 +131,24 @@ func reportTaskErrors(e Env, id string, errs []domain.ValidationError) {
 }
 
 func runTaskValidate(e Env, args []string) int {
+	f := fs("task validate", e)
+	flag := f.String("item", "", "only this item; defaults to this session's")
+	all := f.Bool("all", false, "every item")
+	if err := parse(f, args); err != nil {
+		return ExitError
+	}
 	repo, code := openRepo(e)
 	if repo == nil {
 		return code
 	}
-	ts, err := task.Load(repo)
+	var ts []domain.Task
+	var err error
+	if *all {
+		ts, err = task.Load(repo)
+	} else {
+		id, _ := currentItem(repo, *flag)
+		ts, err = task.LoadItem(repo, id)
+	}
 	if err != nil {
 		fmt.Fprintf(e.Stderr, "circle: %v\n", err)
 		return ExitError

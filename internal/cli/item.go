@@ -80,11 +80,13 @@ type itemView struct {
 	Tasks  int        `json:"tasks"`
 	Closed int        `json:"closed"`
 	Held   int        `json:"held"`
+	// ClosedElsewhere is closed in another worktree, not yet merged here.
+	ClosedElsewhere int `json:"closed_elsewhere,omitempty"`
 }
 
 func viewOf(repo *contract.Repo, it item.Item) itemView {
 	s := item.Derive(repo, it.ID)
-	return itemView{it, s.State, s.Reason, len(s.Tasks), s.Closed, s.Held}
+	return itemView{it, s.State, s.Reason, len(s.Tasks), s.Closed, s.Held, s.ClosedElsewhere}
 }
 
 func runItemList(e Env, args []string) int {
@@ -132,6 +134,9 @@ func runItemList(e Env, args []string) int {
 		fmt.Fprintf(e.Stdout, "%s %s%-20s%s %-10s %s", mark, p.B, v.ID, p.N, v.State, v.Title)
 		if v.Tasks > 0 {
 			fmt.Fprintf(e.Stdout, "  %s%d/%d closed%s", p.D, v.Closed, v.Tasks, p.N)
+			if v.ClosedElsewhere > 0 {
+				fmt.Fprintf(e.Stdout, "%s · %d more closed in another worktree, not merged yet%s", p.D, v.ClosedElsewhere, p.N)
+			}
 		}
 		fmt.Fprintln(e.Stdout)
 	}
