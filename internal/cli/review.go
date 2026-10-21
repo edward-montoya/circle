@@ -81,14 +81,15 @@ func computeTrace(repo *contract.Repo, id string) (trace, error) {
 	return tr, nil
 }
 
-// bookkeeping is a commit that only records Circle's own state — a plan, a
-// brief, an approval. It is the process, not the work, and names no task.
+// bookkeeping is a commit that only records planning: Circle's own state — a
+// shape, a spec, a plan, an approval — and the domain model written while
+// shaping. It is the process, not the work, and there was no task to name.
 func bookkeeping(en domain.Entry) bool {
 	if len(en.Files) == 0 {
 		return false
 	}
 	for _, f := range en.Files {
-		if !strings.HasPrefix(f.Path, contract.Dir+"/") {
+		if !strings.HasPrefix(f.Path, contract.Dir+"/") && !domaindoc.IsDomainDoc(f.Path) {
 			return false
 		}
 	}
