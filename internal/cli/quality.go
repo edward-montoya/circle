@@ -12,6 +12,7 @@ import (
 	"github.com/edwardmontoya/circle/internal/contract"
 	"github.com/edwardmontoya/circle/internal/domain"
 	"github.com/edwardmontoya/circle/internal/events"
+	"github.com/edwardmontoya/circle/internal/task"
 )
 
 func init() {
@@ -64,6 +65,15 @@ func runQualityRun(e Env, args []string) int {
 
 	wanted := f.Args()
 	gates := repo.Contract.Quality.Gates()
+	// A task with a verification command narrower than its gate runs that
+	// command, recorded under the gate and attributed to the task.
+	if *taskID != "" {
+		if t, err := task.Get(repo, *taskID); err == nil && t.Verify.Command != "" {
+			if len(wanted) == 0 || (len(wanted) == 1 && (wanted[0] == t.Verify.Gate || "test:"+wanted[0] == t.Verify.Gate)) {
+				gates, wanted = []domain.GateSpec{{Name: t.Verify.Gate, Command: t.Verify.Command}}, nil
+			}
+		}
+	}
 	if len(wanted) > 0 && !*all {
 		var sel []domain.GateSpec
 		for _, name := range wanted {

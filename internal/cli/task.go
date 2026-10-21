@@ -363,6 +363,14 @@ func runTaskClose(e Env, args []string) int {
 		evs, _ := events.All(repo)
 		since := lastCommitTime(repo, t)
 		ev, passed := events.GatePassedSince(evs, t.Verify.Gate, since)
+		// A task that declared a command narrower than its gate is proven by
+		// that command, run for this task — not by the gate's broader run.
+		if t.Verify.Command != "" {
+			ev, passed = events.TaskGatePassedSince(evs, t.Verify.Gate, t.ID, since)
+			if !passed && ev.Gate == "" {
+				fmt.Fprintf(e.Stderr, "circle: %s is verified by its own command; run it with `circle quality run --task %s`\n", t.ID, t.ID)
+			}
+		}
 		if !passed {
 			p := NewPalette(e.Stderr)
 			fmt.Fprintf(e.Stderr, "%scircle: %s cannot close%s\n", p.R, t.ID, p.N)

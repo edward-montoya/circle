@@ -84,6 +84,18 @@ func LastGateRun(evs []domain.Event, gate string) (domain.Event, bool) {
 	return domain.Event{}, false
 }
 
+// TaskGatePassedSince is GatePassedSince restricted to runs attributed to one
+// task — the evidence for a task whose verification is narrower than its gate.
+func TaskGatePassedSince(evs []domain.Event, gate, taskID string, t time.Time) (domain.Event, bool) {
+	var own []domain.Event
+	for _, ev := range evs {
+		if ev.Task == taskID {
+			own = append(own, ev)
+		}
+	}
+	return GatePassedSince(own, gate, t)
+}
+
 // GatePassedSince reports whether a gate has a passing run strictly after t.
 func GatePassedSince(evs []domain.Event, gate string, t time.Time) (domain.Event, bool) {
 	for i := len(evs) - 1; i >= 0; i-- {

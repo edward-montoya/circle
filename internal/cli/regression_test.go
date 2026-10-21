@@ -251,3 +251,21 @@ func TestLocalEnvReachesGatesInEveryWorktree(t *testing.T) {
 		t.Fatal("machine-local variables must never show up as a change to commit")
 	}
 }
+
+// A task whose verification is narrower than its gate is proven by that
+// command, run for the task — the gate's broader green does not close it.
+func TestTaskVerifyCommandIsEnforced(t *testing.T) {
+	root := newGitRepo(t)
+	mustRun(t, root, "task", "create", "--id", "n-1", "--title", "t", "--goal", "g", "--verify-kind", "unit",
+		"--verify-gate", "test:unit", "--verify-command", "test -f proof", "--paths", "src/**")
+	mustRun(t, root, "quality", "run", "test:unit")
+	if code, _ := run(t, root, "task", "close", "n-1"); code == ExitOK {
+		t.Fatal("the gate's own green must not close a task with a narrower command")
+	}
+	if code, _ := run(t, root, "quality", "run", "--task", "n-1"); code != ExitQuality {
+		t.Fatal("--task must run the task's own command, which fails without proof")
+	}
+	_ = os.WriteFile(filepath.Join(root, "proof"), nil, 0o644)
+	mustRun(t, root, "quality", "run", "--task", "n-1")
+	mustRun(t, root, "task", "close", "n-1")
+}
