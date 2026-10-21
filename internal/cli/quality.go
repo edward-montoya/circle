@@ -1,6 +1,7 @@
 package cli
 
 import (
+	"bytes"
 	"fmt"
 	"os/exec"
 	"strings"
@@ -94,9 +95,17 @@ func runQualityRun(e Env, args []string) int {
 	if b := strings.TrimSpace(repo.Contract.Quality.Bootstrap); b != "" && !*noBootstrap {
 		cmd := exec.Command("sh", "-c", b)
 		cmd.Dir = repo.Root
-		cmd.Stdout, cmd.Stderr = e.Stderr, e.Stderr
+		// Quiet unless it fails: a build log streamed before every gate buries
+		// the one thing the run is for, which gate passed and which did not.
+		var out bytes.Buffer
+		cmd.Stdout, cmd.Stderr = &out, &out
 		cmd.Env = gateEnv(repo)
 		if err := cmd.Run(); err != nil {
+			lines := strings.Split(strings.TrimRight(out.String(), "\n"), "\n")
+			if len(lines) > 40 {
+				lines = lines[len(lines)-40:]
+			}
+			fmt.Fprintln(e.Stderr, strings.Join(lines, "\n"))
 			fmt.Fprintf(e.Stdout, "%s✗%s bootstrap failed: %s\n", p.R, p.N, b)
 			fmt.Fprintln(e.Stdout, "  the gates cannot prove the current tree until it succeeds")
 			return ExitQuality
