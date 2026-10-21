@@ -231,12 +231,26 @@ Then in a session:
 
 | Skill | Does |
 |---|---|
-| `/circle:start` | Loads the contracts. Aborts if they are invalid |
-| `/circle:tasks` | Breaks work into tasks, each with a goal and a gate |
+| `/circle:start` | Loads the contracts, binds the session to one item or decision. Aborts if the contracts are invalid |
+| `/circle:next` | Where this session stands, the next skill, and whether to continue, clear, hand off or compact |
+| `/circle:shape` | Interviews you into a settled item, writing `DOMAIN.md` terms and ADRs as it goes |
+| `/circle:spec` | Turns the shaped item into a spec whose every test seam names a declared gate |
+| `/circle:tasks` | Breaks it into tracer-bullet tasks, each with a goal, a gate and a blast radius |
 | `/circle:brief` | Renders the gate a human must approve |
+| `/circle:implement` | Builds one task test-first — or every ready task in parallel worktrees |
+| `/circle:review` | Three axes: computed trace, spec, standards. Closes the item only when nothing blocks |
+| `/circle:handoff` | Reports what landed, from git rather than from memory |
+| `/circle:retro` | Turns the session's mistakes into new gates and knowledge |
+| `/circle:chart` | Maps an effort too big for one session as decisions, one per session |
+| `/circle:hunt` | Builds a command that goes red on a bug, then files the fix as an item |
 | `/circle:run` | Brings the stack up from the execution contract |
 | `/circle:verify` | Runs the gates and reports what is actually proven |
-| `/circle:handoff` | Reports what landed, from git rather than from memory |
+
+Three practices run underneath and are swappable per repository under
+`[lifecycle]`: `circle:grill` (the interview), `circle:domain` (the domain model),
+`circle:tdd` (test-first against declared gates). Write your own with
+`circle skill new`; `circle skill validate` holds it to the same contract.
+The full flow is in [`docs/LIFECYCLE.md`](docs/LIFECYCLE.md).
 
 The hooks matter more than the skills. They are why the rules hold when the
 model would rather not follow them. See [`plugin/README.md`](plugin/README.md).
@@ -320,6 +334,13 @@ circle item new | list | show | require
 circle session bind | current
 circle task create | ready | claim | release | close | list | show
 circle domain index | check
+circle spec check
+circle review drift | record | show | close
+circle initiative new | list | show
+circle decision new | link | frontier | claim | show | resolve | scope-out
+circle next
+circle handoff write
+circle skill validate | new
 circle brief generate | show | approve | reject | verify
 circle timeline show | sync | drift
 circle status | score explain

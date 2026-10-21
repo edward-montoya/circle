@@ -2,9 +2,20 @@
 description: Renders the comprehension gate a human must approve before any code is written. Use after planning tasks and before implementing them.
 disable-model-invocation: true
 allowed-tools: Read Bash(circle *)
+metadata:
+  circle:
+    kind: orchestrator
+    requires: planned | approved
+    produces: approved
+    reads: [tasks, domain, knowledge]
+    writes: [brief]
 ---
 
 # Brief
+
+```!
+circle item require --state planned --state approved
+```
 
 ```!
 circle brief generate

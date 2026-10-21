@@ -2,6 +2,11 @@
 description: Runs every quality gate and reports what is actually proven. Use before claiming any work is done.
 disable-model-invocation: true
 allowed-tools: Read Bash(circle *)
+metadata:
+  circle:
+    kind: orchestrator
+    reads: [quality, tasks]
+    writes: [events]
 ---
 
 # Verify

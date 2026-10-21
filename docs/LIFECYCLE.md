@@ -1,11 +1,9 @@
 # The Circle lifecycle — design draft
 
-**Status: partly built.** The foundation is in the CLI: items, session binding,
-per-item plans and approvals, shared claims, derived item states, and the domain
-model with its self-maintaining index. The skills still live in
-[`plugin/drafts/`](../plugin/drafts/), where the plugin loader does not see them,
-because several call commands that are not built yet — [CLI surface](#cli-surface)
-marks which.
+**Status: built.** The skills ship in [`plugin/skills/`](../plugin/skills/), every
+command they call exists, and a test fails the build if one ever does not
+(`TestShippedSkillsConform`). The one deferred piece is the GitHub projection —
+see [CLI surface](#cli-surface).
 
 The ideas are adapted from Matt Pocock's skill set
 ([mattpocock/skills](https://github.com/mattpocock/skills)). The adaptation rule
@@ -54,8 +52,8 @@ A Matt skill asks the model to behave. A Circle skill asks the model to behave
 | *practice* | `circle:domain` | — | model | `domain-modeling` |
 | *practice* | `circle:tdd` | — | model | `tdd` |
 
-`/circle:run`, `/circle:verify` and `/circle:brief` are unchanged and are not
-redrafted.
+`/circle:run`, `/circle:verify` and `/circle:brief` keep their bodies; they gained
+the metadata block, and `brief` the gate injection.
 
 ### Two kinds of skill
 
@@ -198,7 +196,7 @@ The domain model is **kept current by Circle, not by memory.**
 - **`DOMAIN.md`, one per bounded context**, in the directory it covers. Terms are
   `**Term**:` lines, banned synonyms an `_Avoid_:` line under them, owned modules
   backticked paths under `## Modules`. Format:
-  [`plugin/drafts/domain/DOMAIN-FORMAT.md`](../plugin/drafts/domain/DOMAIN-FORMAT.md).
+  [`plugin/skills/domain/DOMAIN-FORMAT.md`](../plugin/skills/domain/DOMAIN-FORMAT.md).
 - **ADRs** are any `.md` under an `adr/` directory; **architecture documents** are
   `ARCHITECTURE.md` or anything under `architecture/`.
 - **`.circle/DOMAIN-INDEX.md`** is generated from all of them plus every source
@@ -260,7 +258,12 @@ And every orchestrator body follows one shape:
 4. **Record.** State changes go through a CLI command that records the event.
 5. **Next.** End by naming the next skill and the phase-boundary move.
 
-`circle skill validate` (Phase 10) lints exactly these five points. A
+`circle skill validate` checks the contract: the metadata block, that an
+orchestrator is user-only and a practice is not, that `requires`/`produces` are
+real states, that the first injected block is the gate covering every required
+state, that every `circle` command named anywhere in the skill exists, and that
+linked sibling files are there. `circle skill new` scaffolds a skill that already
+passes. A
 `PreToolUse` hook on the `Skill` tool records `skill.run` events, so `retro` and
 the timeline can see which skills actually ran on an item.
 
@@ -283,7 +286,7 @@ An orchestrator never names a practice directly. It reads the slot from
 
 ## CLI surface
 
-✅ built · ⬜ not built yet. Grouped by the skill that first needs it.
+✅ built · ⏸ deferred to Phase 9 (the tracker port). Grouped by the skill that first needs it.
 
 | | Command | Needed by | Does |
 |---|---|---|---|
@@ -299,17 +302,18 @@ An orchestrator never names a practice directly. It reads the slot from
 | ✅ | `circle domain index [--check] [--print]` | domain, CI | Regenerates / checks / prints `.circle/DOMAIN-INDEX.md` |
 | ✅ | `circle domain check [--since <rev>] [--json]` | review, CI | New concepts and modules the model does not cover |
 | ✅ | `circle domain sync --hook` | PostToolUse | Refreshes the index; feeds new concepts back to the agent |
-| ⬜ | `circle spec check [--item <id>]` | spec | Sections present; every seam maps to a declared gate |
-| ⬜ | `circle item show --with shape\|spec` | spec, tasks | Inlines the named artifact |
-| ⬜ | `circle quality run <gate> --task <id> --expect red\|green` | tdd | Records the cycle; `--expect red` passes only when the gate fails |
-| ⬜ | `circle review drift` / `review record --axis` / `review close` | review | Trace axis, findings, → `done` |
-| ⬜ | `circle knowledge add <p> --as standards` / `knowledge list --as <c> --content` | review, retro | A standards class and its contents |
-| ⬜ | `circle initiative new\|show`, `circle decision new\|frontier\|claim\|resolve\|scope-out` | chart, next | Initiatives and decisions |
-| ⬜ | `circle handoff write [--item <id>]` | handoff | Writes `handoff.md` from the timeline |
-| ⬜ | `circle quality add <name> <cmd>` | retro | Adds a gate |
-| ⬜ | `circle next [--json]` | next | State → suggested skill and phase-boundary move |
-| ⬜ | `circle event list --item <id> --types <t,...>` / `event record --type skill.run` | retro, hooks | Filtered events; skill telemetry |
-| ⬜ | `circle sync github` | — | The GitHub projection |
+| ✅ | `circle spec check [--item <id>]` | spec | Sections present; every seam maps to a declared gate |
+| ✅ | `circle item show --with shape\|spec` | spec, tasks | Inlines the named artifact |
+| ✅ | `circle quality run <gate> --task <id> --expect red\|green` | tdd | Records the cycle; `--expect red` passes only when the gate fails |
+| ✅ | `circle review drift` / `review record --axis spec\|standards` / `review show` / `review close` | review | Computed trace axis; judged axes; → `done` |
+| ✅ | `circle knowledge add <p> --as standards` / `knowledge list --as <c> --content` | review, retro | A standards class and its contents |
+| ✅ | `circle initiative new\|list\|show`, `circle decision new\|link\|frontier\|claim\|show\|resolve\|scope-out` | chart, next | Initiatives and decisions |
+| ✅ | `circle skill validate [paths]` / `skill new <name>` | extending | Check a skill against the contract; scaffold one that passes |
+| ✅ | `circle handoff write [--item <id>]` | handoff | Writes `handoff.md` from the timeline |
+| ✅ | `circle quality add <name> <cmd>` | retro | Adds a gate |
+| ✅ | `circle next [--json]` | next | State → suggested skill and phase-boundary move |
+| ✅ | `circle event list --item <id> --types <t,...>` / `event record --type skill.run` | retro, hooks | Filtered events; skill telemetry |
+| ⏸ | `circle sync github` | — | The GitHub projection |
 
 ---
 

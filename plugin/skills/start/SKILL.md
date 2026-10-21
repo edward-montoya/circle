@@ -1,45 +1,61 @@
 ---
-description: Opens a Circle session. Loads the project contracts and refuses to proceed if they are invalid. Use at the start of any implementation work.
+description: Opens a Circle session. Loads the contracts, binds the session to one item or decision, and refuses to proceed if the contracts are invalid. Use at the start of any work.
 disable-model-invocation: true
 allowed-tools: Read Grep Glob Bash(circle *)
+argument-hint: "[item-id | decision-id | what we are building]"
+metadata:
+  circle:
+    kind: orchestrator
+    reads: [contracts, items, initiatives]
+    writes: [session]
 ---
 
 # Circle session
 
-The block below is produced at invocation time. **If the contracts are invalid
-the command exits 2 and you never see this file at all** — that is the gate, not
-a convention you are asked to respect.
+**If the contracts are invalid, the command below exits 2 and you never see this
+file.** That is the gate, not a convention.
 
 ```!
 circle preflight --context
 ```
 
 ```!
-circle task ready
+circle item list --open
 ```
 
-## Standing instructions for this session
+```!
+circle decision frontier
+```
 
-1. **Do not re-derive how to run or test this project.** Both are in the block
-   above. If something is missing there, say so and propose the edit to
-   `.circle/project.toml` — knowledge that stays in the transcript dies with the
-   session.
+## Bind the session
 
-2. **Every task needs a goal and a verification.** `circle task create` rejects
-   a task without both, and `circle task close` refuses until the named gate has
-   passed *since the task's last commit*. Do not try to work around either; they
-   are what makes the status score a measurement instead of a claim.
+A session works on **exactly one** item or decision. The write hook enforces
+against the bound item's approval and the claimed task's paths, so an unbound
+session can write nothing outside the `default` item.
 
-3. **A PreToolUse hook denies file writes while preflight fails.** If a write is
-   refused, run `circle preflight --explain` and fix the contract.
+- `$ARGUMENTS` names an open item or decision → `circle session bind --item <id>`
+  (or `--decision <id>`).
+- `$ARGUMENTS` describes new work → it is a new item. Do not create it here;
+  that is `/circle:shape`'s first step.
+- No arguments → show the open items and the decision frontier above, and ask
+  which.
 
-4. **You may not open a gate.** You can generate a brief but not approve it, run
-   a quality gate but not declare it passed. Approval is the human's.
+A worktree session (`claude --worktree <id>`) is already bound to `<id>`. Confirm
+it rather than rebinding.
 
-## Your task
+## Standing instructions
 
-Confirm the contracts, then ask what we are building — or if the user already
-said, restate it and propose the task breakdown, each with its goal and the gate
-that will prove it.
+1. **Do not re-derive how to run or test this project.** It is in the block
+   above. If something is missing, propose the edit to `.circle/project.toml`.
+2. **Speak the domain.** Use the terms in `.circle/DOMAIN-INDEX.md` exactly. A
+   concept you need that is not there is a `circle:domain` moment — and Circle
+   will flag it anyway the moment you write a type for it.
+3. **You may not open a gate.** You can generate a brief, not approve it; run a
+   gate, not declare it passed.
+
+## Next
+
+Run `circle next` and present its suggestion. It reads the bound item's state;
+you do not guess it.
 
 $ARGUMENTS

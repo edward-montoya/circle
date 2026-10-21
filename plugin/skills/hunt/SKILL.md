@@ -59,7 +59,7 @@ to separate two hypotheses.
 The fix is an item, so it goes through the same gate as everything else:
 
 ```
-circle item new <id> --kind fix --title "<symptom>"
+circle item new <id> --kind fix --title "<symptom>" --bind
 ```
 
 Write `.circle/items/<id>/repro.md` (expected, observed, the red command) and a

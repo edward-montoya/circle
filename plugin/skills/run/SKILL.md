@@ -2,6 +2,11 @@
 description: Brings up this project's stack from the execution contract. Use when you need the app running locally.
 disable-model-invocation: true
 allowed-tools: Read Bash(circle *) Bash(docker compose *) Bash(make *) Bash(curl *)
+metadata:
+  circle:
+    kind: orchestrator
+    reads: [execution]
+    writes: []
 ---
 
 # Run the stack

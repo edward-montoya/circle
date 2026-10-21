@@ -50,7 +50,8 @@ Two modes. **Either way, resolve at most one decision per session**, except
 
    ```
    circle decision new --initiative <id> --type research|prototype|grill|task \
-     --question "<the question>" [--blocked-by <ids>]
+     --title "<short name>" --question "<the question>"
+   circle decision link <decision-id> --blocked-by <ids>
    ```
 
    **Ticket or fog?** If you can state the question precisely now — even if you
@@ -79,7 +80,7 @@ Two modes. **Either way, resolve at most one decision per session**, except
 
    A HITL decision resolves only through the live exchange. Answering the human's
    side yourself breaks it.
-4. **Record:** `circle decision resolve <did> --answer <file>`. The answer lives
+4. **Record:** `circle decision resolve <did> --answer <file> --gist "<one line>"`. The answer lives
    in the decision; the map gets one line pointing at it.
 5. **Push back the fog.** Graduate anything now specifiable into new decisions.
    A decision that turns out to lie past the destination:
