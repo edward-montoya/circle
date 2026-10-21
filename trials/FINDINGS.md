@@ -509,6 +509,10 @@ continued on the fixed binary.
 | F-35 | PDF agents | A machine-only value (the proxy CA directory) had to be typed into every command | `circle local set`: machine-local gate variables, shared by every worktree, never committed |
 | F-36 | repair agent | The bootstrap's build log buried which gate had failed | Bootstrap output only on failure |
 | F-37 | several | `task validate` checked every item; main showed a worktree's closures as 0/4 | Scoped validate; "closed in another worktree, not merged yet" |
+| F-38 | second item's review | Its timeline began before the first item was merged, so the trace counted the first item's commits and files as its own drift — two false blocking findings | A commit naming another item's task is that item's work |
+| F-39 | blocking-fix agent | It gave a task a `--verify-command` narrower than the gate, because the gate could not see the fix — Circle stored the command and never ran it | `quality run --task` runs it; `task close` requires that run |
+| F-40 | final review | Machine-local variables reached the gates but not a `docker compose up` the agent typed | SessionStart exports them into the agent's shell; `circle local export` |
+| F-41 | repair agent | `circle local --help` was "unknown command"; nothing said which local variables a gate ran with | Group help; `quality run` names them |
 
 ## What held without change
 
@@ -533,5 +537,16 @@ continued on the fixed binary.
 
 ## Cost
 
-The whole run — shaping, specs, plans, 15 implementation sessions, three
-reviews — cost about **$5–6** in model usage and fit in an afternoon.
+28 headless sessions and 261 turns — two items shaped, specified and planned,
+19 implementation sessions, five review rounds — cost about **$7** in model
+usage. The app, with its `.circle/` state and history, is in
+[`examples/mail-digest/`](../examples/mail-digest/).
+
+## The pattern in the defects
+
+Seventeen defects, and almost none were in what Circle checks — the gates, the
+approval binding, the task contract held throughout. They were in the
+**transitions**: day zero to first green, one item to two, a plan to a changed
+plan, a worktree to a merge, a review round to the next. A framework tested one
+item at a time on one branch never meets any of them. The cold-start trial in
+Phase 7 should be run with two items in parallel for the same reason.
