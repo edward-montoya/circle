@@ -3,6 +3,8 @@ package cli
 import (
 	"errors"
 	"fmt"
+	"os/exec"
+	"path/filepath"
 	"os/user"
 	"strings"
 	"time"
@@ -336,6 +338,7 @@ func runTaskRelease(e Env, args []string) int {
 func runTaskClose(e Env, args []string) int {
 	f := fs("task close", e)
 	verifyOnly := f.Bool("verify-only", false, "check without closing. TaskCompleted hook target")
+	commit := f.Bool("commit", false, "commit the closure record, and nothing else, as \"<id>: closed\"")
 	if err := parse(f, args); err != nil {
 		return ExitError
 	}
@@ -399,7 +402,15 @@ func runTaskClose(e Env, args []string) int {
 	ev.Task, ev.Item, ev.Gate = t.ID, task.ItemOf(t), t.Verify.Gate
 	_ = events.Append(repo, ev)
 	fmt.Fprintf(e.Stdout, "closed %s  evidence: %s\n", t.ID, t.ClosedBy)
-	fmt.Fprintln(e.Stdout, "  the closure is recorded in .circle/ — it lands with your next commit")
+	if *commit {
+		if err := commitClosure(repo, t); err != nil {
+			fmt.Fprintf(e.Stderr, "circle: closed, but the closure was not committed: %v\n", err)
+			return ExitExternal
+		}
+		fmt.Fprintf(e.Stdout, "  committed the closure as \"%s: closed\"\n", t.ID)
+	} else {
+		fmt.Fprintln(e.Stdout, "  the closure is recorded in .circle/ — commit it, or close with --commit")
+	}
 	return ExitOK
 }
 
@@ -613,4 +624,19 @@ func dependencyErrors(repo *contract.Repo, t domain.Task) []domain.ValidationErr
 		}
 	}
 	return errs
+}
+
+// commitClosure commits the task file holding the closure, and only that file:
+// `git commit -- <path>` leaves anything else staged or modified untouched.
+func commitClosure(repo *contract.Repo, t domain.Task) error {
+	rel, err := filepath.Rel(repo.Root, task.FileOf(repo, t))
+	if err != nil {
+		return err
+	}
+	cmd := exec.Command("git", "commit", "-q", "-m", t.ID+": closed", "--", rel)
+	cmd.Dir = repo.Root
+	if out, err := cmd.CombinedOutput(); err != nil {
+		return fmt.Errorf("%v: %s", err, strings.TrimSpace(string(out)))
+	}
+	return nil
 }

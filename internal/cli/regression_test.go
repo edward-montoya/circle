@@ -337,3 +337,29 @@ func TestDependenciesMustExistAndReadsWriteNothing(t *testing.T) {
 		t.Fatalf("review drift must not rewrite the committed timeline:\n%s", out)
 	}
 }
+
+func TestCloseCommitsOnlyTheClosure(t *testing.T) {
+	root := newGitRepo(t)
+	planItem(t, root, "alpha", "src/a/**")
+	git(t, root, "add", "-A")
+	git(t, root, "commit", "-q", "-m", "plan")
+	_ = os.WriteFile(filepath.Join(root, "unrelated.txt"), []byte("wip\n"), 0o644)
+	mustRun(t, root, "quality", "run")
+	mustRun(t, root, "task", "close", "alpha-1", "--commit")
+	log, _ := exec.Command("git", "-C", root, "log", "-1", "--format=%s", "--name-only").Output()
+	if !strings.Contains(string(log), "alpha-1: closed") || !strings.Contains(string(log), "items/alpha/tasks.jsonl") || strings.Contains(string(log), "unrelated") {
+		t.Fatalf("the closure commit must hold the task file and nothing else:\n%s", log)
+	}
+}
+
+func TestKnowledgeAddKeepsTheBlankLineBeforeTheNextSection(t *testing.T) {
+	root := newGitRepo(t)
+	toml := filepath.Join(root, ".circle", "project.toml")
+	_ = os.WriteFile(toml, []byte("[project]\nname = \"p\"\n\n[knowledge]\ndocs = []\n\n[quality.test]\nunit = \"true\"\n"), 0o644)
+	_ = os.WriteFile(filepath.Join(root, "STANDARDS.md"), []byte("# s\n"), 0o644)
+	mustRun(t, root, "knowledge", "add", "STANDARDS.md", "--as", "standards")
+	b, _ := os.ReadFile(toml)
+	if !strings.Contains(string(b), "standards   = [\"STANDARDS.md\"]\n\n[quality.test]") {
+		t.Fatalf("the new key goes before the blank line:\n%s", b)
+	}
+}

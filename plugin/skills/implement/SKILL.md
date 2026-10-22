@@ -36,8 +36,9 @@ The default. Take the named task, or the first one in the ready set.
 2. State the task's title and goal back in one line.
 3. Call the Skill tool for the `tdd` slot (default `circle:tdd`) and build it,
    one recorded red → green at a time.
-4. Run the task's full gate, commit, then `circle task close <id>`. It refuses
-   unless the gate passed **after** your last commit.
+4. Commit, run the task's full gate, then `circle task close <id> --commit`. It
+   refuses unless the gate passed **after** your last commit, and commits the
+   closure record on its own.
 5. **Phase boundary.** The next task is self-contained, so this context is
    disposable: suggest `/clear`, then `/circle:implement`.
 

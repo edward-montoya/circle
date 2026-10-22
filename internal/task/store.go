@@ -39,6 +39,9 @@ func file(r *contract.Repo, item string) string {
 	return r.StateDir("items", item, "tasks.jsonl")
 }
 
+// FileOf is the file a task's records are written to.
+func FileOf(r *contract.Repo, t domain.Task) string { return file(r, t.Item) }
+
 // Files lists every task file, the default item's first.
 func Files(r *contract.Repo) []string {
 	out := []string{file(r, DefaultItem)}

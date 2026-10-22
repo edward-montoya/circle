@@ -238,6 +238,11 @@ func writeContract(r *contract.Repo, c domain.Contract) error {
 	if len(missing) > 0 {
 		switch {
 		case insertAt >= 0:
+			// Before the blank lines that separate the section from the next,
+			// so the file keeps its shape.
+			for insertAt > 0 && strings.TrimSpace(lines[insertAt-1]) == "" {
+				insertAt--
+			}
 			lines = append(lines[:insertAt], append(missing, lines[insertAt:]...)...)
 		case inKnowledge:
 			lines = append(lines, missing...)
