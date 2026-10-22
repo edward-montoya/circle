@@ -123,7 +123,7 @@ You have never seen this repository, and no one will answer questions. Using onl
 
   prompt="/circle:implement
 
-Headless: no human is present. Work exactly one task — the one this worktree's item has ready — test-first, commit with the task id at the start of the message, run its gate after the last commit, close it, and commit the closure. Stay inside the task's paths."
+Headless: no human is present. Work exactly one task — the one this worktree's item has ready — test-first, commit with the task id at the start of the message, run its gate after the last commit, then close it with `circle task close <id> --commit`. Stay inside the task's paths."
   agent "$W/days-index" "$OUT/run$run-B1.json" "$prompt" &
   agent "$W/remind-actions" "$OUT/run$run-B2.json" "$prompt" &
   wait

@@ -192,7 +192,8 @@ Then the loop:
 circle task claim feat-1
 # ... implement ...
 circle quality run test:unit      # records the result as an event
-circle task close feat-1          # refuses unless that gate passed since your last commit
+circle task close feat-1 --commit # refuses unless that gate passed since your last commit;
+                                  # --commit commits the closure record, and only it
 circle status                     # one score, every point traced to a command
 ```
 

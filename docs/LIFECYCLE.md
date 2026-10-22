@@ -323,7 +323,7 @@ writable either way — the write hook enforces every write.
 | ✅ | `circle spec check [--item <id>]` | spec | Sections present; every seam maps to a declared gate |
 | ✅ | `circle item show --with shape\|spec` | spec, tasks | Inlines the named artifact |
 | ✅ | `circle quality run <gate> --task <id> --expect red\|green` | tdd | Records the cycle; `--expect red` passes only when the gate fails |
-| ✅ | `circle review drift` / `review record --axis spec\|standards` / `review show` / `review close` | review | Computed trace axis; judged axes; → `done` |
+| ✅ | `circle review drift` / `review record --axis spec\|standards [--append]` / `review show` / `review close` | review | Computed trace axis; judged axes; → `done` |
 | ✅ | `circle knowledge add <p> --as standards` / `knowledge list --as <c> --content` | review, retro | A standards class and its contents |
 | ✅ | `circle initiative new\|list\|show`, `circle decision new\|link\|frontier\|claim\|show\|resolve\|scope-out` | chart, next | Initiatives and decisions |
 | ✅ | `circle skill validate [paths]` / `skill new <name>` | extending | Check a skill against the contract; scaffold one that passes |

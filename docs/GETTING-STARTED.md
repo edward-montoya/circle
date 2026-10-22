@@ -248,11 +248,13 @@ reason lists what *was* approved.
 circle task claim feat-1
 # ... implement ...
 circle quality run test:unit
-circle task close feat-1
+circle task close feat-1 --commit
 ```
 
 `quality run` records each result as an event. `task close` reads those events
-and **refuses unless the task's gate passed after its last commit**:
+and **refuses unless the task's gate passed after its last commit**. `--commit`
+commits the closure record, and nothing else, as `feat-1: closed`; without it
+the record waits in `.circle/` for your next commit.
 
 ```
 circle: feat-1 cannot close
