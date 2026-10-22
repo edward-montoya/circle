@@ -520,6 +520,8 @@ continued on the fixed binary.
 | F-46 | review | `review drift` rewrote the item's timeline as a side effect of reading it | Reading a trace writes nothing (`timeline.Peek`) |
 | F-47 | four implementation sessions | After `task close` the closure record sat uncommitted; every agent committed it by hand, once into an unrelated commit | `task close --commit` commits that task file and nothing else |
 | F-48 | hardening agent | `knowledge add` swallowed the blank line before the next TOML section | The key goes before the separating blank lines |
+| F-49 | hardening review lead | Checking a subagent's report turned up a gap it had marked delivered, and there was no way to add one finding to a recorded axis | `review record --append`, only within the round recorded at HEAD |
+| F-50 | hardening review, round 2 | `.circle/timelines/*.json` committed `"repo": "/home/user/…"` — Circle breaching the "nothing machine-specific is committed" standard the review checks | The field is gone; a test walks committed state for the repository's path |
 
 ## What held without change
 
@@ -551,7 +553,7 @@ usage. The app, with its `.circle/` state and history, is in
 
 ## The pattern in the defects
 
-Twenty-four defects, and almost none were in what Circle checks — the gates, the
+Twenty-six defects, and almost none were in what Circle checks — the gates, the
 approval binding, the task contract held throughout. They were in the
 **transitions**: day zero to first green, one item to two, a plan to a changed
 plan, a worktree to a merge, a review round to the next. A framework tested one
