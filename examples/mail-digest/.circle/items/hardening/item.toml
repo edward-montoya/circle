@@ -1,0 +1,6 @@
+id = "hardening"
+title = "Hardening: fix non-blocking review findings"
+kind = "fix"
+initiative = ""
+author = "dev@example.com"
+created = 2026-10-22T01:09:09.457482364Z

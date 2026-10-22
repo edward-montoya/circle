@@ -1,5 +1,7 @@
 import json
+import logging
 import os
+import re
 from datetime import date, datetime, timedelta, timezone
 from html import escape
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
@@ -10,20 +12,34 @@ from app.mailbox import load_mailbox
 
 DEFAULT_OWNER = "owner@example.com"
 
+log = logging.getLogger("app.server")
+
+STYLE = (
+    "body{font-family:system-ui,sans-serif;max-width:42rem;margin:1rem auto;padding:0 1rem;line-height:1.5}"
+    "nav a{margin-right:1rem}"
+    ".badge{display:inline-block;padding:0 .4em;border-radius:.3em;background:#e3e8ef;"
+    "font-size:.75em;font-weight:bold}"
+)
+
 
 def render_html(digest):
-    day = date.fromisoformat(digest["date"])
-    prev_day = (day - timedelta(days=1)).isoformat()
-    next_day = (day + timedelta(days=1)).isoformat()
+    day = date.fromisoformat(digest["day"])
+    prev_day = None if day == date.min else (day - timedelta(days=1)).isoformat()
+    next_day = None if day == date.max else (day + timedelta(days=1)).isoformat()
     e = escape
     parts = [
-        "<!doctype html><html><head><meta charset=\"utf-8\">",
-        f"<title>Digest {e(digest['date'])}</title></head><body>",
-        f"<h1>Digest for {e(digest['date'])}</h1>",
-        f"<nav><a href=\"/?date={prev_day}\">Previous day</a> "
-        f"<a href=\"/?date={next_day}\">Next day</a></nav>",
+        "<!doctype html><html><head><meta charset=\"utf-8\">"
+        "<meta name=\"viewport\" content=\"width=device-width, initial-scale=1\">",
+        f"<title>Digest {e(digest['day'])}</title><style>{STYLE}</style></head><body>",
+        f"<h1>Digest for {e(digest['day'])}</h1>",
+        "<nav>"
+        + (f"<a href=\"/?day={prev_day}\">Previous day</a> " if prev_day else "")
+        + (f"<a href=\"/?day={next_day}\">Next day</a>" if next_day else "")
+        + "</nav>",
         f"<p>{digest['total']} messages</p>",
     ]
+    if digest["total"] == 0:
+        parts.append("<p>No mail on this day</p>")
     if digest.get("skipped", 0) > 0:
         parts.append(f"<p>{int(digest['skipped'])} skipped files</p>")
     parts += [
@@ -54,19 +70,30 @@ class Handler(BaseHTTPRequestHandler):
         self.wfile.write(data)
 
     def _digest(self, query):
-        raw = parse_qs(query).get("date", [None])[0]
+        params = parse_qs(query, keep_blank_values=True)
+        raw = params.get("day", params.get("date", [None]))[0]
         if raw is None:
             day = datetime.now(timezone.utc).date()
         else:
+            if not re.fullmatch(r"[0-9]{4}-[0-9]{2}-[0-9]{2}", raw):
+                return None
             try:
-                day = datetime.strptime(raw, "%Y-%m-%d").date()
+                day = date.fromisoformat(raw)
             except ValueError:
                 return None
         owner = os.environ.get("OWNER_EMAIL", DEFAULT_OWNER)
         messages, skipped = load_mailbox(self.server.mail_dir)
-        return build_digest(messages, day, owner, skipped)
+        digest = build_digest(messages, day, owner, skipped)
+        return digest
 
     def do_GET(self):
+        try:
+            self._route()
+        except Exception:
+            log.exception("error handling GET %s", self.path)
+            self._send(500, "text/plain; charset=utf-8", "internal error")
+
+    def _route(self):
         url = urlparse(self.path)
         if url.path == "/health":
             self._send(200, "text/plain; charset=utf-8", "ok")
@@ -80,6 +107,10 @@ class Handler(BaseHTTPRequestHandler):
                 self._send(200, "application/json", json.dumps(digest))
         else:
             self.send_error(404)
+
+    def log_request(self, code="-", size="-"):
+        if str(code).isdigit() and int(code) >= 400:
+            log.warning("%s %s -> %s", self.command, self.path, code)
 
     def log_message(self, format, *args):
         pass

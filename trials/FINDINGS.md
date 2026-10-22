@@ -548,7 +548,10 @@ continued on the fixed binary.
 
 28 headless sessions and 261 turns — two items shaped, specified and planned,
 19 implementation sessions, five review rounds — cost about **$7** in model
-usage. The app, with its `.circle/` state and history, is in
+usage. A third item, `hardening`, took the non-blocking findings of those
+reviews through the same flow: 18 more sessions, three review rounds, ten
+tasks, about $4. Its second review found F-50 — Circle itself committing a
+machine path — and its third closed it. The app, with its `.circle/` state and history, is in
 [`examples/mail-digest/`](../examples/mail-digest/).
 
 ## The pattern in the defects

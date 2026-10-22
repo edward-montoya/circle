@@ -2,14 +2,13 @@
   "item": "pdf-ingest",
   "baseline": "1d5676bf205659214b98e6525c6bb402c7fff0f9",
   "branch": "main",
-  "repo": "/home/user/mail-digest",
   "opened_at": "2026-10-21T17:50:51.298582087Z",
   "entries": [
     {
       "seq": 0,
       "sha": "1d5676bf205659214b98e6525c6bb402c7fff0f9",
       "short": "1d5676b",
-      "subject": "baseline · session opened",
+      "subject": "baseline \u00b7 session opened",
       "at": "2026-10-21T17:50:51.29858222Z",
       "state": "baseline"
     },

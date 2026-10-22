@@ -22,7 +22,7 @@ class TotalTest(unittest.TestCase):
     def test_day_without_mail_is_an_empty_digest(self):
         d = build_digest([], DAY, OWNER)
         self.assertEqual(
-            (d["date"], d["total"], d["senders"], d["threads"], d["action_items"]),
+            (d["day"], d["total"], d["senders"], d["threads"], d["action_items"]),
             ("2025-01-07", 0, [], [], []))
 
 
@@ -78,6 +78,12 @@ class ActionItemsTest(unittest.TestCase):
         self.assertEqual(self.items(body), [
             "Can you send the report?", "Please review the draft.",
             "The deadline is soon.", "Send it by Friday."])
+
+    def test_sentences_are_not_split_at_decimals_or_abbreviations(self):
+        self.assertEqual(self.items("Please raise the cap to 3.5 percent. Fine."),
+                         ["Please raise the cap to 3.5 percent."])
+        self.assertEqual(self.items("Please ask Dr. Lee, e.g. Sam, etc. today. Done."),
+                         ["Please ask Dr. Lee, e.g. Sam, etc. today."])
 
     def test_detects_by_date_and_question_mark(self):
         self.assertEqual(self.items("Need it by 2025-01-10. Ready"

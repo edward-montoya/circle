@@ -1,0 +1,8 @@
+- [minor] Spec 12 (c): an unparseable Date can absorb a following body line (From: a@b / Date: bad / Body text -> date='bad Body text line'); brief task 10 says it no longer absorbs. File is a counted Skipped File either way.
+- [minor] (b) extract_text(extraction_mode="layout") in _parse_pdf was not asked for and changes every PDF's extraction.
+- [minor] (b) do_GET catch-all returning a 500 "internal error"; spec 18 only asks for logging and keeping the HTML 404.
+- [minor] (b) 400 body says "invalid date" where spec 3 vocabulary is "day".
+- [minor] (a) Spec 18 "request errors logged": log_request logs only status >= 400 and relies on the last-resort stderr handler; the error-path logging is not proved by a test.
+- [nit] (c) Spec 17: tests/unit/test_sample_pdfs.py reproduction check fails locally (reportlab producer string); looks environmental; docker gates not run by this reviewer.
+- [nit] (b) build_check.sh gained .gitignore, bytecode and STANDARDS checks beyond the loop-variable fix; covered by brief goals.
+- [nit] (a) Spec 16: build_check only greps for "STANDARDS.md", not the standards key in project.toml; Risks accept this.

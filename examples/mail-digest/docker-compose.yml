@@ -8,6 +8,8 @@ services:
       args:
         HTTPS_PROXY: ${HTTPS_PROXY:-}
     image: mail-digest
+    environment:
+      OWNER_EMAIL: ${OWNER_EMAIL:-owner@example.com}
     ports:
       - "8080:8080"
   test:
@@ -20,7 +22,5 @@ services:
       args:
         HTTPS_PROXY: ${HTTPS_PROXY:-}
     command: python -m unittest discover -s tests -t .
-    volumes:
-      - ./app:/srv/app:ro
-      - ./tests:/srv/tests:ro
-      - ./samples:/srv/samples:ro
+    environment:
+      OWNER_EMAIL: ${OWNER_EMAIL:-owner@example.com}

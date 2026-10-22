@@ -1,0 +1,14 @@
+- [minor] Machine-specific values: HEAD has no absolute /home/user path in .circle/timelines/*.json (this diff removes the "repo" key); a later Circle write may re-add it. No gate checks this.
+- [minor] docs/DEV-ENVIRONMENT.md holds /home/user/.mail-digest-build; it is the documented home for machine facts, so minor wording tension only.
+- [nit] .circle/items/*/review/*.md quote /home/user/mail-digest in prose only.
+- [major] Possible Duplicated Code / Shotgun Surgery: the owner@example.com default lives in docker-compose.yml (twice), server.py DEFAULT_OWNER and build_check.sh; DEFAULT_OWNER is a second source of truth beside compose.
+- [minor] Possible Duplicated Code: sender lower-casing parseaddr(...)[1].lower() repeated in _parse_file and _parse_pdf; DOMAIN says normalised once.
+- [minor] Possible Mysterious Name: Message.date / _parse_date hold a timestamp, but DOMAIN uses date for the Digest Day; rename to timestamp.
+- [minor] Possible Primitive Obsession: Digest Day travels as a raw string through _digest, render_html (re-parsed) and 400 validation.
+- [minor] build_check.sh repeats the web and test service checks; extract one function.
+- [minor] _split_header_block: a wrapped second repeated header appends to the first value's text (corrupts it).
+- [nit] server.py _digest has a redundant temporary before return.
+- [nit] Possible Middle Man: no-op log_message beside log_request; fold together.
+- [nit] mailbox.py stdlib imports not alphabetical.
+- [nit] DOMAIN lists only e.g./i.e. abbreviations but digest.py handles etc, dr and others; DOMAIN and code disagree.
+- [nit] approval.json / approved-radius list app/__pycache__/**; looks accidental.

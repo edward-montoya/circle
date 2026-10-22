@@ -10,6 +10,7 @@ contract_version = 1
 docs        = ["README.md", "docs/", "docs/DEV-ENVIRONMENT.md"]
 definitions = []
 validations = []
+standards   = ["docs/STANDARDS.md"]
 
 [execution]
 compose      = "docker-compose.yml"

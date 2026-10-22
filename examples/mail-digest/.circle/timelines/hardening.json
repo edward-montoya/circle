@@ -1,0 +1,16 @@
+{
+  "item": "hardening",
+  "baseline": "e84f5dc2e5b072587e77642eb5a9379cb378031b",
+  "branch": "main",
+  "opened_at": "2026-10-22T01:09:09.466203326Z",
+  "entries": [
+    {
+      "seq": 0,
+      "sha": "e84f5dc2e5b072587e77642eb5a9379cb378031b",
+      "short": "e84f5dc",
+      "subject": "baseline \u00b7 session opened",
+      "at": "2026-10-22T01:09:09.466203432Z",
+      "state": "baseline"
+    }
+  ]
+}

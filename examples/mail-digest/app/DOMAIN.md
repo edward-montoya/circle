@@ -13,19 +13,19 @@ The person whose mailbox it is, identified by their email address. Messages from
 _Avoid_: user, me
 
 **Message**:
-A single email, with a sender, a date, a subject and a body.
+A single email, with a sender, a timestamp, a subject and a body. An email with only an HTML part has that part's text as its body.
 _Avoid_: mail, email (as a count noun)
 
 **Digest Day**:
-One calendar day in UTC. A message belongs to the Digest Day on which it was sent.
-_Avoid_: date range, period
+One calendar day in UTC, written `YYYY-MM-DD` with zero padding. A message belongs to the Digest Day on which it was sent. Named `day` in the Digest's JSON and in the `?day=` query parameter; `?date=` is accepted as an alias for old links. The first and last representable days are valid; a Digest Day has no previous link before the first nor next link after the last.
+_Avoid_: date, date range, period
 
 **Digest**:
 The deterministic summary of the Mailbox for one Digest Day: total count, ranked senders, threads, and action items.
 _Avoid_: report, summary
 
 **Sender**:
-The address a message came from, ranked in a Digest by how many messages it sent that day.
+The address a message came from, normalised to lower case once, when the Mailbox reads the Message, ranked in a Digest by how many messages it sent that day.
 _Avoid_: author, from
 
 **Thread**:
@@ -37,7 +37,7 @@ A subject with any leading reply or forward markers (Re:, RE:, Fwd:) removed, us
 _Avoid_: topic
 
 **Action Item**:
-A sentence in a message body that asks the reader for something: a question, a polite request, a deadline, or a "by <weekday or date>" demand.
+A sentence in a message body (a sentence does not end at a decimal point such as "3.5" or an abbreviation such as "e.g." or "i.e.") that asks the reader for something: a question, a polite request, a deadline, or a "by <weekday or date>" demand.
 _Avoid_: task, todo
 
 **Needs Reply**:
@@ -53,11 +53,11 @@ A Message whose Source is `pdf`: a PDF file in the Mailbox whose first page open
 _Avoid_: PDF message, scan
 
 **Header Block**:
-The lines `From:`, `To:`, `Subject:` and `Date:` at the top of a PDF Email's first page, as mail clients print them. Everything after it is the body. A PDF Email needs at least a parseable From and Date.
+The lines `From:`, `To:`, `Subject:` and `Date:` at the top of a PDF Email's first page, as mail clients print them. A value may wrap onto following lines, indented or not, as long as the line is not itself a header and the body has not started. Everything after it is the body. A PDF Email needs at least a parseable From and Date.
 _Avoid_: metadata, PDF properties
 
 **Skipped File**:
-A file in the Mailbox that could not become a Message (a PDF without a parseable From and Date, or not a readable PDF). It is counted and reported, never fatal.
+A file in the Mailbox that could not become a Message (a PDF without a parseable From and Date, or not a readable PDF; an email file that is malformed, undecodable or has no parseable Date). It is counted and reported, never fatal. Source suffixes (`.eml`, `.pdf`) match regardless of case.
 _Avoid_: error, failure
 
 ## Relationships
@@ -78,4 +78,5 @@ _Avoid_: error, failure
 ## Flagged ambiguities
 
 - "date" was used for both the day a Digest covers and a message's timestamp. Resolved: the day is the **Digest Day**; the timestamp belongs to the **Message**.
+- The JSON key `date` and the `?date=` parameter named the Digest Day. Resolved: `day` and `?day=`; `?date=` survives only as an input alias.
 - "email" for a PDF: a PDF Email is a **Message** with Source `pdf`, not a separate kind of thing; the Digest treats all Messages alike whatever their Source.

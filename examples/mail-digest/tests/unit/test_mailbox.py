@@ -3,7 +3,7 @@ import unittest
 from datetime import datetime, timezone
 from pathlib import Path
 
-from app.mailbox import load_messages
+from app.mailbox import load_mailbox, load_messages
 
 EML = """From: Alice Example <alice@example.com>
 To: owner@example.com
@@ -43,6 +43,37 @@ class LoadMessagesTest(unittest.TestCase):
         write(self.tmp.name, "a.eml")
         Path(self.tmp.name, "notes.txt").write_text("hello")
         self.assertEqual(len(load_messages(self.tmp.name)), 1)
+
+    def test_sender_is_lower_cased(self):
+        Path(self.tmp.name, "a.eml").write_text(
+            EML.format(date="Mon, 06 Jan 2025 10:00:00 +0000", n=1)
+            .replace("alice@example.com", "Alice@Example.COM"))
+        [m] = load_messages(self.tmp.name)
+        self.assertEqual(m.sender, "alice@example.com")
+
+    def test_suffix_matches_case_insensitively(self):
+        write(self.tmp.name, "A.EML")
+        self.assertEqual(len(load_messages(self.tmp.name)), 1)
+
+    def test_html_only_message_has_the_text_as_body(self):
+        Path(self.tmp.name, "h.eml").write_text(
+            "From: bob@example.com\nSubject: Hi\nDate: Mon, 06 Jan 2025 10:00:00 +0000\n"
+            "Content-Type: text/html\n\n<html><body><p>Can you call me?</p></body></html>\n")
+        [m] = load_messages(self.tmp.name)
+        self.assertIn("Can you call me?", m.body)
+        self.assertNotIn("<p>", m.body)
+
+    def test_unreadable_undecodable_and_undated_files_are_skipped_and_counted(self):
+        write(self.tmp.name, "good.eml")
+        Path(self.tmp.name, "nodate.eml").write_text("From: b@example.com\n\nx\n")
+        Path(self.tmp.name, "dir.eml").mkdir()
+        Path(self.tmp.name, "bad.eml").write_bytes(
+            b"From: b@example.com\nDate: Mon, 06 Jan 2025 10:00:00 +0000\n"
+            b"Content-Type: text/plain; charset=no-such-charset\n"
+            b"Content-Transfer-Encoding: 8bit\n\n\xff\xfe caf\xe9\n")
+        messages, skipped = load_mailbox(self.tmp.name)
+        self.assertEqual(len(messages), 1)
+        self.assertEqual(skipped, 3)
 
 
 SAMPLES = Path(__file__).resolve().parents[2] / "samples" / "mail"

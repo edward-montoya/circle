@@ -16,7 +16,7 @@
 - **Mailbox** — _avoid_: inbox, account
 - **Owner** — _avoid_: user, me
 - **Message** — _avoid_: mail, email (as a count noun)
-- **Digest Day** — _avoid_: date range, period
+- **Digest Day** — _avoid_: date, date range, period
 - **Digest** — _avoid_: report, summary
 - **Sender** — _avoid_: author, from
 - **Thread** — _avoid_: conversation

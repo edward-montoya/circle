@@ -18,8 +18,8 @@ way, and what was fixed, is iteration 7 of
 
 ```bash
 docker compose up -d --build web
-open http://localhost:8080/?date=2025-03-11     # the samples cover 10–12 March 2025
-curl 'http://localhost:8080/api/digest?date=2025-03-11'
+open http://localhost:8080/?day=2025-03-11      # the samples cover 10–12 March 2025
+curl 'http://localhost:8080/api/digest?day=2025-03-11'   # ?date= still works
 docker compose down
 ```
 
@@ -30,16 +30,17 @@ Behind a TLS-intercepting proxy, see `docs/DEV-ENVIRONMENT.md`.
 
 ## How it was built
 
-Two items, run in parallel, each through the whole Circle lifecycle:
+Three items, each through the whole Circle lifecycle — the first two in parallel:
 
 | Item | Shaped → planned | Built | Review rounds | Tasks |
 |---|---|---|---|---|
 | `daily-digest` — read `.eml`, build the daily Digest, serve HTML + JSON | one headless session, resumed through shape → spec → tasks | one fresh session per task, in its own worktree | 2 — the first found the Owner read from the wrong variable and a container serving an empty mailbox | 7 (4 planned + 3 from review) |
 | `pdf-ingest` — read emails delivered as PDF | on `main`, **while** `daily-digest` was being built | two tasks concurrently in two task worktrees | 2 — merge regressions, then a test-only dependency in the production image | 7 (4 planned + 3 from merge and review) |
+| `hardening` — the non-blocking findings of the first two reviews | one session, shape → spec → tasks | one fresh session per task | 3 — committed bytecode and an Owner not forwarded to `web`; then machine paths Circle itself committed; then a wrapped last PDF header | 10 (5 planned + 5 from review) |
 
 Every approval was given by the operator after reading the brief; every change
 to the plan made the approval stale and needed a new one. Gates run through
 Docker (`test:unit`, `test:integration`, `test:smoke`, `test:image`,
 `test:build`), so they prove the container, not the host.
 
-28 headless sessions, 261 turns, about $7 of model usage.
+46 headless sessions, about 410 turns, about $11 of model usage.

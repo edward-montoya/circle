@@ -1,0 +1,24 @@
+{
+  "at": "2026-10-22T01:31:09.696327425Z",
+  "axes": {
+    "spec": {
+      "axis": "spec",
+      "blocking": 0,
+      "findings": 8,
+      "at": "2026-10-22T01:30:36.696399541Z",
+      "head": "bcb41af77db408ce09196037cdf8515f780cdae1"
+    },
+    "standards": {
+      "axis": "standards",
+      "blocking": 0,
+      "findings": 14,
+      "at": "2026-10-22T01:30:27.198738939Z",
+      "head": "bcb41af77db408ce09196037cdf8515f780cdae1"
+    }
+  },
+  "base": "e84f5dc2e5b072587e77642eb5a9379cb378031b",
+  "by": "dev@example.com",
+  "commits": 26,
+  "item": "hardening",
+  "untraced": 0
+}

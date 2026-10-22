@@ -30,7 +30,7 @@ class DigestHttpTest(unittest.TestCase):
         self.assertEqual(status, 200)
         self.assertIn("application/json", headers["Content-Type"])
         digest = json.loads(body)
-        self.assertEqual(digest["date"], "2025-03-10")
+        self.assertEqual(digest["day"], "2025-03-10")
         self.assertEqual(digest["total"], 5)
 
     def test_api_quiet_day_is_empty_digest(self):
@@ -44,24 +44,55 @@ class DigestHttpTest(unittest.TestCase):
         for path in ("/api/digest?date=nope", "/?date=2025-13-40"):
             self.assertEqual(self.get(path)[0], 400, path)
 
+    def test_day_parameter_and_date_alias(self):
+        for q in ("day=2025-03-10", "date=2025-03-10"):
+            d = json.loads(self.get("/api/digest?" + q)[2])
+            self.assertEqual((d["day"], d["total"]), ("2025-03-10", 5), q)
+            self.assertNotIn("date", d)
+        d = json.loads(self.get("/api/digest?day=2025-03-10&date=2025-01-01")[2])
+        self.assertEqual(d["day"], "2025-03-10")
+
+    def test_empty_malformed_or_unpadded_day_is_400(self):
+        for q in ("day=", "date=", "day=2025-3-1", "day=2025-03-1", "day=20250310",
+                  "day=2025-02-30", "day=%202025-03-10"):
+            for path in ("/api/digest?", "/?"):
+                self.assertEqual(self.get(path + q)[0], 400, path + q)
+
+    def test_first_and_last_days_render_without_link_beyond(self):
+        status, _, body = self.get("/?day=0001-01-01")
+        self.assertEqual(status, 200)
+        self.assertNotIn("Previous day", body)
+        self.assertIn('href="/?day=0001-01-02"', body)
+        status, _, body = self.get("/?day=9999-12-31")
+        self.assertEqual(status, 200)
+        self.assertNotIn("Next day", body)
+        self.assertIn('href="/?day=9999-12-30"', body)
+        self.assertEqual(self.get("/api/digest?day=9999-12-31")[0], 200)
+
+    def test_sample_needs_reply_for_default_owner(self):
+        os.environ.pop("OWNER_EMAIL", None)
+        d = json.loads(self.get("/api/digest?day=2025-03-10")[2])
+        self.assertEqual({t["subject"]: t["needs_reply"] for t in d["threads"]}["Q1 budget review"], False)
+        self.assertTrue(any(t["needs_reply"] for t in d["threads"]))
+
     def test_default_date_is_today(self):
         from datetime import datetime, timezone
         today = datetime.now(timezone.utc).date().isoformat()
-        self.assertEqual(json.loads(self.get("/api/digest")[2])["date"], today)
+        self.assertEqual(json.loads(self.get("/api/digest")[2])["day"], today)
 
     def test_html_page_has_day_links_and_content(self):
         status, headers, body = self.get("/?date=2025-03-10")
         self.assertEqual(status, 200)
         self.assertIn("text/html", headers["Content-Type"])
-        self.assertIn('href="/?date=2025-03-09"', body)
-        self.assertIn('href="/?date=2025-03-11"', body)
+        self.assertIn('href="/?day=2025-03-09"', body)
+        self.assertIn('href="/?day=2025-03-11"', body)
         self.assertIn("Q1 budget review", body)
         self.assertIn("priya@acme.example", body)
 
     def test_html_escapes_text(self):
         from app import server
         html = server.render_html({
-            "date": "2025-03-10", "total": 1,
+            "day": "2025-03-10", "total": 1,
             "senders": [{"address": "<b>x</b>@e.example", "count": 1}],
             "threads": [{"subject": "<script>alert(1)</script>", "messages": [],
                          "needs_reply": True, "action_items": ["a & b?"]}],

@@ -37,6 +37,43 @@ class PdfLoadTest(unittest.TestCase):
         self.assertEqual(m.subject, "Budget review for Q1")
         self.assertEqual(m.date, datetime(2025, 1, 7, 4, 30, tzinfo=timezone.utc))
 
+    def test_unindented_wrapped_header_value_continues_its_header(self):
+        write_pdf(self.dir / "a.pdf", [[
+            "From: <carol@example.com>", "Subject: Budget", "review for Q1",
+            "Date: Mon, 06 Jan 2025 23:30:00 -0500", "", "Body"]])
+        [m], _ = load_mailbox(self.dir)
+        self.assertEqual(m.subject, "Budget review for Q1")
+        self.assertEqual(m.body.strip(), "Body")
+
+    def test_unindented_wrapped_last_header_stays_in_its_header(self):
+        write_pdf(self.dir / "a.pdf", [[
+            "From: <carol@example.com>", "Date: Mon, 06 Jan",
+            "2025 23:30:00 -0500", "", "Body"]])
+        [m], _ = load_mailbox(self.dir)
+        self.assertEqual(m.date, datetime(2025, 1, 7, 4, 30, tzinfo=timezone.utc))
+        self.assertEqual(m.body.strip(), "Body")
+
+    def test_unindented_line_continues_last_header_until_the_blank_line(self):
+        write_pdf(self.dir / "a.pdf", [[
+            "From: <carol@example.com>", "Date: Mon, 06 Jan 2025 23:30:00 -0500",
+            "Subject: Budget", "review for Q1", "", "Body"]])
+        [m], _ = load_mailbox(self.dir)
+        self.assertEqual(m.subject, "Budget review for Q1")
+        self.assertEqual(m.body.strip(), "Body")
+
+    def test_unparseable_date_does_not_absorb_the_body(self):
+        write_pdf(self.dir / "a.pdf", [[
+            "From: <carol@example.com>", "Subject: Hi", "Date: someday", "", "Body"]])
+        messages, skipped = load_mailbox(self.dir)
+        self.assertEqual((messages, skipped), ([], 1))
+
+    def test_repeated_header_keeps_its_first_value(self):
+        write_pdf(self.dir / "a.pdf", [[
+            "From: <carol@example.com>", "Subject: First", "Subject: Second",
+            "Date: Mon, 06 Jan 2025 23:30:00 -0500", "", "Body"]])
+        [m], _ = load_mailbox(self.dir)
+        self.assertEqual(m.subject, "First")
+
     def test_missing_zone_is_utc_and_missing_subject_empty(self):
         write_pdf(self.dir / "a.pdf", [["From: c@example.com", "Date: 07 Jan 2025 09:00:00", "", "x"]])
         [m], _ = load_mailbox(self.dir)

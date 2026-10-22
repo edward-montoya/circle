@@ -28,3 +28,30 @@ f1d3a35  pdf-ingest: repair closures
 f5ff185  pdf-ingest: blocking finding planned, re-approved
 c0190a2  pdf-ingest-5212dcc7: split test-only reportlab into requirements-test.txt and a test image stage
 e84f5dc  pdf-ingest: reviewed and done
+6973b6e  hardening: shaped, specified, planned, approved
+1115367  hardening-6fad8297: Gates prove the built image
+c8c36b1  hardening: closure after session 1
+32dcb48  hardening-1fc920fe: Unreadable email files are Skipped Files
+eb36009  hardening: closure after session 2
+b7d2bb1  hardening-39b323da: The Digest Day is a strict day
+47eeb15  hardening: closure after session 3
+b9cfd59  hardening-0e93c40f: The page is readable and errors are logged
+e2d41d6  hardening: closure after session 4
+8a93bf4  hardening-e475d7a9: Wrapped headers and whole Action Items
+ebe65ba  hardening: closure after session 5
+599c9a4  hardening: review round 1 recorded
+c4d3af3  hardening: round 2 planned and approved
+e3285d2  hardening-32d4b937: a wrapped last header stays in its header
+1e138f7  hardening-32d4b937: closed
+b14fa34  hardening-73abf600: build_digest returns the day key
+6d4f59c  hardening-73abf600: closed
+89af158  hardening-cd117ef7: untrack bytecode, add root .gitignore
+cdeecdc  hardening-cd117ef7: closed
+bb59312  hardening-66103364: web service forwards OWNER_EMAIL with the test default
+50de87e  hardening-66103364: closed
+56e4007  hardening: review round 2 recorded; timelines no longer name this machine
+1728830  hardening: round 3 planned and approved
+813325e  hardening-4cd9b245: any non-blank line continues the last header until the blank line
+47f864e  hardening-4cd9b245: extract PDF text in layout mode so the blank line is visible
+bcb41af  hardening-4cd9b245: closed
+2751f30  hardening: reviewed and done

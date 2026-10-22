@@ -1,0 +1,30 @@
+{
+  "item": "hardening",
+  "approver": "dev@example.com",
+  "author": "dev@example.com",
+  "plan_hash": "8648990a44db77c6",
+  "radius": [
+    ".circle/DOMAIN-INDEX.md",
+    ".circle/project.toml",
+    ".dockerignore",
+    ".gitignore",
+    "Dockerfile",
+    "app/__pycache__/**",
+    "app/digest.py",
+    "app/mailbox.py",
+    "app/server.py",
+    "docker-compose.yml",
+    "docs/STANDARDS.md",
+    "samples/**",
+    "scripts/**",
+    "scripts/build_check.sh",
+    "tests/integration/**",
+    "tests/support/**",
+    "tests/unit/**",
+    "tests/unit/test_digest.py",
+    "tests/unit/test_mailbox_pdf.py"
+  ],
+  "at": "2026-10-22T01:28:39.295325697Z",
+  "note": "operator: review round 2 fix",
+  "self_approved": true
+}

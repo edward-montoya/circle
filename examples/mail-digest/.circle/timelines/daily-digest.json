@@ -2,14 +2,13 @@
   "item": "daily-digest",
   "baseline": "e1cf56d01206a86d471c14b52618c894c492ee18",
   "branch": "main",
-  "repo": "/home/user/mail-digest",
   "opened_at": "2026-10-21T17:44:31.039736498Z",
   "entries": [
     {
       "seq": 0,
       "sha": "e1cf56d01206a86d471c14b52618c894c492ee18",
       "short": "e1cf56d",
-      "subject": "baseline · session opened",
+      "subject": "baseline \u00b7 session opened",
       "at": "2026-10-21T17:44:31.039736652Z",
       "state": "baseline"
     },

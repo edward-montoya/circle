@@ -2,7 +2,9 @@ import re
 from collections import Counter
 
 _MARKERS = re.compile(r"^\s*(re|fwd?)\s*:\s*", re.IGNORECASE)
-_SENTENCE = re.compile(r"[^.!?]*(?:[.!?]+|$)")
+_ABBREVIATIONS = r"(?:e\.g|i\.e|etc|vs|mr|mrs|ms|dr|prof|st)"
+_SENTENCE = re.compile(
+    rf"(?:\d\.\d|\b{_ABBREVIATIONS}\.|[^.!?])*(?:[.!?]+|$)", re.IGNORECASE)
 _WEEKDAYS = "monday|tuesday|wednesday|thursday|friday|saturday|sunday"
 _MONTHS = "jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec"
 _REQUEST = re.compile(
@@ -46,7 +48,7 @@ def build_digest(messages, day, owner, skipped=0):
             "action_items": items,
         })
     return {
-        "date": day.isoformat(),
+        "day": day.isoformat(),
         "total": len(todays),
         "skipped": skipped,
         "senders": senders,
