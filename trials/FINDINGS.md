@@ -513,6 +513,13 @@ continued on the fixed binary.
 | F-39 | blocking-fix agent | It gave a task a `--verify-command` narrower than the gate, because the gate could not see the fix — Circle stored the command and never ran it | `quality run --task` runs it; `task close` requires that run |
 | F-40 | final review | Machine-local variables reached the gates but not a `docker compose up` the agent typed | SessionStart exports them into the agent's shell; `circle local export` |
 | F-41 | repair agent | `circle local --help` was "unknown command"; nothing said which local variables a gate ran with | Group help; `quality run` names them |
+| F-42 | headless review | A skill refused by its gate injection aborted in zero turns with an empty result — headless, nobody saw why | With `CIRCLE_REFUSE=text` (or an SDK entrypoint) the refusal is injected as "CIRCLE REFUSED — reason" and the model reports it |
+| F-43 | several | Skills linked sibling files by relative path; headless sessions resolved them against the repository and missed | Links use `${CLAUDE_SKILL_DIR}/`; `skill validate` checks them |
+| F-44 | hardening agents | Five green gates printed hundreds of lines of build log | Gates are quiet when green, show a 60-line tail when red; `--verbose` streams |
+| F-45 | planning | `task create --deps` accepted a task id that did not exist; the task was never ready | Dependencies must name real tasks |
+| F-46 | review | `review drift` rewrote the item's timeline as a side effect of reading it | Reading a trace writes nothing (`timeline.Peek`) |
+| F-47 | four implementation sessions | After `task close` the closure record sat uncommitted; every agent committed it by hand, once into an unrelated commit | `task close --commit` commits that task file and nothing else |
+| F-48 | hardening agent | `knowledge add` swallowed the blank line before the next TOML section | The key goes before the separating blank lines |
 
 ## What held without change
 
@@ -544,7 +551,7 @@ usage. The app, with its `.circle/` state and history, is in
 
 ## The pattern in the defects
 
-Seventeen defects, and almost none were in what Circle checks — the gates, the
+Twenty-four defects, and almost none were in what Circle checks — the gates, the
 approval binding, the task contract held throughout. They were in the
 **transitions**: day zero to first green, one item to two, a plan to a changed
 plan, a worktree to a merge, a review round to the next. A framework tested one
