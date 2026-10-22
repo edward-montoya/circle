@@ -345,6 +345,9 @@ writable either way — the write hook enforces every write.
    v0.2. This lifecycle is v0.2 scope. Recommendation: record a decision moving the
    barrier after the foundation now built — a trial of one item at a time would
    not exercise what Circle now is.
+   The agent half now runs as a script, with two items in parallel
+   (`trials/cold-start/run.sh`; results in iteration 8 of `trials/FINDINGS.md`);
+   the human-stranger half is still open.
 
 ## Decided
 

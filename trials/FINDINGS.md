@@ -205,7 +205,8 @@ Honest ledger, so the phase table is not read as more than it is.
   currently enforces *preflight*, not approval. The blast-radius check is
   written and wired but inert until an `approved-radius` file exists.
 - **Phase 7 — the trial.** Still the largest gap. Everything above proves the
-  mechanism works; nothing proves a human stranger succeeds.
+  mechanism works; nothing proves a human stranger succeeds. (Iteration 8
+  automates the agent half.)
 - The `Stop` hook is specified in the CLI doc but not yet registered.
 
 ---
@@ -562,3 +563,46 @@ approval binding, the task contract held throughout. They were in the
 plan, a worktree to a merge, a review round to the next. A framework tested one
 item at a time on one branch never meets any of them. The cold-start trial in
 Phase 7 should be run with two items in parallel for the same reason.
+
+---
+
+# Iteration 8 — the scripted cold-start trial
+
+[`trials/cold-start/run.sh`](cold-start/run.sh) automates the half of Phase 7
+that does not need a human stranger. Each run starts from a fresh clone of the
+Mail Digest repository — no runtime state, no session, no memory — and drives
+two phases with headless Claude Code sessions under the Circle plugin:
+
+- **A. Cold start.** An agent that has never seen the repository brings the app
+  up, checks it answers, runs every gate and brings it down. Asserted from
+  recorded state, not from its report.
+- **B. Two items in parallel.** Two one-task items are planned and approved by
+  script, then built concurrently by two agents in two worktrees. Asserted: both
+  closed, both branches green, both merge without a conflict, main green after,
+  no blocking trace finding on either.
+
+| Trial | Runs | Phase A | Phase B | Turns | Cost |
+|---|---|---|---|---|---|
+| 1 | 3 | 3 × ✗ "every gate passed during the session" | 3 × all ✓ | 70 | $0.98 |
+| 2 (after F-51) | 3 | 3 × all ✓ | 3 × all ✓ | 76 | $1.01 |
+
+## F-51 · A gate Circle did not see
+
+In all three runs of trial 1 the agent reported five green gates, and it was
+right — but it had run the five commands straight from the preflight listing.
+Circle recorded nothing, so `task close`, `review` and `status` could not have
+counted any of it. The session context listed what each gate runs and never
+said how a gate *counts*. It now does — `circle quality run [gate]`, and "a gate
+command run any other way leaves no record and counts for nothing" — and the
+start skill says the same. Trial 2: every run recorded every gate.
+
+The trial found it because it asserts from recorded state. An agent's report
+of a green gate and a recorded green gate are different claims; only the second
+is evidence.
+
+## What the trial does not prove
+
+That a human stranger succeeds. It proves an agent stranger does, from what
+Circle and the repository give it, six times out of six after F-51 — and that two
+agents building in parallel do not collide. The human half of Phase 7 is still
+open.
