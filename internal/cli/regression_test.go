@@ -377,3 +377,13 @@ func TestCommittedStateHoldsNoMachinePath(t *testing.T) {
 		return nil
 	})
 }
+
+// A cold-start agent ran every gate command by hand from the context listing:
+// all green, none recorded. The context must say how a gate counts.
+func TestSessionContextSaysHowGatesAreRun(t *testing.T) {
+	root := buildAlpha(t)
+	out := mustRun(t, root, "preflight", "--context")
+	if !strings.Contains(out, "circle quality run") || !strings.Contains(out, "no record") {
+		t.Fatalf("the context must route gates through circle quality run:\n%s", out)
+	}
+}

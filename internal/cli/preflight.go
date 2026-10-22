@@ -102,4 +102,11 @@ func renderSessionContext(e Env, repo *contract.Repo) {
 		slots = append(slots, s[0]+"="+s[1])
 	}
 	fmt.Fprintf(e.Stdout, "LIFECYCLE  %s\n", strings.Join(slots, "  "))
+	// The gate commands are listed above, and an agent asked to "run every
+	// gate" ran them straight from that list: green, and unrecorded. A run
+	// Circle did not see proves nothing to task close, review or status.
+	if len(repo.Contract.Quality.Gates()) > 0 {
+		fmt.Fprintln(e.Stdout, "GATES      run them with `circle quality run [gate]` — bootstrap first, each result recorded.")
+		fmt.Fprintln(e.Stdout, "           A gate command run any other way leaves no record and counts for nothing.")
+	}
 }

@@ -51,7 +51,8 @@ it rather than rebinding.
    concept you need that is not there is a `circle:domain` moment — and Circle
    will flag it anyway the moment you write a type for it.
 3. **You may not open a gate.** You can generate a brief, not approve it; run a
-   gate, not declare it passed.
+   gate, not declare it passed. Run gates with `circle quality run`, never by
+   pasting their commands: only a recorded run counts.
 
 ## Next
 
