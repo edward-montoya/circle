@@ -49,7 +49,7 @@ func (t trace) blocking(domainBlocks bool) int {
 }
 
 func computeTrace(repo *contract.Repo, id string) (trace, error) {
-	tl, err := timeline.Sync(repo, id, true)
+	tl, err := timeline.Peek(repo, id, true)
 	if err != nil {
 		return trace{}, err
 	}

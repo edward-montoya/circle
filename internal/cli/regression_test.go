@@ -317,3 +317,23 @@ func TestGatesAreQuietWhenGreenAndShowTheirTailWhenRed(t *testing.T) {
 		t.Fatalf("--verbose streams:\n%s", out)
 	}
 }
+
+func TestDependenciesMustExistAndReadsWriteNothing(t *testing.T) {
+	root := newGitRepo(t)
+	planItem(t, root, "alpha", "src/a/**")
+	if code, out := run(t, root, "task", "create", "--item", "alpha", "--id", "alpha-2", "--title", "t", "--goal", "g",
+		"--verify-kind", "unit", "--verify-gate", "test:unit", "--depends-on", "alpha-9"); code != ExitGate || !strings.Contains(out, "no task alpha-9") {
+		t.Fatalf("a made-up dependency must be refused: %d\n%s", code, out)
+	}
+	if code, _ := run(t, root, "task", "update", "alpha-1", "--depends-on", "alpha-1"); code != ExitGate {
+		t.Fatal("a task cannot depend on itself")
+	}
+	mustRun(t, root, "timeline", "open", "--item", "alpha")
+	git(t, root, "add", "-A")
+	git(t, root, "commit", "-q", "-m", "state")
+	commitFile(t, root, "src/a/x.go", "package a\n", "alpha-1: work")
+	mustRun(t, root, "review", "drift", "--item", "alpha")
+	if out, _ := exec.Command("git", "-C", root, "status", "--porcelain", ".circle/timelines").Output(); len(out) > 0 {
+		t.Fatalf("review drift must not rewrite the committed timeline:\n%s", out)
+	}
+}

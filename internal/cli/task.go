@@ -98,7 +98,7 @@ func runTaskCreate(e Env, args []string) int {
 		}
 	}
 
-	if errs := t.Validate(repo.Contract.Quality); len(errs) > 0 {
+	if errs := append(t.Validate(repo.Contract.Quality), dependencyErrors(repo, t)...); len(errs) > 0 {
 		reportTaskErrors(e, t.ID, errs)
 		return ExitGate // the TaskCreated hook maps this to "prevent creation"
 	}
@@ -155,7 +155,7 @@ func runTaskValidate(e Env, args []string) int {
 	}
 	bad := 0
 	for _, t := range ts {
-		if errs := t.Validate(repo.Contract.Quality); len(errs) > 0 {
+		if errs := append(t.Validate(repo.Contract.Quality), dependencyErrors(repo, t)...); len(errs) > 0 {
 			reportTaskErrors(e, t.ID, errs)
 			bad++
 		}
@@ -579,7 +579,7 @@ func runTaskUpdate(e Env, args []string) int {
 	if *deps != "" {
 		t.DependsOn = splitList(*deps)
 	}
-	if errs := t.Validate(repo.Contract.Quality); len(errs) > 0 {
+	if errs := append(t.Validate(repo.Contract.Quality), dependencyErrors(repo, t)...); len(errs) > 0 {
 		reportTaskErrors(e, t.ID, errs)
 		return ExitGate
 	}
@@ -593,4 +593,24 @@ func runTaskUpdate(e Env, args []string) int {
 	fmt.Fprintf(e.Stdout, "updated %s — the plan changed, so item %s needs its brief re-approved\n", t.ID, task.ItemOf(t))
 	fmt.Fprintf(e.Stdout, "  paths   %s\n  verify  %s via %s\n", strings.Join(t.Paths, " "), t.Verify.Kind, t.Verify.Gate)
 	return ExitOK
+}
+
+// dependencyErrors rejects a dependency that names no task, or the task itself.
+// A made-up id would leave the task blocked forever: Blocked treats a missing
+// dependency as open, so the task never reaches the ready set and nothing says
+// why.
+func dependencyErrors(repo *contract.Repo, t domain.Task) []domain.ValidationError {
+	all, _ := task.Load(repo)
+	idx := task.ByID(all)
+	var errs []domain.ValidationError
+	for _, d := range t.DependsOn {
+		switch {
+		case d == t.ID:
+			errs = append(errs, domain.ValidationError{Field: "depends_on", Reason: "a task cannot depend on itself"})
+		case idx[d].ID == "":
+			errs = append(errs, domain.ValidationError{Field: "depends_on", Reason: "no task " + d,
+				Fix: "create the blocker first, or name an existing id (`circle task list`)"})
+		}
+	}
+	return errs
 }

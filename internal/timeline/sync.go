@@ -74,6 +74,17 @@ func short(sha string) string {
 // rather than quietly dropped, and anything present but unattributed is still
 // listed. The agent's account is never allowed to overrule the repository.
 func Sync(r *contract.Repo, item string, resolveRewrites bool) (domain.Timeline, error) {
+	t, err := Peek(r, item, resolveRewrites)
+	if err != nil {
+		return t, err
+	}
+	return t, Save(r, t)
+}
+
+// Peek reconciles like Sync but writes nothing. Reading a trace must not
+// rewrite a committed file: a review of a finished item would otherwise leave a
+// diff behind in a checkout that changed nothing.
+func Peek(r *contract.Repo, item string, resolveRewrites bool) (domain.Timeline, error) {
 	t, err := Load(r, item)
 	if err != nil {
 		return t, err
@@ -139,7 +150,7 @@ func Sync(r *contract.Repo, item string, resolveRewrites bool) (domain.Timeline,
 		entries[i].Seq = i
 	}
 	t.Entries = entries
-	return t, Save(r, t)
+	return t, nil
 }
 
 // RecordPhantom notes a commit the agent claimed. Sync decides whether it is real.
