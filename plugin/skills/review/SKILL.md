@@ -63,6 +63,7 @@ hiding the other, so **never rerank across axes.**
    ```
    circle review record --axis spec      --file <f>
    circle review record --axis standards --file <f>
+   circle review record --axis spec --file <f> --append   # a finding you add after checking a report
    ```
 
    Only `[blocking]` holds the item. `circle review show` prints all three.

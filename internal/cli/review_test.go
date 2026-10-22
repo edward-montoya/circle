@@ -122,3 +122,20 @@ func TestTraceIgnoresAnotherItemsMergedWork(t *testing.T) {
 		t.Fatalf("beta's own commits should be counted:\n%s", out)
 	}
 }
+
+func TestReviewRecordAppendsWithinTheSameRound(t *testing.T) {
+	root := buildAlpha(t)
+	tmp := t.TempDir()
+	if code, _ := run(t, root, "review", "record", "--item", "alpha", "--axis", "spec", "--append", "--file", findings(t, tmp, "x.md", "- [blocking] late\n")); code != ExitPrecond {
+		t.Fatalf("nothing recorded yet: append must refuse, got %d", code)
+	}
+	mustRun(t, root, "review", "record", "--item", "alpha", "--axis", "spec", "--file", findings(t, tmp, "s.md", "- [major] first\n"))
+	out := mustRun(t, root, "review", "record", "--item", "alpha", "--axis", "spec", "--append", "--file", findings(t, tmp, "a.md", "- [blocking] added after checking\n"))
+	if !strings.Contains(out, "2 finding(s), 1 blocking") {
+		t.Fatalf("append must keep the first findings and count the new one:\n%s", out)
+	}
+	commitFile(t, root, "src/a/more.go", "package a\n", "alpha-1: next round")
+	if code, _ := run(t, root, "review", "record", "--item", "alpha", "--axis", "spec", "--append", "--file", findings(t, tmp, "b.md", "- [minor] x\n")); code != ExitPrecond {
+		t.Fatalf("appending to a round recorded at an older commit must refuse, got %d", code)
+	}
+}

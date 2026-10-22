@@ -216,6 +216,7 @@ func runReviewRecord(e Env, args []string) int {
 	flag := f.String("item", "", "item id; defaults to this session's")
 	axis := f.String("axis", "", "spec or standards")
 	file := f.String("file", "", "the findings, as markdown")
+	appendTo := f.Bool("append", false, "add these findings to the axis recorded at this commit, instead of replacing it")
 	if err := parse(f, args); err != nil {
 		return ExitError
 	}
@@ -235,6 +236,19 @@ func runReviewRecord(e Env, args []string) int {
 		return ExitError
 	}
 	head, _ := timeline.HeadSHA(repo.Root)
+	path := filepath.Join(reviewDir(repo, id), *axis+".md")
+	if *appendTo {
+		// A finding the reviewer adds after checking a subagent's report belongs
+		// to the same round. Only to the same round: appending to findings about
+		// an older commit would mix what was fixed with what was not.
+		prev, ok := loadReview(repo, id).Axes[*axis]
+		old, err := os.ReadFile(path)
+		if !ok || err != nil || prev.Head != head {
+			fmt.Fprintf(e.Stderr, "circle: no %s axis recorded at this commit to append to — record it first\n", *axis)
+			return ExitPrecond
+		}
+		body = append(append(old, '\n'), body...)
+	}
 	rec := axisRecord{Axis: *axis, At: time.Now().UTC(), Head: head}
 	for _, line := range strings.Split(string(body), "\n") {
 		if findingRe.MatchString(line) {
@@ -248,7 +262,7 @@ func runReviewRecord(e Env, args []string) int {
 		fmt.Fprintf(e.Stderr, "circle: %v\n", err)
 		return ExitError
 	}
-	if err := os.WriteFile(filepath.Join(reviewDir(repo, id), *axis+".md"), body, 0o644); err != nil {
+	if err := os.WriteFile(path, body, 0o644); err != nil {
 		fmt.Fprintf(e.Stderr, "circle: %v\n", err)
 		return ExitError
 	}
