@@ -57,7 +57,7 @@ that could never close honestly.
 
 ## 3. Write the spec
 
-`.circle/items/<id>/spec.md`, using [SPEC-TEMPLATE.md](SPEC-TEMPLATE.md). Domain
+`.circle/items/<id>/spec.md`, using [SPEC-TEMPLATE.md](${CLAUDE_SKILL_DIR}/SPEC-TEMPLATE.md). Domain
 terms throughout; no file paths or code, except a prototype snippet that encodes
 a decision more exactly than prose can.
 

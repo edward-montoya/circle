@@ -42,12 +42,13 @@ func TestSkillValidateCatchesBrokenSkills(t *testing.T) {
 	}
 	write("ghost", "---\ndescription: d\ndisable-model-invocation: true\nmetadata:\n  circle:\n    kind: orchestrator\n---\n\n```!\ncircle teleport now\n```\n")
 	write("ungated", "---\ndescription: d\ndisable-model-invocation: true\nmetadata:\n  circle:\n    kind: orchestrator\n    requires: approved\n---\n\n```!\ncircle status\n```\n")
-	write("chatty", "---\ndescription: d\nmetadata:\n  circle:\n    kind: practice\n    produces: done\n---\nbody\n")
+	write("linker", "---\ndescription: d\nmetadata:\n  circle:\n    kind: practice\n---\nSee [the rules](${CLAUDE_SKILL_DIR}/MISSING.md).\n")
+		write("chatty", "---\ndescription: d\nmetadata:\n  circle:\n    kind: practice\n    produces: done\n---\nbody\n")
 	code, out := run(t, dir, "skill", "validate", dir)
 	if code != ExitGate {
 		t.Fatalf("broken skills must fail validation:\n%s", out)
 	}
-	for _, want := range []string{"`circle teleport now` is not a circle command", "first injected block is not `circle item require`", "a practice never changes item state"} {
+	for _, want := range []string{"`circle teleport now` is not a circle command", "first injected block is not `circle item require`", "a practice never changes item state", "MISSING.md, which does not exist"} {
 		if !strings.Contains(out, want) {
 			t.Errorf("missing %q:\n%s", want, out)
 		}

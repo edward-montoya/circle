@@ -34,7 +34,7 @@ circle quality list
 
 Each task is a **tracer bullet**: a narrow slice through every layer it needs,
 demoable or verifiable on its own, small enough for one fresh session. Not a
-layer. See [SLICING.md](SLICING.md) for the rules and the one exception — a
+layer. See [SLICING.md](${CLAUDE_SKILL_DIR}/SLICING.md) for the rules and the one exception — a
 **wide refactor**, which goes expand → migrate → contract.
 
 A prefactor the spec named goes first.

@@ -82,6 +82,9 @@ func runPreflight(e Env, args []string) int {
 			fmt.Fprintln(e.Stdout, "\nPLANNING ONLY — documents and .circle/ are writable; code is not until preflight passes")
 			return ExitOK
 		}
+		if *ctx {
+			return refuseSkill(e, "the contracts are invalid — `circle preflight --explain` shows what to fix")
+		}
 		return ExitGate
 	}
 	return ExitOK

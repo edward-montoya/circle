@@ -52,7 +52,7 @@ rewrite of everything behind it. It reads like a line of the spec. Its expected
 value comes from an independent source — a known-good literal, a worked
 example, the spec — never recomputed the way the code computes it.
 
-See [ANTI-PATTERNS.md](ANTI-PATTERNS.md) when a test feels wrong and you cannot
+See [ANTI-PATTERNS.md](${CLAUDE_SKILL_DIR}/ANTI-PATTERNS.md) when a test feels wrong and you cannot
 say why.
 
 ## Done

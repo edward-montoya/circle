@@ -124,7 +124,7 @@ func Parse(path string) (Skill, error) {
 }
 
 var (
-	linkRe   = regexp.MustCompile(`\]\(([A-Za-z0-9_./-]+\.md)\)`)
+	linkRe   = regexp.MustCompile(`\]\((?:\$\{CLAUDE_SKILL_DIR\}/)?([A-Za-z0-9_./-]+\.md)\)`)
 	statesRe = regexp.MustCompile(`--state\s+([a-z]+)`)
 )
 

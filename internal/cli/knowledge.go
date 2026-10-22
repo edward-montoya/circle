@@ -280,7 +280,11 @@ func printKnowledge(e Env, repo *contract.Repo, only []string) int {
 		}
 	}
 	if printed == 0 {
-		fmt.Fprintf(e.Stdout, "(nothing registered under %s)\n", strings.Join(only, ", "))
+		fmt.Fprintf(e.Stdout, "(nothing registered under %s", strings.Join(only, ", "))
+		if contains(only, "standards") {
+			fmt.Fprint(e.Stdout, " — review against the smell baseline and the DOMAIN.md files, and say so")
+		}
+		fmt.Fprintln(e.Stdout, ")")
 	}
 	return ExitOK
 }

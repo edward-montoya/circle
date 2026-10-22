@@ -45,14 +45,14 @@ on every write. **Edit those, never the index.**
 ## Write as you go
 
 - **Terms.** When a term resolves, write it into the `DOMAIN.md` of the context
-  it belongs to, in [DOMAIN-FORMAT.md](DOMAIN-FORMAT.md). No such file yet? Create
+  it belongs to, in [DOMAIN-FORMAT.md](${CLAUDE_SKILL_DIR}/DOMAIN-FORMAT.md). No such file yet? Create
   it in the directory the context covers — Circle finds it on the next write.
   Language only: what a thing *is*, never how it is built.
 - **Modules.** A new module goes under `## Modules` in its context's `DOMAIN.md`,
   with one line on what it holds.
 - **ADR.** Offer one only when the decision is **hard to reverse**, **surprising
   without context**, and **the result of a real trade-off**. All three, or no ADR.
-  Write it in [ADR-FORMAT.md](ADR-FORMAT.md) under `docs/adr/`, or under the
+  Write it in [ADR-FORMAT.md](${CLAUDE_SKILL_DIR}/ADR-FORMAT.md) under `docs/adr/`, or under the
   context's own `docs/adr/` when only that context is affected.
 
 There is nothing to register. Circle indexes every `DOMAIN.md`, ADR and

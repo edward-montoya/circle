@@ -282,6 +282,24 @@ tdd    = "circle:tdd"         # e.g. "acme:property-tests"
 An orchestrator never names a practice directly. It reads the slot from
 `circle preflight --context` and calls whatever is there.
 
+### Running skills headless
+
+Orchestrating Circle with `claude -p` or the SDK — one session per lifecycle
+step, as the dogfood in [`examples/mail-digest/`](../examples/mail-digest/) did —
+needs one setting:
+
+```bash
+export CIRCLE_REFUSE=text
+```
+
+Interactive, a skill whose precondition fails is aborted before the model sees
+it and Claude Code shows the user why. Headless, that abort is silent: zero
+turns, an empty result. With `CIRCLE_REFUSE=text` the refusal is injected
+instead, and the result reads `CIRCLE REFUSED — <reason>`. Circle detects
+`claude -p` on its own when it can, but a child process inherits its parent's
+entrypoint, so set the variable rather than rely on detection. Nothing becomes
+writable either way — the write hook enforces every write.
+
 ---
 
 ## CLI surface

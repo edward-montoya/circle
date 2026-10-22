@@ -48,6 +48,7 @@ func runQualityRun(e Env, args []string) int {
 	failFast := f.Bool("fail-fast", false, "stop at the first failure")
 	taskID := f.String("task", "", "attribute the run to a task, for its red → green history")
 	noBootstrap := f.Bool("no-bootstrap", false, "skip quality.bootstrap before the gates")
+	verbose := f.Bool("verbose", false, "stream every gate's output; by default only a failing gate's tail is shown")
 	expect := f.String("expect", "", "red or green: exit 0 only when every gate matches. For test-first work")
 	if err := parse(f, args); err != nil {
 		return ExitError
@@ -144,7 +145,15 @@ func runQualityRun(e Env, args []string) int {
 		start := time.Now()
 		cmd := exec.Command("sh", "-c", g.Command)
 		cmd.Dir = repo.Root
-		cmd.Stdout, cmd.Stderr = e.Stdout, e.Stderr
+		// Quiet when green, the tail when red. Five green gates used to print
+		// hundreds of lines of build log, and the one line that mattered — which
+		// gate failed — was lost in it.
+		var gateOut bytes.Buffer
+		if *verbose {
+			cmd.Stdout, cmd.Stderr = e.Stdout, e.Stderr
+		} else {
+			cmd.Stdout, cmd.Stderr = &gateOut, &gateOut
+		}
 		cmd.Env = gateEnv(repo)
 		runErr := cmd.Run()
 		dur := time.Since(start)
@@ -177,6 +186,16 @@ func runQualityRun(e Env, args []string) int {
 		}
 		fmt.Fprintf(e.Stdout, "%s%s%s %-12s exit=%d  %s%s%s\n",
 			colour, mark, p.N, g.Name, code, p.D, dur.Round(time.Millisecond), p.N)
+		if code != 0 && !*verbose {
+			lines := strings.Split(strings.TrimRight(gateOut.String(), "\n"), "\n")
+			if len(lines) > 60 {
+				fmt.Fprintf(e.Stdout, "    %s… %d earlier lines (--verbose shows them)%s\n", p.D, len(lines)-60, p.N)
+				lines = lines[len(lines)-60:]
+			}
+			for _, l := range lines {
+				fmt.Fprintf(e.Stdout, "    %s\n", l)
+			}
+		}
 
 		if code != 0 && *failFast {
 			break

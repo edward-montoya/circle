@@ -51,8 +51,11 @@ hiding the other, so **never rerank across axes.**
    - **Spec:** the diff command, `spec.md`, the brief. Report (a) behaviours
      missing or partial, (b) behaviour nobody asked for, (c) behaviours present
      but wrong. Quote the spec line for each. Under 400 words.
-   - **Standards:** the diff command, the standards files above, and
-     [SMELLS.md](SMELLS.md) pasted in full. Report documented-standard breaches
+   - **Standards:** the diff command, the standards files above, and the
+     smell baseline at `${CLAUDE_SKILL_DIR}/SMELLS.md`, pasted in full. When no
+     standards are registered, the baseline and the `DOMAIN.md` files are the
+     standards: say so in the report, and name any rule the review leaned on as
+     a candidate for `/circle:retro` to register. Report documented-standard breaches
      as hard, smells as judgement calls; a documented standard overrides a
      smell; skip anything a gate already enforces. Under 400 words.
 4. **Record the two judged axes**, each report saved to a file first:

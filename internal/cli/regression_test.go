@@ -283,3 +283,37 @@ func TestLocalEnvReachesTheAgentShell(t *testing.T) {
 		t.Fatalf("local export:\n%s", out)
 	}
 }
+
+// Headless, a failed injection aborts the skill silently; the refusal is
+// injected as text instead. Interactive, the hard stop stays.
+func TestRefusalIsVisibleHeadless(t *testing.T) {
+	root := newGitRepo(t)
+	mustRun(t, root, "item", "new", "h", "--title", "h")
+	t.Setenv("CLAUDE_CODE_ENTRYPOINT", "cli")
+	if code, _ := run(t, root, "item", "require", "--item", "h", "--state", "approved"); code != ExitGate {
+		t.Fatal("interactive keeps the hard stop")
+	}
+	t.Setenv("CLAUDE_CODE_ENTRYPOINT", "sdk-cli")
+	code, out := run(t, root, "item", "require", "--item", "h", "--state", "approved")
+	if code != ExitOK || !strings.Contains(out, "CIRCLE REFUSED") || !strings.Contains(out, "is shaping") {
+		t.Fatalf("headless must inject the refusal: %d\n%s", code, out)
+	}
+	t.Setenv("CLAUDE_CODE_ENTRYPOINT", "remote_mobile")
+	t.Setenv("CIRCLE_REFUSE", "text")
+	if code, out := run(t, root, "item", "require", "--item", "h", "--state", "approved"); code != ExitOK || !strings.Contains(out, "CIRCLE REFUSED") {
+		t.Fatalf("an orchestrator's CIRCLE_REFUSE=text must win over an inherited entrypoint: %d\n%s", code, out)
+	}
+}
+
+func TestGatesAreQuietWhenGreenAndShowTheirTailWhenRed(t *testing.T) {
+	root := newGitRepo(t)
+	mustRun(t, root, "quality", "add", "test:noisy", `echo lots-of-build-log; true`)
+	mustRun(t, root, "quality", "add", "test:broken", `echo the-real-cause; false`)
+	_, out := run(t, root, "quality", "run")
+	if strings.Contains(out, "lots-of-build-log") || !strings.Contains(out, "the-real-cause") {
+		t.Fatalf("green output hidden, red output shown:\n%s", out)
+	}
+	if _, out := run(t, root, "quality", "run", "test:noisy", "--verbose"); !strings.Contains(out, "lots-of-build-log") {
+		t.Fatalf("--verbose streams:\n%s", out)
+	}
+}

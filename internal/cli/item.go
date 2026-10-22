@@ -228,8 +228,7 @@ func runItemRequire(e Env, args []string) int {
 	}
 	id, src := currentItem(repo, *flag)
 	if id != task.DefaultItem && !session.Exists(repo, id) {
-		fmt.Fprintf(e.Stderr, "circle: no item %q (resolved from %s) — `circle item new %s`\n", id, src, id)
-		return ExitGate
+		return refuseSkill(e, fmt.Sprintf("no item %q (resolved from %s) — `circle item new %s`", id, src, id))
 	}
 	got := item.Derive(repo, id)
 	for _, s := range states {
@@ -237,10 +236,8 @@ func runItemRequire(e Env, args []string) int {
 			return ExitOK
 		}
 	}
-	fmt.Fprintf(e.Stderr, "circle: item %s is %s (%s); this step needs %s.\n",
-		id, got.State, got.Reason, strings.Join(states, " or "))
-	fmt.Fprintln(e.Stderr, "Run `circle next` for the step that fits where it stands.")
-	return ExitGate
+	return refuseSkill(e, fmt.Sprintf("item %s is %s (%s); this step needs %s. `circle next` names the step that fits.",
+		id, got.State, got.Reason, strings.Join(states, " or ")))
 }
 
 func stateNames() string {

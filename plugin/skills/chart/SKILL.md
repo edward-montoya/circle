@@ -44,7 +44,7 @@ Two modes. **Either way, resolve at most one decision per session**, except
    ```
 
    Then write **Notes**, **Not yet specified** and **Out of scope** into its
-   `map.md` ([MAP-FORMAT.md](MAP-FORMAT.md)).
+   `map.md` ([MAP-FORMAT.md](${CLAUDE_SKILL_DIR}/MAP-FORMAT.md)).
 4. **Create the decisions you can state sharply now** — first all of them, then
    wire blockers in a second pass so every reference is a real id:
 

@@ -42,6 +42,8 @@ func git(t *testing.T, dir string, args ...string) {
 func newGitRepo(t *testing.T) string {
 	t.Helper()
 	t.Setenv("CIRCLE_ITEM", "")
+	t.Setenv("CLAUDE_CODE_ENTRYPOINT", "") // tests expect the interactive hard stop
+	t.Setenv("CIRCLE_REFUSE", "")
 	t.Setenv("CIRCLE_SESSION", "")
 	root := t.TempDir()
 	git(t, root, "init", "-q", "-b", "main")
