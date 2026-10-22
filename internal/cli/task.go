@@ -4,8 +4,8 @@ import (
 	"errors"
 	"fmt"
 	"os/exec"
-	"path/filepath"
 	"os/user"
+	"path/filepath"
 	"strings"
 	"time"
 
