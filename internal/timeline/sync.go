@@ -51,7 +51,7 @@ func Open(r *contract.Repo, item string) (domain.Timeline, error) {
 	}
 	br, _ := Branch(r.Root)
 	t := domain.Timeline{
-		Item: item, Baseline: sha, Branch: br, Repo: r.Root,
+		Item: item, Baseline: sha, Branch: br,
 		OpenedAt: time.Now().UTC(),
 		Entries: []domain.Entry{{
 			Seq: 0, SHA: sha, Short: short(sha), Subject: "baseline · session opened",

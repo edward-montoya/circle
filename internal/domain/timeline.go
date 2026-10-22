@@ -65,7 +65,6 @@ type Timeline struct {
 	Item     string    `json:"item"`
 	Baseline string    `json:"baseline"`
 	Branch   string    `json:"branch"`
-	Repo     string    `json:"repo"`
 	OpenedAt time.Time `json:"opened_at"`
 	Entries  []Entry   `json:"entries"`
 }

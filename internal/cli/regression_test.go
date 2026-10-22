@@ -363,3 +363,17 @@ func TestKnowledgeAddKeepsTheBlankLineBeforeTheNextSection(t *testing.T) {
 		t.Fatalf("the new key goes before the blank line:\n%s", b)
 	}
 }
+
+// .circle/ is committed, so nothing Circle writes there may name this machine.
+func TestCommittedStateHoldsNoMachinePath(t *testing.T) {
+	root := buildAlpha(t)
+	_ = filepath.WalkDir(filepath.Join(root, ".circle"), func(p string, d os.DirEntry, err error) error {
+		if err != nil || d.IsDir() || strings.Contains(p, string(filepath.Separator)+"runtime"+string(filepath.Separator)) || strings.HasSuffix(p, "local.env") {
+			return nil
+		}
+		if b, _ := os.ReadFile(p); strings.Contains(string(b), root) {
+			t.Errorf("%s names the machine path %s", p, root)
+		}
+		return nil
+	})
+}
